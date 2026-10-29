@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StrictInt, model_validator
 
 
 def _nonblank(value: str) -> str:
@@ -59,6 +59,8 @@ class Material(Record):
     version: str = ""
     title: str = ""
     source_group: str = ""
+    pmid: str | StrictInt | None = None
+    doi: str | None = None
     source_kind: Literal["primary", "review", "graph"]
     text_level: Literal["abstract", "full_text", "selected_passages"]
     url: str | None = None

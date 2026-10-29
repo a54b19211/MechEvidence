@@ -6,6 +6,7 @@ import hashlib
 import re
 from collections import defaultdict
 from typing import Callable
+from urllib.parse import unquote, urlsplit
 
 from pydantic import ValidationError
 
@@ -44,29 +45,109 @@ def _species(value) -> str:
     return _SPECIES_ALIASES.get(normalized, normalized)
 
 
+class IdentityInputError(ValueError):
+    """Invalid or conflicting publication metadata; callers should request corrected input."""
+
+    def __init__(self, code: str, material_id: str, identifier_type: str, fields: dict):
+        self.code, self.material_id = code, material_id
+        self.identifier_type, self.fields = identifier_type, fields
+        super().__init__(f"{code}: material {material_id}, {identifier_type}: {fields}")
+
+    def as_dict(self) -> dict:
+        return {"status": "needs_input", "error_code": self.code, "material_id": self.material_id,
+                "identifier_type": self.identifier_type, "fields": self.fields}
+
+
+_PMID = r"[1-9][0-9]*"
+_DOI = r'10\.[0-9]{4,9}/[^\s\x00-\x1f\x7f<>"\\]+'
+
+
+def _identifier_value(value, kind: str, material_id: str, field: str) -> str:
+    text = str(value).strip()
+    if isinstance(value, bool) or not re.fullmatch(_PMID if kind == "pmid" else _DOI, text):
+        raise IdentityInputError("material_identifier_invalid", material_id, kind, {field: value})
+    # DOI punctuation is part of the identifier; do not strip a closing ')' or '.'.
+    return text if kind == "pmid" else text.casefold()
+
+
+def _url_identifier(value: str) -> tuple[str, str] | None:
+    """Recognize exact official routes without fetching or scanning URL substrings."""
+    if ("\\" in value or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in value)
+            or re.search(r"%(?![0-9a-fA-F]{2})", value)):
+        return None
+    try:
+        url = urlsplit(value)
+        if (url.scheme not in {"http", "https"} or url.username is not None or url.password is not None
+                or url.port not in {None, 443 if url.scheme == "https" else 80}):
+            return None
+        routes = {
+            "pubmed.ncbi.nlm.nih.gov": rf"/({_PMID})/?",
+            "ncbi.nlm.nih.gov": rf"/pubmed/({_PMID})/?",
+            "www.ncbi.nlm.nih.gov": rf"/pubmed/({_PMID})/?",
+            "europepmc.org": rf"/article/MED/({_PMID})/?",
+            "www.europepmc.org": rf"/article/MED/({_PMID})/?",
+        }
+        if url.hostname in routes:
+            match = re.fullmatch(routes[url.hostname], url.path)
+            return ("pmid", match.group(1)) if match else None
+        if url.hostname in {"doi.org", "dx.doi.org"}:
+            doi = unquote(url.path[1:], errors="strict") if url.path.startswith("/") else ""
+            return ("doi", doi) if re.fullmatch(_DOI, doi) else None
+    except (ValueError, UnicodeError):
+        return None
+    return None
+
+
+def _tagged_identifier(value: str) -> tuple[str, str] | None:
+    """Only whole-field labels, bare DOI, or official URLs carry identifier meaning."""
+    # A colon/slash declares an identifier; ordinary group labels stay opaque.
+    match = re.fullmatch(r"(?:pmid|pubmed)\s*[:/]\s*(.*)", value, re.I)
+    if match:
+        return "pmid", match.group(1)
+    match = re.fullmatch(rf"(?:pmid|pubmed)\s*({_PMID})", value, re.I)
+    if match:
+        return "pmid", match.group(1)
+    match = re.fullmatch(r"doi\s*[:/]\s*(.*)", value, re.I)
+    if match:
+        return "doi", match.group(1)
+    match = re.fullmatch(rf"doi\s+({_DOI})", value, re.I)
+    if match:
+        return "doi", match.group(1)
+    if re.fullmatch(_DOI, value):
+        return "doi", value
+    return _url_identifier(value)
+
+
 def source_identity(material: Material) -> str:
-    """Group records of one publication; this does not establish study independence."""
-    values = (material.source_group.strip(), material.record_id.strip(), (material.url or "").strip())
-    # Search every supplied field for PMID before considering DOI. Europe PMC MED
-    # records and PubMed records share the same PMID, even without source_group.
-    for value in values:
-        pmid = re.search(
-            r"(?:\b(?:pmid|pubmed)[:\s/]*|pubmed\.ncbi\.nlm\.nih\.gov/|europepmc\.org/article/MED/)([1-9]\d*)(?![\w])",
-            value, re.I,
-        )
-        if pmid:
-            return "pmid:" + pmid.group(1)
-    record_id = material.record_id.strip()
+    """Validate one material's identifiers and group its publication, never its cohort."""
+    candidates = {"pmid": {}, "doi": {}}
+
+    def add(kind, field, value):
+        candidates[kind][field] = _identifier_value(value, kind, material.id, field)
+
+    for kind in candidates:
+        value = getattr(material, kind)
+        if value is not None:
+            add(kind, kind, value)
     source = material.source_id.strip().casefold().replace("-", "_")
-    med = re.fullmatch(r"MED:([1-9]\d*)", record_id, re.I)
-    if source in {"europe_pmc", "europepmc"} and med:
-        return "pmid:" + med.group(1)
-    if source == "pubmed" and re.fullmatch(r"[1-9]\d*", record_id):
-        return "pmid:" + record_id
-    for value in values:
-        doi = re.search(r"10\.\d{4,9}/[^\s]+", value, re.I)
-        if doi:
-            return "doi:" + doi.group().casefold().rstrip("/.,;)")
+    for field in ("source_group", "record_id", "url"):
+        value = (getattr(material, field) or "").strip()
+        if not value:
+            continue
+        parsed = _url_identifier(value) if field == "url" else _tagged_identifier(value)
+        if parsed:
+            add(parsed[0], field, parsed[1])
+        elif field == "record_id" and source == "pubmed":
+            add("pmid", field, value)
+        elif field == "record_id" and source in {"europe_pmc", "europepmc"} and value.upper().startswith("MED:"):
+            add("pmid", field, value[4:])
+    # Examine BOTH kinds before applying priority, so a PMID cannot hide conflicting DOIs.
+    for kind, fields in candidates.items():
+        if len(set(fields.values())) > 1:
+            raise IdentityInputError("material_identity_conflict", material.id, kind, fields)
+    for kind in ("pmid", "doi"):
+        if candidates[kind]:
+            return kind + ":" + next(iter(candidates[kind].values()))
     if material.source_group:
         return "group:" + _normal(material.source_group)
     if material.record_id:
@@ -75,11 +156,18 @@ def source_identity(material: Material) -> str:
     return "text:" + digest
 
 
+def _material_metadata(material: Material, exclude: set[str]) -> dict:
+    # Old inputs retain their exact output shape; supplied identifiers remain in references.
+    absent = {key for key in ("pmid", "doi") if getattr(material, key) is None}
+    return material.model_dump(exclude=exclude | absent)
+
+
 def prepare_passages(case: Case | dict) -> list[dict]:
     """Number exact source spans before applying a deletion-test passage selection."""
     case = Case.model_validate(case)
     passages = []
     for material in case.materials:
+        identity = source_identity(material)
         boundaries = [0] + [match.end() for match in re.finditer(
             r"\n+|(?<=[.!?。！？])\s+(?=[A-Z0-9\u4e00-\u9fffΑ-Ω])", material.text,
         )] + [len(material.text)]
@@ -98,7 +186,7 @@ def prepare_passages(case: Case | dict) -> list[dict]:
             found.add(passage_id)
             if selected is None or passage_id in selected:
                 passages.append({"id": passage_id, "material_id": material.id,
-                                 "source_group": source_identity(material),
+                                 "source_group": identity,
                                  "start": start, "end": end, "text": material.text[start:end]})
         if selected is not None and not selected <= found:
             raise ValueError(f"material {material.id}: unknown allowed passage IDs {sorted(selected - found)}")
@@ -111,7 +199,7 @@ def prepare_materials(case: Case | dict) -> list[dict]:
     by_material = defaultdict(list)
     for passage in prepare_passages(case):
         by_material[passage["material_id"]].append(passage)
-    return [{**material.model_dump(exclude={"text", "allowed_passage_ids"}),
+    return [{**_material_metadata(material, {"text", "allowed_passage_ids"}),
              "source_group": source_identity(material), "passages": by_material[material.id]}
             for material in case.materials if by_material[material.id]]
 
@@ -124,8 +212,8 @@ def _payload(case: Case) -> dict:
 
 
 def _references(ids: list[str], passages: dict, materials: dict) -> list[dict]:
-    return [{**materials[passages[pid]["material_id"]].model_dump(
-        exclude={"id", "text", "allowed_passage_ids"}), **passages[pid]} for pid in ids]
+    return [{**_material_metadata(materials[passages[pid]["material_id"]],
+        {"id", "text", "allowed_passage_ids"}), **passages[pid]} for pid in ids]
 
 
 def _call(call_json: CallJSON, stage: str, instructions: str, payload: dict, model):

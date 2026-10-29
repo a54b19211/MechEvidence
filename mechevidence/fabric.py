@@ -63,4 +63,5 @@ def to_material(record: dict, material_id: str = "M1", source_kind: str | None =
     return {"id": material_id, "text": text, "source_id": record["source_id"],
             "record_id": record["source_record_id"], "version": record["version_id"],
             "title": record.get("title", ""), "source_group": group,
-            "source_kind": source_kind, "text_level": "abstract", "url": record.get("source_url", "")}
+            "source_kind": source_kind, "text_level": "abstract", "url": record.get("source_url", ""),
+            **{key: facts[key] for key in ("pmid", "doi") if facts.get(key) is not None}}

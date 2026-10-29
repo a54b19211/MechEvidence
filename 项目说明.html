@@ -115,7 +115,7 @@ result = evaluate(case, call_json)
 # call_json(stage, instructions, payload, schema) → 已解析的 JSON 对象
 # 阶段：decomposition（按需）、local_review、mechanism_review</pre>
 <p><strong>调用由李控制：</strong>方法不自行调用 HTTP、Fabric 或图谱，不读取密钥；李提供四参数模型回调，统一管理模型、预算和执行错误。雷达可继续只载入 <code>models.py</code> 与 <code>assess.py</code>，函数签名保持不变。</p>
-<p><strong>输入背景应明确传入：</strong><code>scope.species / system / disease</code>。材料使用 <code>id、text、source_id、record_id、version、source_group、source_kind、text_level、url</code>；引用只能来自本次允许的材料。<code>allowed_passage_ids</code> 指定选用句子，未提供时使用材料全部段落。</p>
+<p><strong>输入背景应明确传入：</strong><code>scope.species / system / disease</code>。材料使用 <code>id、text、source_id、record_id、version、source_group、source_kind、text_level、url</code>，并可附 <code>pmid、doi</code>；引用只能来自本次允许的材料。<code>allowed_passage_ids</code> 指定选用句子，未提供时使用材料全部段落。</p>
 <div class="table-wrap"><table><thead><tr><th>必须完整保留的结果</th><th>下游用途</th></tr></thead><tbody>
 <tr><td>claims、joins</td><td>区分局部事实与因果衔接；整体 partial 不代表所有局部都没有证据。</td></tr>
 <tr><td>critical_gaps</td><td>保留具体缺口及需核对的证据，供补查和生成时限定结论。</td></tr>
@@ -128,8 +128,46 @@ result = evaluate(case, call_json)
 <p><strong>给潘的现成材料：</strong><a href="examples/partial_handoff.json">examples/partial_handoff.json</a>。其中 <code>case</code> 是实际输入，<code>evaluation</code> 是逐字段复用的 Q005 真实结果，<code>provenance</code> 记录出处，<code>consumer_checks</code> 给出人工写的生成检查对照；不要将整个外层交接对象送入 Case。</p>
 <p>Q005 的 C1、C2、C3 均支持；J2（Akt 参与促轴突作用）支持；J1（ERK 在 Akt 上游的串联关系）未建立，整体 <code>partial</code>。生成应保留培养的小鼠发育期海马神经元这一条件及 J1 缺口，不能改写成“已证实 APRIL→ERK→Akt 串联”。交接对照文字不是新增模型结果或专家金标准。</p>
 </div></details>
+<details id="identity"><summary>PMID、DOI 怎样传入；输入有问题时怎样处理</summary><div class="detail">
+<p><strong>雷达把原件里的明确标识交给 MechEvidence：</strong>材料可新增 <code>pmid</code>、<code>doi</code>，均可省略或为 <code>null</code>。雷达不需要再写一套归组算法；Fabric 适配器也只透传 <code>facts.pmid / facts.doi</code>。这些规则检查格式与一致性，不联网确认文献是否存在。</p>
+<div class="table-wrap"><table><thead><tr><th>输入位置</th><th>接受什么</th><th>怎样处理</th></tr></thead><tbody>
+<tr><td>pmid</td><td>正整数，或没有前导零的正整数字符串，例如 <code>111</code>、<code>"111"</code>。</td><td>布尔、浮点、容器等错误类型由 Pydantic 拒绝；空字符串、零、前导零、<code>PMID:111</code> 等错误格式由身份检查拒绝。</td></tr>
+<tr><td>doi</td><td>完整的裸 DOI，例如 <code>10.1234/Abc)</code>。前缀为 <code>10.</code> 加4至9位数字，斜杠后有非空后缀；不得包含空白、控制字符、尖括号、双引号或反斜杠。</td><td>不接受 DOI URL 或 <code>doi:</code> 前缀。归组时忽略大小写，保留末尾标点。两个结构化字段仅在解析时去掉首尾空白，原始字段不改写。</td></tr>
+<tr><td>source_group / record_id</td><td>完整的 <code>PMID:111</code>、<code>PubMed:111</code>、<code>doi:10.1234/a</code>、裸 DOI，或下列合法官方 URL。兼容 <code>PMID111</code> 和带空格的完整有效标识。</td><td>冒号或斜杠前缀明确声明标识，格式错误会拒绝。普通标签如 <code>PubMed literature search</code> 保留为普通分组，不从自由文本里搜标识。</td></tr>
+<tr><td>source_id + record_id</td><td><code>pubmed + 111</code>；<code>europe_pmc / europepmc + MED:111</code>。</td><td>只在相应来源内解释编号；其他来源的数字、PMC 编号不猜成 PMID。</td></tr>
+<tr><td>url 或完整官方 URL 字段</td><td><code>pubmed.ncbi.nlm.nih.gov/111/</code>；<code>ncbi.nlm.nih.gov/pubmed/111/</code>（可带 www）；<code>europepmc.org/article/MED/111/</code>（可带 www）；<code>doi.org/10.1234/a</code>、<code>dx.doi.org/10.1234/a</code>。</td><td>必须使用 http/https、精确主机名和完整路径；可省略末尾斜杠（PMID 路径），端口只能省略或使用对应协议默认端口。不接受用户信息、控制字符、反斜杠或错误百分号编码。查询参数和 fragment 不作为标识；DOI 路径按 URL 编码解码一次。</td></tr>
+</tbody></table></div>
+<p><strong>同类冲突必须补正：</strong>逐一比较结构化字段、规范标签、来源记录编号和合法 URL 中的 PMID，以及这些位置里的 DOI。例如 <code>source_group=PMID:111</code> 与 <code>pubmed / record_id=222</code> 冲突。所有材料都在第一次模型回调前检查，包括 <code>allowed_passage_ids=[]</code> 的材料；不能先花模型费用再发现输入错误。</p>
+<p>PMID 与 DOI 是不同种类；同条材料可同时提供两者。检查完两种标识各自没有冲突后，以 PMID 作为该材料的论文分组，否则使用 DOI。这<strong>不会建立跨材料的 PMID↔DOI 映射</strong>：另一条只有 DOI 的记录，缺少外部明确映射时不自动并入 PMID 组，也不据此判断跨种类冲突。</p>
+<pre>from pydantic import ValidationError
+from mechevidence import evaluate, IdentityInputError
+
+try:
+    result = evaluate(case, call_json)
+except IdentityInputError as error:
+    result = error.as_dict()  # 交给用户或上游补正输入
+except ValidationError:
+    # Case / Material 的字段类型或结构不合要求；按输入错误处理
+    raise
+
+# 上例 PMID 冲突的 error.as_dict()：
+{
+  "status": "needs_input",
+  "error_code": "material_identity_conflict",
+  "material_id": "材料自己的 id",
+  "identifier_type": "pmid",
+  "fields": {"source_group": "111", "record_id": "222"}
+}</pre>
+<p><code>IdentityInputError</code> 继承 <code>ValueError</code>。<code>error_code</code> 固定为 <code>material_identifier_invalid</code>（明确标识格式错误）或 <code>material_identity_conflict</code>（同类标识矛盾）；<code>identifier_type</code> 为 <code>pmid / doi</code>。<code>fields</code> 是字段名到值的字典：格式错误保留不合法值，冲突列出该种类全部已识别的规范值。先检查完整输入、遇到首个错误就抛出；<code>evaluate</code> 不自动返回这个错误字典，调用方捕获并转换。它不属于科学判断的 <code>insufficient</code>。</p>
+<p><strong>雷达按路径动态载入模块时：</strong>请捕获本次载入的 <code>method.IdentityInputError</code>，不要用另一个命名空间里导入的同名类。单独调用 <code>Case.model_validate</code> 仅完成结构和类型检查；标识格式与冲突检查由 <code>source_identity</code> 或评价前的材料准备完成。现有 <code>evaluate(case, call_json)</code> 签名及正常结果字段不变。</p>
+<p>不合法或非官方 URL 仅不贡献论文标识，例如 <code>https://example.invalid/path/pubmed.ncbi.nlm.nih.gov/333/</code> 不产生 <code>pmid:333</code>；若没有其他已知标识，沿用普通分组、来源记录或文本归组。原 URL、来源、记录、版本和文本仍完整保留。未提供的 <code>pmid / doi</code> 不向旧结果引用里追加空字段；已提供的值原样保留。</p>
+<p><strong>可直接运行的例子：</strong><a href="examples/identity_contract.json">examples/identity_contract.json</a> 覆盖合法输入、冲突、伪 URL 和跨来源同论文对照。文件只用于软件接口验收，不属于医学实验。运行：</p>
+<pre>python -m unittest discover -s tests -p 'test_identity.py' -v</pre>
+<p>本次保留原有25份真实结果，复用已保存的局部与机制审核重新计算，逐字段核对科学判断、分组和引用。没有新增商业模型调用，也没有联网反查身份；强模型对照、删证据对照、失败与误报的解释沿用原有记录。</p>
+</div></details>
+
 <details id="provenance"><summary>论文去重、全文版本和引用位置</summary><div class="detail">
-<p><code>source_group</code> 对文献表示<strong>同一篇论文的记录归组</strong>。PubMed 编号、Europe PMC 的 <code>MED:编号</code>、两站相应 URL 统一为 <code>pmid:编号</code>；已知 PMID 优先于同条材料里的 DOI。其他来源的纯数字编号不会自动当作 PMID。只有 DOI 时保留 DOI；缺少可靠映射时不猜测它对应哪个 PMID。</p>
+<p><code>source_group</code> 对文献表示<strong>同一篇论文的记录归组</strong>。PubMed 编号、Europe PMC 的 <code>MED:编号</code>、两站相应 URL 统一为 <code>pmid:编号</code>；先检查同类标识没有冲突，再以 PMID 归组；存在 PMID 也不能遮住 DOI 冲突。其他来源的纯数字编号不会自动当作 PMID。只有 DOI 时保留 DOI；缺少可靠映射时不猜测它对应哪个 PMID。</p>
 <p>去重保留每条记录自己的 <code>source_id / record_id / version</code> 和实际文本。论文编号不同并不证明队列或实验独立；<code>independent_cohorts</code> 仍为 <code>null</code>。没有文献标识时保守按上游归组、来源记录或同文本归组，也不能把该计数宣传成已确认独立研究数。</p>
 <p><strong>全文有自己的版本。</strong>Q005 使用 <code>europe_pmc_fulltext_supplement / PMC4008386</code> 的9个原始全文段落；通过原记录的 PMID 24444792、PMCID 和 DOI 及 XML 的文章标识对应同一论文。Fabric 摘要版本与补读全文 XML 版本分别保存在交接文件里，二者不互相冒充。原论文和补读片段的范围也不相同，判断只限当前提供材料。</p>
 <p><strong>位置的唯一基准是实际输入字符串：</strong><code>references.start / end</code> 为 <code>case.materials[material_id].text</code> 中的 Unicode 字符位置，采用 <code>[start, end)</code>；不是 XML 字节偏移，也不是 Fabric 摘要偏移。程序从这个字符串回填引用，因此下游必须用同一字符串回读。原 XML 的 section / paragraph 选择位置另见交接文件。</p>

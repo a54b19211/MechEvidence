@@ -1,0 +1,476 @@
+{
+  "description": "离线身份契约用例；不是医学证据或真实模型结果。由 tests/test_identity.py 执行。",
+  "base_material": {
+    "id": "m",
+    "text": "The original material text remains unchanged.",
+    "source_kind": "primary",
+    "text_level": "abstract",
+    "version": "original-v1"
+  },
+  "accepted": [
+    {
+      "name": "explicit PMID string",
+      "fields": {
+        "pmid": "111"
+      },
+      "identity": "pmid:111"
+    },
+    {
+      "name": "explicit PMID integer",
+      "fields": {
+        "pmid": 111
+      },
+      "identity": "pmid:111"
+    },
+    {
+      "name": "explicit DOI case",
+      "fields": {
+        "doi": "10.1234/ABC"
+      },
+      "identity": "doi:10.1234/abc"
+    },
+    {
+      "name": "DOI suffix punctuation retained",
+      "fields": {
+        "doi": "10.1234/A.)"
+      },
+      "identity": "doi:10.1234/a.)"
+    },
+    {
+      "name": "same PMID in all fields",
+      "fields": {
+        "pmid": 111,
+        "source_group": "PMID/111",
+        "source_id": "pubmed",
+        "record_id": "111",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/111/"
+      },
+      "identity": "pmid:111"
+    },
+    {
+      "name": "PMID and DOI coexist without mapping inference",
+      "fields": {
+        "pmid": "111",
+        "doi": "10.1234/unmapped"
+      },
+      "identity": "pmid:111"
+    },
+    {
+      "name": "PubMed numeric record",
+      "fields": {
+        "source_id": "pubmed",
+        "record_id": "111"
+      },
+      "identity": "pmid:111"
+    },
+    {
+      "name": "Europe PMC MED record",
+      "fields": {
+        "source_id": "europe_pmc",
+        "record_id": "MED:111"
+      },
+      "identity": "pmid:111"
+    },
+    {
+      "name": "legacy PMID no separator",
+      "fields": {
+        "source_group": "PMID111"
+      },
+      "identity": "pmid:111"
+    },
+    {
+      "name": "legacy PubMed URL",
+      "fields": {
+        "url": "https://www.ncbi.nlm.nih.gov/pubmed/111/"
+      },
+      "identity": "pmid:111"
+    },
+    {
+      "name": "Europe PMC URL",
+      "fields": {
+        "url": "https://europepmc.org/article/MED/111"
+      },
+      "identity": "pmid:111"
+    },
+    {
+      "name": "DOI resolver URL",
+      "fields": {
+        "url": "https://doi.org/10.1234/ABC"
+      },
+      "identity": "doi:10.1234/abc"
+    },
+    {
+      "name": "legacy DOI URL with encoded suffix",
+      "fields": {
+        "url": "http://dx.doi.org/10.1234/A%29"
+      },
+      "identity": "doi:10.1234/a)"
+    },
+    {
+      "name": "whole source_group official URL",
+      "fields": {
+        "source_group": "https://pubmed.ncbi.nlm.nih.gov/111/"
+      },
+      "identity": "pmid:111"
+    },
+    {
+      "name": "official article URL ignores query and fragment",
+      "fields": {
+        "url": "https://pubmed.ncbi.nlm.nih.gov/111/?pmid=222#333"
+      },
+      "identity": "pmid:111"
+    },
+    {
+      "name": "identical normalized DOIs",
+      "fields": {
+        "doi": "10.1234/ABC",
+        "source_group": "DOI:10.1234/abc",
+        "url": "https://doi.org/10.1234/AbC"
+      },
+      "identity": "doi:10.1234/abc"
+    },
+    {
+      "name": "valid whitespace PMID label",
+      "fields": {
+        "source_group": "PMID 111"
+      },
+      "identity": "pmid:111"
+    },
+    {
+      "name": "valid whitespace DOI label",
+      "fields": {
+        "source_group": "DOI 10.1234/ABC"
+      },
+      "identity": "doi:10.1234/abc"
+    },
+    {
+      "name": "ordinary PubMed group label remains opaque",
+      "fields": {
+        "source_group": "PubMed literature search"
+      },
+      "identity": "group:pubmed literature search"
+    },
+    {
+      "name": "ordinary DOI group label remains opaque",
+      "fields": {
+        "source_group": "DOI analysis batch"
+      },
+      "identity": "group:doi analysis batch"
+    },
+    {
+      "name": "DOI suffix containing scheme punctuation is still a whole DOI",
+      "fields": {
+        "source_group": "10.1234/http://example"
+      },
+      "identity": "doi:10.1234/http://example"
+    }
+  ],
+  "rejected": [
+    {
+      "name": "coordinator PMID conflict",
+      "fields": {
+        "source_group": "PMID:111",
+        "source_id": "pubmed",
+        "record_id": "222"
+      },
+      "identifier_type": "pmid",
+      "error_code": "material_identity_conflict"
+    },
+    {
+      "name": "structured PMID conflicts with official URL",
+      "fields": {
+        "pmid": "111",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/222/"
+      },
+      "identifier_type": "pmid",
+      "error_code": "material_identity_conflict"
+    },
+    {
+      "name": "structured PMID conflicts with Europe PMC",
+      "fields": {
+        "pmid": "111",
+        "source_id": "europe_pmc",
+        "record_id": "MED:222"
+      },
+      "identifier_type": "pmid",
+      "error_code": "material_identity_conflict"
+    },
+    {
+      "name": "structured DOI conflicts with label",
+      "fields": {
+        "doi": "10.1234/a",
+        "source_group": "DOI:10.1234/b"
+      },
+      "identifier_type": "doi",
+      "error_code": "material_identity_conflict"
+    },
+    {
+      "name": "DOI conflict must not hide behind PMID priority",
+      "fields": {
+        "pmid": "111",
+        "doi": "10.1234/a",
+        "url": "https://doi.org/10.1234/b"
+      },
+      "identifier_type": "doi",
+      "error_code": "material_identity_conflict"
+    },
+    {
+      "name": "DOI punctuation is not trimmed into equality",
+      "fields": {
+        "doi": "10.1234/a)",
+        "source_group": "DOI:10.1234/a"
+      },
+      "identifier_type": "doi",
+      "error_code": "material_identity_conflict"
+    },
+    {
+      "name": "nonpositive PMID",
+      "fields": {
+        "pmid": 0
+      },
+      "identifier_type": "pmid",
+      "error_code": "material_identifier_invalid"
+    },
+    {
+      "name": "leading zero PMID",
+      "fields": {
+        "pmid": "0111"
+      },
+      "identifier_type": "pmid",
+      "error_code": "material_identifier_invalid"
+    },
+    {
+      "name": "PMID field is bare identifier",
+      "fields": {
+        "pmid": "PMID:111"
+      },
+      "identifier_type": "pmid",
+      "error_code": "material_identifier_invalid"
+    },
+    {
+      "name": "empty explicit PMID",
+      "fields": {
+        "pmid": ""
+      },
+      "identifier_type": "pmid",
+      "error_code": "material_identifier_invalid"
+    },
+    {
+      "name": "invalid DOI field",
+      "fields": {
+        "doi": "not-a-doi"
+      },
+      "identifier_type": "doi",
+      "error_code": "material_identifier_invalid"
+    },
+    {
+      "name": "DOI field does not contain a resolver URL",
+      "fields": {
+        "doi": "https://doi.org/10.1234/a"
+      },
+      "identifier_type": "doi",
+      "error_code": "material_identifier_invalid"
+    },
+    {
+      "name": "invalid explicitly tagged PMID",
+      "fields": {
+        "source_group": "PMID:111 extra"
+      },
+      "identifier_type": "pmid",
+      "error_code": "material_identifier_invalid"
+    },
+    {
+      "name": "invalid MED record",
+      "fields": {
+        "source_id": "europe_pmc",
+        "record_id": "MED:abc"
+      },
+      "identifier_type": "pmid",
+      "error_code": "material_identifier_invalid"
+    },
+    {
+      "name": "DOI suffix URL-like text cannot hide same-kind conflict",
+      "fields": {
+        "doi": "10.1234/a",
+        "source_group": "DOI:10.1234/http://example"
+      },
+      "identifier_type": "doi",
+      "error_code": "material_identity_conflict"
+    },
+    {
+      "name": "explicit invalid PMID label cannot bypass validation as URL",
+      "fields": {
+        "source_group": "PMID:https://example.invalid"
+      },
+      "identifier_type": "pmid",
+      "error_code": "material_identifier_invalid"
+    }
+  ],
+  "unrecognized": [
+    {
+      "name": "coordinator official-domain text inside foreign path",
+      "fields": {
+        "url": "https://example.invalid/path/pubmed.ncbi.nlm.nih.gov/333/"
+      },
+      "identity_prefix": "text:"
+    },
+    {
+      "name": "official domain inside query",
+      "fields": {
+        "url": "https://example.invalid/?next=https://pubmed.ncbi.nlm.nih.gov/333/"
+      },
+      "identity_prefix": "text:"
+    },
+    {
+      "name": "official domain inside fragment",
+      "fields": {
+        "url": "https://example.invalid/#https://pubmed.ncbi.nlm.nih.gov/333/"
+      },
+      "identity_prefix": "text:"
+    },
+    {
+      "name": "lookalike subdomain",
+      "fields": {
+        "url": "https://pubmed.ncbi.nlm.nih.gov.example.invalid/333/"
+      },
+      "identity_prefix": "text:"
+    },
+    {
+      "name": "official domain as userinfo",
+      "fields": {
+        "url": "https://pubmed.ncbi.nlm.nih.gov@example.invalid/333/"
+      },
+      "identity_prefix": "text:"
+    },
+    {
+      "name": "userinfo on official host is not canonical",
+      "fields": {
+        "url": "https://user@pubmed.ncbi.nlm.nih.gov/333/"
+      },
+      "identity_prefix": "text:"
+    },
+    {
+      "name": "wrong official path",
+      "fields": {
+        "url": "https://pubmed.ncbi.nlm.nih.gov/path/333/"
+      },
+      "identity_prefix": "text:"
+    },
+    {
+      "name": "nondefault official port",
+      "fields": {
+        "url": "https://pubmed.ncbi.nlm.nih.gov:444/333/"
+      },
+      "identity_prefix": "text:"
+    },
+    {
+      "name": "unsupported scheme",
+      "fields": {
+        "url": "ftp://pubmed.ncbi.nlm.nih.gov/333/"
+      },
+      "identity_prefix": "text:"
+    },
+    {
+      "name": "nested DOI URL",
+      "fields": {
+        "url": "https://example.invalid/https://doi.org/10.1234/a"
+      },
+      "identity_prefix": "text:"
+    },
+    {
+      "name": "DOI-shaped foreign path",
+      "fields": {
+        "url": "https://publisher.invalid/10.1234/a"
+      },
+      "identity_prefix": "text:"
+    },
+    {
+      "name": "DOI-shaped foreign record",
+      "fields": {
+        "record_id": "https://publisher.invalid/10.1234/a"
+      },
+      "identity_prefix": "record:"
+    },
+    {
+      "name": "PMID text in opaque group",
+      "fields": {
+        "source_group": "note PMID:111"
+      },
+      "identity_prefix": "group:"
+    },
+    {
+      "name": "DOI text in opaque group",
+      "fields": {
+        "source_group": "note 10.1234/a"
+      },
+      "identity_prefix": "group:"
+    },
+    {
+      "name": "trial number is not PMID",
+      "fields": {
+        "source_id": "chictr",
+        "record_id": "111"
+      },
+      "identity_prefix": "record:"
+    },
+    {
+      "name": "unmapped PMC identifier is not PMID",
+      "fields": {
+        "source_id": "europe_pmc",
+        "record_id": "PMC111"
+      },
+      "identity_prefix": "record:"
+    },
+    {
+      "name": "leading NUL before official URL",
+      "fields": {
+        "url": "\u0000https://pubmed.ncbi.nlm.nih.gov/333/"
+      },
+      "identity_prefix": "text:"
+    },
+    {
+      "name": "invalid DOI URL percent escape",
+      "fields": {
+        "url": "https://doi.org/10.1234/%ZZ"
+      },
+      "identity_prefix": "text:"
+    }
+  ],
+  "pairs": [
+    {
+      "name": "PubMed and Europe PMC same paper",
+      "left": {
+        "pmid": "111",
+        "source_id": "pubmed",
+        "record_id": "111"
+      },
+      "right": {
+        "pmid": "111",
+        "source_id": "europe_pmc",
+        "record_id": "MED:111"
+      },
+      "same_group": true
+    },
+    {
+      "name": "PMID and DOI only have no asserted mapping",
+      "left": {
+        "pmid": "111"
+      },
+      "right": {
+        "doi": "10.1234/a"
+      },
+      "same_group": false
+    },
+    {
+      "name": "coexistence does not create a cross-material alias registry",
+      "left": {
+        "pmid": "111",
+        "doi": "10.1234/a"
+      },
+      "right": {
+        "doi": "10.1234/a"
+      },
+      "same_group": false
+    }
+  ]
+}
