@@ -1,0 +1,1453 @@
+{
+  "description": "Q005：真实论文选段上的候选机制检验。三个局部主张支持，ERK到Akt的串联未建立，整体partial。无新增模型调用，评价逐字段复用保存结果。",
+  "case": {
+    "id": "Q005",
+    "question": "APRIL 的 ERK 激活是否在这些培养神经元中通过进一步激活 Akt 产生促轴突作用？",
+    "mechanism": "APRIL 先激活 ERK，ERK 再激活 Akt，随后促进轴突延长。",
+    "scope": {
+      "species": "mouse",
+      "system": "cultured developing hippocampal pyramidal neurons",
+      "disease": null
+    },
+    "claims": [
+      {
+        "id": "C1",
+        "text": "APRIL activates ERK1/ERK2 in these neurons.",
+        "kind": "causal"
+      },
+      {
+        "id": "C2",
+        "text": "APRIL activates Akt in these neurons.",
+        "kind": "causal"
+      },
+      {
+        "id": "C3",
+        "text": "APRIL enhances axonal elongation in these neurons.",
+        "kind": "causal"
+      }
+    ],
+    "joins": [
+      {
+        "id": "J1",
+        "text": "APRIL-induced ERK activation is upstream of and mediates Akt activation in these neurons.",
+        "claim_ids": [
+          "C1",
+          "C2"
+        ]
+      },
+      {
+        "id": "J2",
+        "text": "Akt signaling contributes to the APRIL-induced axon elongation.",
+        "claim_ids": [
+          "C2",
+          "C3"
+        ]
+      }
+    ],
+    "materials": [
+      {
+        "id": "M1",
+        "text": "To investigate the potential role of APRIL in hippocampal neuron development, we established dissociated cultures from E18 mouse hippocampi, a stage at which the predominant neuron type in these cultures is the pyramidal cell. In agreement with others (Kaech and Banker, 2006; Kaech et al., 2012), the overwhelming majority of cells in these cultures are neurons (98.52% ± 0.22 of the cells are stained with anti-MAP-2 and only 1.48% ± 0.22 of the cells stain with anti-GFAP, which recognizes glial cells).\n\nWe examined the effect of APRIL on axon growth and dendrite growth separately. To investigate whether APRIL affects axon growth, the neurons were transfected with a green fluorescent protein expression plasmid 2 days after plating and were treated with APRIL for 18 h prior to fixation and immunostaining for GFP. The axons of APRIL-treated neurons were clearly longer than those in control cultures (Fig. 3A, B and C). Measurement of axon length revealed highly significant increases in length in cultures supplemented with APRIL compared with control cultures (Fig. 3B) at APRIL concentrations of 10 ng/ml and greater. Based on this dose response analysis, we used 100 ng/ml APRIL in subsequent experiments. Neurons corresponding to the 100th, 75th, 50th and 25th percentiles in terms of axon length for control and APRIL-treated cultures are illustrated in Fig. 3C. In addition to enhancing axonal extension from pyramidal cells in dissociated cultures, APRIL also clearly increased the density and extent or neurite outgrowth from E18 CA1 hippocampal explants after 3 days in culture (Fig. 3D).\n\nAlthough BCMA is clearly expressed by pyramidal cells and TACI is barely detectable, we carried out experiments to formally demonstrate that the effects of APRIL on axon growth are mediated by BCMA by manipulating the function of this receptor in hippocampal neurons cultured with and without APRIL. To do this, we transfected 2-day cultures of E18 neurons with a plasmid vector in which separate promoters drive the expression of GFP and full-length or truncated BCMA proteins. After transfection, the medium was changed to a medium with or without APRIL and the cultures were fixed and immunostained for GFP 18 h later. The extent of axon growth from neurons overexpressing full-length BCMA and grown in the absence of APRIL was comparable to that from neurons treated with APRIL, and the extent of axon growth from BCMA-overexpressing neurons was not further enhanced by APRIL (Fig. 4A and B). The extent of axon growth from neurons expressing a signaling-defective BCMA mutant that is truncated at the 83 residue in the C-terminal (BCMA ΔC83) (Yang et al., 2005) was significantly reduced compared with control cultures, and the expression of truncated BCMA prevented APRIL from promoting axonal elongation. These results suggest that the axon growth-enhancing effect of APRIL is mediated by BCMA.\n\nTo investigate whether MEK/ERK signaling in the MAP kinase cascade contributes to APRIL-promoted axon elongation from hippocampal pyramidal cells, we first tested whether APRIL activates ERK1 and ERK2 in these neurons. In these experiments, we initially cultured E18 pyramidal cells for 3 days before treating them with APRIL. This treatment caused rapid increases in the levels of phospho-ERK1 and phospho-ERK2 within 15 min that remained elevated for at least 60 min (Fig. 5A and B), demonstrating that APRIL causes rapid ERK1/ERK2 activation in the pyramidal cells.\n\nTo ascertain if activation of ERK1 and ERK2 contributes to APRIL-promoted axon growth, we examined whether PD98059, a selective inhibitor of MEK1 and MEK2, the kinases that phosphorylate and activate ERK1 and ERK2 (Touyz et al., 2002), could prevent the APRIL-promoted axon growth. In these experiments, the neurons were transfected with a GFP plasmid 2 days after plating and were then pretreated for 2 h with PD98059 before adding APRIL and quantifying axon length 18 h later. Axons were significantly longer in cultures treated with APRIL alone compared with control cultures, and whereas axon length in cultures that received PD98059 alone was not significantly different from that in control cultures, PD98059 pretreatment prevented the axon growth-enhancing effect of APRIL (Fig. 5C and D). This suggests that MEK/ERK signaling plays a crucial role in mediating the effect of APRIL on axon growth from developing pyramidal cells.\n\nTo test whether PI-3 kinase signaling contributes to APRIL-promoted axon growth, we first examined whether the selective PI-3 kinase inhibitor LY294002 (Vlahos et al., 1994) was able to prevent the APRIL-promoted axon elongation. In these experiments, the neurons were transfected with a GFP plasmid 2 days after plating and were pretreated for 2 h with LY294002 before adding APRIL to the culture medium and quantifying axon length 18 h later. Whereas axon length in cultures that received LY294002 alone was not significantly different from that in control cultures, LY294002 completely prevented the axon growth-enhancing effect of APRIL (Fig. 6A and B). To confirm the results of these pharmacological experiments, we transfected pyramidal cells with a construct that expresses both GFP and a dominant-negative form of the p85α regulatory subunit of PI-3 kinase that lacks the binding domain for the p110 catalytic subunit. The p85α mutant had a small, significant effect on axon extension from neurons not exposed to exogenous APRIL, and completely eliminated the axon growth-enhancing effect of exogenous APRIL (Fig. 6C and D). Taken together, these results suggest that PI3-kinase signaling is required for the effect of APRIL on axon growth.\n\nTo determine the involvement of Akt signaling in APRIL-promoted axon growth, we first investigated whether APRIL treatment activates Akt. E18 pyramidal cells were initially cultured for 3 days prior to APRIL treatment. Western analysis showed that APRIL caused a rapid increase in the level phospho-Akt within 15 min, reaching a peak 30 min after APRIL addition. The level of phospho-Akt remained significantly elevated in APRIL-treated cultures for at least 60 min (Fig. 7A and B). To test whether Akt signaling contributes to APRIL-promoted axon growth, we first examined whether a selective dual Akt1/Akt2 kinase inhibitor (Zhao et al., 2008) was able to prevent the increase in axon elongation promoted by APRIL. E18 pyramidal cells were transfected with pGFP 2 days after plating and were pretreated for 2 h with the Akt1/Akt2 inhibitor before adding APRIL to the culture medium and quantifying the axon length 18 h later. Whereas axon length in cultures that received the Akt1/Akt2 inhibitor alone was not significantly different from that in control cultures, the Akt1/Akt2 inhibitor completely prevented the axon growth-enhancing effect of APRIL (Fig. 7C and D). As further confirmation of these results, we transfected pyramidal cells with a plasmid that expresses both GFP and an Akt construct with loss-of-function mutations in its active site. Expression of the Akt mutant had no significant effect on axon extension in the absence of exogenous APRIL, and completely eliminated the axon growth-enhancing effect of exogenous APRIL (Fig. 7E and F). Taken together, these results suggest that Akt signaling is required for the effect of APRIL on axon growth.\n\nGlycogen synthase kinase-3 (GSK-3) proteins are among the many substrates of Akt kinases, and have been implicated in the regulation of multiple aspects of neural development (Hur and Zhou, 2010), including the control of axon growth from developing sensory and hippocampal neurons (Kim et al., 2006; Zhou et al., 2004). The two isoforms of GSK-3, GSK-3α and GSK-3β, can be phosphorylated on serine-21 and serine-9, respectively, by Akt kinases (Cross et al., 1995). This results in inactivation of GSK-3, and several studies suggest that inactivated GSK-3 promotes axon elongation from cultured sensory and hippocampal neurons by regulating the molecular machinery that controls actin rearrangement and microtubule assembly (Kim et al., 2006; Kumar et al., 2009; Namekata et al., 2012; Yoshimura et al., 2005; Zhou et al., 2004). To determine if treating hippocampal neurons with APRIL leads to GSK-3 phosphorylation, we cultured E18 pyramidal cells for 3 days before treating them with APRIL. Western blot analysis revealed that APRIL caused a rapid increase in the phosphorylation of phospho-S9 GSK-3β that was sustained for at least 60 min (Fig. 8A and B), but caused no change in the level of phospho-S21 GSK-3α.\n\nTo evaluate the participation of GSK-3β in the axon growth-promoting effects of APRIL, we studied the effect of expressing a constitutively active form of GSK-3β in hippocampal neurons. Neurons that were transfected with a construct that expresses GFP together with a constitutively active GSK-3β protein (GSK-3β S9A) extended axons that were not significantly different in length from those transfected with a GFP-expressing construct. However, expression of the GSK3β S9A mutant completely eliminated the axon growth-enhancing effect of APRIL (Fig. 8C and D). These results suggest that the effect of APRIL on axon growth is mediated by GSK-3β inactivation.",
+        "source_id": "europe_pmc_fulltext_supplement",
+        "record_id": "PMC4008386",
+        "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+        "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+        "source_group": "PMID:24444792",
+        "source_kind": "primary",
+        "text_level": "selected_passages",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/"
+      }
+    ]
+  },
+  "evaluation": {
+    "case_id": "Q005",
+    "question": "APRIL 的 ERK 激活是否在这些培养神经元中通过进一步激活 Akt 产生促轴突作用？",
+    "mechanism": "APRIL 先激活 ERK，ERK 再激活 Akt，随后促进轴突延长。",
+    "scope": {
+      "species": "mouse",
+      "system": "cultured developing hippocampal pyramidal neurons",
+      "disease": null
+    },
+    "overall": {
+      "verdict": "partial",
+      "rationale": "部分义务获得适用支持；整体机制仍有覆盖、衔接或相反结果问题。现有证据分别支持：APRIL 在这些培养锥体神经元中快速激活 ERK1/ERK2（L1）和 Akt（L2），并增强轴突伸长（L3）；MEK/ERK、PI3K 和 Akt 信号均被证明对 APRIL 的促轴突生长是必需的（L4-L6, M1）。但没有任何实验直接检验 APRIL 诱导的 ERK 激活是否位于 Akt 激活上游并介导 Akt 激活（J1）。因此，虽然 Akt 对 APRIL 促轴突生长的作用（J2）已直接验证，但整个候选机制所要求的 ERK→Akt 顺序因果关系尚未建立，故只能判定为 compatible_only。",
+      "valid_witness_ids": [],
+      "has_comparable_conflict": false,
+      "has_unresolved_counterevidence": false
+    },
+    "claims": [
+      {
+        "id": "C1",
+        "text": "APRIL activates ERK1/ERK2 in these neurons.",
+        "kind": "causal",
+        "verdict": "supported",
+        "supporting_observation_ids": [
+          "L1"
+        ],
+        "opposing_observation_ids": [],
+        "compatible_observation_ids": [],
+        "applicability_gaps": [],
+        "distinct_supporting_source_groups": [
+          "pmid:24444792"
+        ]
+      },
+      {
+        "id": "C2",
+        "text": "APRIL activates Akt in these neurons.",
+        "kind": "causal",
+        "verdict": "supported",
+        "supporting_observation_ids": [
+          "L2",
+          "M1"
+        ],
+        "opposing_observation_ids": [],
+        "compatible_observation_ids": [],
+        "applicability_gaps": [],
+        "distinct_supporting_source_groups": [
+          "pmid:24444792"
+        ]
+      },
+      {
+        "id": "C3",
+        "text": "APRIL enhances axonal elongation in these neurons.",
+        "kind": "causal",
+        "verdict": "supported",
+        "supporting_observation_ids": [
+          "L3",
+          "L4",
+          "L5",
+          "L6",
+          "M1"
+        ],
+        "opposing_observation_ids": [],
+        "compatible_observation_ids": [],
+        "applicability_gaps": [],
+        "distinct_supporting_source_groups": [
+          "pmid:24444792"
+        ]
+      }
+    ],
+    "joins": [
+      {
+        "id": "J1",
+        "text": "APRIL-induced ERK activation is upstream of and mediates Akt activation in these neurons.",
+        "claim_ids": [
+          "C1",
+          "C2"
+        ],
+        "verdict": "unestablished",
+        "supporting_observation_ids": [],
+        "opposing_observation_ids": [],
+        "compatible_observation_ids": [],
+        "applicability_gaps": [],
+        "distinct_supporting_source_groups": []
+      },
+      {
+        "id": "J2",
+        "text": "Akt signaling contributes to the APRIL-induced axon elongation.",
+        "claim_ids": [
+          "C2",
+          "C3"
+        ],
+        "verdict": "supported",
+        "supporting_observation_ids": [
+          "M1"
+        ],
+        "opposing_observation_ids": [],
+        "compatible_observation_ids": [],
+        "applicability_gaps": [],
+        "distinct_supporting_source_groups": [
+          "pmid:24444792"
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "id": "L1",
+        "claim_ids": [
+          "C1"
+        ],
+        "join_ids": [],
+        "relation": "supports",
+        "basis": "intervention",
+        "causal_test": "established",
+        "passage_ids": [
+          "M1:P021",
+          "M1:P022",
+          "M1:P023",
+          "M1:P024"
+        ],
+        "context": {
+          "species": "mouse",
+          "system": "cultured developing hippocampal pyramidal neurons",
+          "disease": null
+        },
+        "applicability": {
+          "species": "matched",
+          "system": "matched",
+          "disease": "not_required"
+        },
+        "rationale": "该实验在 E18 小鼠海马锥体细胞培养 3 天后给予 APRIL，发现 APRIL 处理 15 分钟内快速升高 phospho-ERK1 和 phospho-ERK2 水平，并至少维持 60 分钟；文本明确结论为 APRIL 引起这些锥体细胞快速的 ERK1/ERK2 激活。",
+        "limitations": [
+          "仅选段文本，未展示 Western blot 定量图和统计细节",
+          "磷酸化水平升高虽直接检测 ERK 激活，但不能单独确立 ERK 与 Akt 之间的上下游关系"
+        ],
+        "effective_applicability": "matched",
+        "causal_evidence_eligible": true,
+        "source_groups": [
+          "pmid:24444792"
+        ],
+        "references": [
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P021",
+            "material_id": "M1",
+            "start": 2911,
+            "end": 3129,
+            "text": "To investigate whether MEK/ERK signaling in the MAP kinase cascade contributes to APRIL-promoted axon elongation from hippocampal pyramidal cells, we first tested whether APRIL activates ERK1 and ERK2 in these neurons."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P022",
+            "material_id": "M1",
+            "start": 3130,
+            "end": 3237,
+            "text": "In these experiments, we initially cultured E18 pyramidal cells for 3 days before treating them with APRIL."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P023",
+            "material_id": "M1",
+            "start": 3238,
+            "end": 3385,
+            "text": "This treatment caused rapid increases in the levels of phospho-ERK1 and phospho-ERK2 within 15 min that remained elevated for at least 60 min (Fig."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P024",
+            "material_id": "M1",
+            "start": 3386,
+            "end": 3479,
+            "text": "5A and B), demonstrating that APRIL causes rapid ERK1/ERK2 activation in the pyramidal cells."
+          }
+        ]
+      },
+      {
+        "id": "L2",
+        "claim_ids": [
+          "C2"
+        ],
+        "join_ids": [],
+        "relation": "supports",
+        "basis": "intervention",
+        "causal_test": "established",
+        "passage_ids": [
+          "M1:P038",
+          "M1:P039",
+          "M1:P040",
+          "M1:P041",
+          "M1:P042"
+        ],
+        "context": {
+          "species": "mouse",
+          "system": "cultured developing hippocampal pyramidal neurons",
+          "disease": null
+        },
+        "applicability": {
+          "species": "matched",
+          "system": "matched",
+          "disease": "not_required"
+        },
+        "rationale": "E18 小鼠海马锥体细胞培养 3 天后接受 APRIL 处理，Western 分析显示 APRIL 在 15 分钟内快速升高 phospho-Akt，30 分钟达峰并至少维持 60 分钟；该结果直接支持 APRIL 在这些神经元中激活 Akt。",
+        "limitations": [
+          "仅选段文本，未展示定量图和统计细节",
+          "Akt 磷酸化升高不能单独说明其上游由 ERK 介导"
+        ],
+        "effective_applicability": "matched",
+        "causal_evidence_eligible": true,
+        "source_groups": [
+          "pmid:24444792"
+        ],
+        "references": [
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P038",
+            "material_id": "M1",
+            "start": 5669,
+            "end": 5806,
+            "text": "To determine the involvement of Akt signaling in APRIL-promoted axon growth, we first investigated whether APRIL treatment activates Akt."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P039",
+            "material_id": "M1",
+            "start": 5807,
+            "end": 5887,
+            "text": "E18 pyramidal cells were initially cultured for 3 days prior to APRIL treatment."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P040",
+            "material_id": "M1",
+            "start": 5888,
+            "end": 6031,
+            "text": "Western analysis showed that APRIL caused a rapid increase in the level phospho-Akt within 15 min, reaching a peak 30 min after APRIL addition."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P041",
+            "material_id": "M1",
+            "start": 6032,
+            "end": 6140,
+            "text": "The level of phospho-Akt remained significantly elevated in APRIL-treated cultures for at least 60 min (Fig."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P042",
+            "material_id": "M1",
+            "start": 6141,
+            "end": 6151,
+            "text": "7A and B)."
+          }
+        ]
+      },
+      {
+        "id": "L3",
+        "claim_ids": [
+          "C3"
+        ],
+        "join_ids": [],
+        "relation": "supports",
+        "basis": "intervention",
+        "causal_test": "established",
+        "passage_ids": [
+          "M1:P004",
+          "M1:P005",
+          "M1:P007",
+          "M1:P008"
+        ],
+        "context": {
+          "species": "mouse",
+          "system": "cultured developing hippocampal pyramidal neurons",
+          "disease": null
+        },
+        "applicability": {
+          "species": "matched",
+          "system": "matched",
+          "disease": "not_required"
+        },
+        "rationale": "在 E18 小鼠海马锥体细胞培养中，APRIL 处理组的轴突明显长于对照组，轴突长度测量显示 10 ng/ml 及以上 APRIL 浓度引起高度显著的轴突延长；该结果直接支持 APRIL 增强这些神经元的轴突伸长。",
+        "limitations": [
+          "仅选段文本，未展示完整轴突长度数据和统计细节"
+        ],
+        "effective_applicability": "matched",
+        "causal_evidence_eligible": true,
+        "source_groups": [
+          "pmid:24444792"
+        ],
+        "references": [
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P004",
+            "material_id": "M1",
+            "start": 587,
+            "end": 821,
+            "text": "To investigate whether APRIL affects axon growth, the neurons were transfected with a green fluorescent protein expression plasmid 2 days after plating and were treated with APRIL for 18 h prior to fixation and immunostaining for GFP."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P005",
+            "material_id": "M1",
+            "start": 822,
+            "end": 913,
+            "text": "The axons of APRIL-treated neurons were clearly longer than those in control cultures (Fig."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P007",
+            "material_id": "M1",
+            "start": 928,
+            "end": 1075,
+            "text": "Measurement of axon length revealed highly significant increases in length in cultures supplemented with APRIL compared with control cultures (Fig."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P008",
+            "material_id": "M1",
+            "start": 1076,
+            "end": 1128,
+            "text": "3B) at APRIL concentrations of 10 ng/ml and greater."
+          }
+        ]
+      },
+      {
+        "id": "L4",
+        "claim_ids": [
+          "C3"
+        ],
+        "join_ids": [],
+        "relation": "supports",
+        "basis": "intervention",
+        "causal_test": "established",
+        "passage_ids": [
+          "M1:P025",
+          "M1:P026",
+          "M1:P027",
+          "M1:P028",
+          "M1:P029"
+        ],
+        "context": {
+          "species": "mouse",
+          "system": "cultured developing hippocampal pyramidal neurons",
+          "disease": null
+        },
+        "applicability": {
+          "species": "matched",
+          "system": "matched",
+          "disease": "not_required"
+        },
+        "rationale": "在 E18 小鼠海马锥体细胞中，MEK1/2 抑制剂 PD98059 预处理阻断了 APRIL 的促轴突生长作用，而单独 PD98059 与对照无显著差异；该实验既显示 APRIL 单独处理促进轴突延长，也证明 MEK/ERK 信号对 APRIL 促轴突生长是必需的。",
+        "limitations": [
+          "该结果证明 MEK/ERK 参与轴突生长效应，但未测试 ERK 是否通过 Akt 发挥作用"
+        ],
+        "effective_applicability": "matched",
+        "causal_evidence_eligible": true,
+        "source_groups": [
+          "pmid:24444792"
+        ],
+        "references": [
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P025",
+            "material_id": "M1",
+            "start": 3481,
+            "end": 3762,
+            "text": "To ascertain if activation of ERK1 and ERK2 contributes to APRIL-promoted axon growth, we examined whether PD98059, a selective inhibitor of MEK1 and MEK2, the kinases that phosphorylate and activate ERK1 and ERK2 (Touyz et al., 2002), could prevent the APRIL-promoted axon growth."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P026",
+            "material_id": "M1",
+            "start": 3763,
+            "end": 3959,
+            "text": "In these experiments, the neurons were transfected with a GFP plasmid 2 days after plating and were then pretreated for 2 h with PD98059 before adding APRIL and quantifying axon length 18 h later."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P027",
+            "material_id": "M1",
+            "start": 3960,
+            "end": 4266,
+            "text": "Axons were significantly longer in cultures treated with APRIL alone compared with control cultures, and whereas axon length in cultures that received PD98059 alone was not significantly different from that in control cultures, PD98059 pretreatment prevented the axon growth-enhancing effect of APRIL (Fig."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P028",
+            "material_id": "M1",
+            "start": 4267,
+            "end": 4277,
+            "text": "5C and D)."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P029",
+            "material_id": "M1",
+            "start": 4278,
+            "end": 4416,
+            "text": "This suggests that MEK/ERK signaling plays a crucial role in mediating the effect of APRIL on axon growth from developing pyramidal cells."
+          }
+        ]
+      },
+      {
+        "id": "L5",
+        "claim_ids": [
+          "C3"
+        ],
+        "join_ids": [],
+        "relation": "supports",
+        "basis": "intervention",
+        "causal_test": "established",
+        "passage_ids": [
+          "M1:P030",
+          "M1:P031",
+          "M1:P032",
+          "M1:P034",
+          "M1:P035",
+          "M1:P037"
+        ],
+        "context": {
+          "species": "mouse",
+          "system": "cultured developing hippocampal pyramidal neurons",
+          "disease": null
+        },
+        "applicability": {
+          "species": "matched",
+          "system": "matched",
+          "disease": "not_required"
+        },
+        "rationale": "在 E18 小鼠海马锥体细胞中，PI3K 抑制剂 LY294002 和显性负性 p85α 均阻断了 APRIL 的促轴突生长作用；该结果支持 PI3K 信号对 APRIL 促轴突生长是必需的。",
+        "limitations": [
+          "该结果证明 PI3K 参与，但未直接检验 ERK 与 Akt 之间的顺序关系"
+        ],
+        "effective_applicability": "matched",
+        "causal_evidence_eligible": true,
+        "source_groups": [
+          "pmid:24444792"
+        ],
+        "references": [
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P030",
+            "material_id": "M1",
+            "start": 4418,
+            "end": 4647,
+            "text": "To test whether PI-3 kinase signaling contributes to APRIL-promoted axon growth, we first examined whether the selective PI-3 kinase inhibitor LY294002 (Vlahos et al., 1994) was able to prevent the APRIL-promoted axon elongation."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P031",
+            "material_id": "M1",
+            "start": 4648,
+            "end": 4862,
+            "text": "In these experiments, the neurons were transfected with a GFP plasmid 2 days after plating and were pretreated for 2 h with LY294002 before adding APRIL to the culture medium and quantifying axon length 18 h later."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P032",
+            "material_id": "M1",
+            "start": 4863,
+            "end": 5064,
+            "text": "Whereas axon length in cultures that received LY294002 alone was not significantly different from that in control cultures, LY294002 completely prevented the axon growth-enhancing effect of APRIL (Fig."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P034",
+            "material_id": "M1",
+            "start": 5076,
+            "end": 5345,
+            "text": "To confirm the results of these pharmacological experiments, we transfected pyramidal cells with a construct that expresses both GFP and a dominant-negative form of the p85α regulatory subunit of PI-3 kinase that lacks the binding domain for the p110 catalytic subunit."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P035",
+            "material_id": "M1",
+            "start": 5346,
+            "end": 5540,
+            "text": "The p85α mutant had a small, significant effect on axon extension from neurons not exposed to exogenous APRIL, and completely eliminated the axon growth-enhancing effect of exogenous APRIL (Fig."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P037",
+            "material_id": "M1",
+            "start": 5552,
+            "end": 5667,
+            "text": "Taken together, these results suggest that PI3-kinase signaling is required for the effect of APRIL on axon growth."
+          }
+        ]
+      },
+      {
+        "id": "L6",
+        "claim_ids": [
+          "C3"
+        ],
+        "join_ids": [],
+        "relation": "supports",
+        "basis": "intervention",
+        "causal_test": "established",
+        "passage_ids": [
+          "M1:P043",
+          "M1:P044",
+          "M1:P045",
+          "M1:P047",
+          "M1:P048",
+          "M1:P050"
+        ],
+        "context": {
+          "species": "mouse",
+          "system": "cultured developing hippocampal pyramidal neurons",
+          "disease": null
+        },
+        "applicability": {
+          "species": "matched",
+          "system": "matched",
+          "disease": "not_required"
+        },
+        "rationale": "在 E18 小鼠海马锥体细胞中，选择性 Akt1/Akt2 抑制剂和功能缺失型 Akt 突变体均完全消除了 APRIL 的促轴突生长作用；该结果支持 Akt 信号对 APRIL 促轴突生长是必需的。",
+        "limitations": [
+          "该结果证明 Akt 参与轴突生长效应，但未证明 Akt 的激活由 ERK 介导"
+        ],
+        "effective_applicability": "matched",
+        "causal_evidence_eligible": true,
+        "source_groups": [
+          "pmid:24444792"
+        ],
+        "references": [
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P043",
+            "material_id": "M1",
+            "start": 6152,
+            "end": 6385,
+            "text": "To test whether Akt signaling contributes to APRIL-promoted axon growth, we first examined whether a selective dual Akt1/Akt2 kinase inhibitor (Zhao et al., 2008) was able to prevent the increase in axon elongation promoted by APRIL."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P044",
+            "material_id": "M1",
+            "start": 6386,
+            "end": 6596,
+            "text": "E18 pyramidal cells were transfected with pGFP 2 days after plating and were pretreated for 2 h with the Akt1/Akt2 inhibitor before adding APRIL to the culture medium and quantifying the axon length 18 h later."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P045",
+            "material_id": "M1",
+            "start": 6597,
+            "end": 6828,
+            "text": "Whereas axon length in cultures that received the Akt1/Akt2 inhibitor alone was not significantly different from that in control cultures, the Akt1/Akt2 inhibitor completely prevented the axon growth-enhancing effect of APRIL (Fig."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P047",
+            "material_id": "M1",
+            "start": 6840,
+            "end": 7024,
+            "text": "As further confirmation of these results, we transfected pyramidal cells with a plasmid that expresses both GFP and an Akt construct with loss-of-function mutations in its active site."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P048",
+            "material_id": "M1",
+            "start": 7025,
+            "end": 7216,
+            "text": "Expression of the Akt mutant had no significant effect on axon extension in the absence of exogenous APRIL, and completely eliminated the axon growth-enhancing effect of exogenous APRIL (Fig."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P050",
+            "material_id": "M1",
+            "start": 7228,
+            "end": 7336,
+            "text": "Taken together, these results suggest that Akt signaling is required for the effect of APRIL on axon growth."
+          }
+        ]
+      },
+      {
+        "id": "M1",
+        "claim_ids": [
+          "C2",
+          "C3"
+        ],
+        "join_ids": [
+          "J2"
+        ],
+        "relation": "supports",
+        "basis": "intervention",
+        "causal_test": "established",
+        "passage_ids": [
+          "M1:P043",
+          "M1:P044",
+          "M1:P045",
+          "M1:P047",
+          "M1:P048",
+          "M1:P050"
+        ],
+        "context": {
+          "species": "mouse",
+          "system": "cultured developing hippocampal pyramidal neurons",
+          "disease": null
+        },
+        "applicability": {
+          "species": "matched",
+          "system": "matched",
+          "disease": "not_required"
+        },
+        "rationale": "该实验在 E18 小鼠海马锥体细胞培养中，用选择性 Akt1/Akt2 抑制剂或功能缺失型 Akt 突变体阻断 Akt 信号，再给予 APRIL，发现 Akt 抑制剂或 Akt 突变体完全阻止 APRIL 的促轴突延长作用，而单独抑制 Akt 与对照无显著差异；这直接检验了 Akt 信号在 APRIL 促轴突生长中的因果贡献，支持 J2。",
+        "limitations": [
+          "该干预实验证明 Akt 对 APRIL 促轴突生长是必需的，但未在此实验中检测 APRIL 是否通过 ERK 激活 Akt",
+          "选段文本未展示完整免疫印迹或轴突长度定量统计图"
+        ],
+        "effective_applicability": "matched",
+        "causal_evidence_eligible": true,
+        "source_groups": [
+          "pmid:24444792"
+        ],
+        "references": [
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P043",
+            "material_id": "M1",
+            "start": 6152,
+            "end": 6385,
+            "text": "To test whether Akt signaling contributes to APRIL-promoted axon growth, we first examined whether a selective dual Akt1/Akt2 kinase inhibitor (Zhao et al., 2008) was able to prevent the increase in axon elongation promoted by APRIL."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P044",
+            "material_id": "M1",
+            "start": 6386,
+            "end": 6596,
+            "text": "E18 pyramidal cells were transfected with pGFP 2 days after plating and were pretreated for 2 h with the Akt1/Akt2 inhibitor before adding APRIL to the culture medium and quantifying the axon length 18 h later."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P045",
+            "material_id": "M1",
+            "start": 6597,
+            "end": 6828,
+            "text": "Whereas axon length in cultures that received the Akt1/Akt2 inhibitor alone was not significantly different from that in control cultures, the Akt1/Akt2 inhibitor completely prevented the axon growth-enhancing effect of APRIL (Fig."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P047",
+            "material_id": "M1",
+            "start": 6840,
+            "end": 7024,
+            "text": "As further confirmation of these results, we transfected pyramidal cells with a plasmid that expresses both GFP and an Akt construct with loss-of-function mutations in its active site."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P048",
+            "material_id": "M1",
+            "start": 7025,
+            "end": 7216,
+            "text": "Expression of the Akt mutant had no significant effect on axon extension in the absence of exogenous APRIL, and completely eliminated the axon growth-enhancing effect of exogenous APRIL (Fig."
+          },
+          {
+            "source_id": "europe_pmc_fulltext_supplement",
+            "record_id": "PMC4008386",
+            "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "pmid:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4008386/",
+            "id": "M1:P050",
+            "material_id": "M1",
+            "start": 7228,
+            "end": 7336,
+            "text": "Taken together, these results suggest that Akt signaling is required for the effect of APRIL on axon growth."
+          }
+        ]
+      }
+    ],
+    "witnesses": [],
+    "conflicts": [],
+    "unresolved_counterevidence": [],
+    "critical_gaps": [
+      {
+        "claim_ids": [
+          "C1",
+          "C2"
+        ],
+        "join_ids": [
+          "J1"
+        ],
+        "reason": "现有证据分别显示 APRIL 可激活 ERK 和 Akt，且 ERK 或 Akt 被抑制均可阻断 APRIL 的促轴突生长作用；但没有一个实验在阻断 ERK/MEK 后检测 APRIL 诱导的 Akt 磷酸化，或在干扰 Akt 后检测 ERK 磷酸化，因此无法证明 ERK 是 Akt 的上游并介导其激活。",
+        "missing_experiment": "在培养的小鼠发育中海马锥体神经元中，用 MEK/ERK 抑制剂（如 PD98059）或 ERK 敲低/显性负性处理，检测 APRIL 诱导的 Akt 磷酸化是否被抑制；并在抑制 ERK 的同时组成型激活 Akt，观察是否能恢复 APRIL 的促轴突延长；或进行时间过程与救援实验以直接验证 ERK→Akt 的上下游顺序。"
+      }
+    ],
+    "material_assessability": {
+      "status": "limited",
+      "material_count": 1,
+      "passage_count": 61,
+      "source_groups": [
+        "pmid:24444792"
+      ],
+      "source_kinds": [
+        "primary"
+      ],
+      "text_levels": [
+        "selected_passages"
+      ],
+      "limitations": [
+        "选取段落不能证明已覆盖原报告的全部相关结果。"
+      ]
+    },
+    "independence": {
+      "distinct_source_groups": 1,
+      "independent_cohorts": null,
+      "note": "来源去重不等于确认队列或实验相互独立。"
+    },
+    "settings": {
+      "use_context": true,
+      "use_joins": true,
+      "deduplicate": true
+    },
+    "local_review": {
+      "observations": [
+        {
+          "id": "L1",
+          "claim_ids": [
+            "C1"
+          ],
+          "join_ids": [],
+          "relation": "supports",
+          "basis": "intervention",
+          "causal_test": "established",
+          "passage_ids": [
+            "M1:P021",
+            "M1:P022",
+            "M1:P023",
+            "M1:P024"
+          ],
+          "context": {
+            "species": "mouse",
+            "system": "cultured developing hippocampal pyramidal neurons",
+            "disease": null
+          },
+          "applicability": {
+            "species": "matched",
+            "system": "matched",
+            "disease": "not_required"
+          },
+          "rationale": "该实验在 E18 小鼠海马锥体细胞培养 3 天后给予 APRIL，发现 APRIL 处理 15 分钟内快速升高 phospho-ERK1 和 phospho-ERK2 水平，并至少维持 60 分钟；文本明确结论为 APRIL 引起这些锥体细胞快速的 ERK1/ERK2 激活。",
+          "limitations": [
+            "仅选段文本，未展示 Western blot 定量图和统计细节",
+            "磷酸化水平升高虽直接检测 ERK 激活，但不能单独确立 ERK 与 Akt 之间的上下游关系"
+          ]
+        },
+        {
+          "id": "L2",
+          "claim_ids": [
+            "C2"
+          ],
+          "join_ids": [],
+          "relation": "supports",
+          "basis": "intervention",
+          "causal_test": "established",
+          "passage_ids": [
+            "M1:P038",
+            "M1:P039",
+            "M1:P040",
+            "M1:P041",
+            "M1:P042"
+          ],
+          "context": {
+            "species": "mouse",
+            "system": "cultured developing hippocampal pyramidal neurons",
+            "disease": null
+          },
+          "applicability": {
+            "species": "matched",
+            "system": "matched",
+            "disease": "not_required"
+          },
+          "rationale": "E18 小鼠海马锥体细胞培养 3 天后接受 APRIL 处理，Western 分析显示 APRIL 在 15 分钟内快速升高 phospho-Akt，30 分钟达峰并至少维持 60 分钟；该结果直接支持 APRIL 在这些神经元中激活 Akt。",
+          "limitations": [
+            "仅选段文本，未展示定量图和统计细节",
+            "Akt 磷酸化升高不能单独说明其上游由 ERK 介导"
+          ]
+        },
+        {
+          "id": "L3",
+          "claim_ids": [
+            "C3"
+          ],
+          "join_ids": [],
+          "relation": "supports",
+          "basis": "intervention",
+          "causal_test": "established",
+          "passage_ids": [
+            "M1:P004",
+            "M1:P005",
+            "M1:P007",
+            "M1:P008"
+          ],
+          "context": {
+            "species": "mouse",
+            "system": "cultured developing hippocampal pyramidal neurons",
+            "disease": null
+          },
+          "applicability": {
+            "species": "matched",
+            "system": "matched",
+            "disease": "not_required"
+          },
+          "rationale": "在 E18 小鼠海马锥体细胞培养中，APRIL 处理组的轴突明显长于对照组，轴突长度测量显示 10 ng/ml 及以上 APRIL 浓度引起高度显著的轴突延长；该结果直接支持 APRIL 增强这些神经元的轴突伸长。",
+          "limitations": [
+            "仅选段文本，未展示完整轴突长度数据和统计细节"
+          ]
+        },
+        {
+          "id": "L4",
+          "claim_ids": [
+            "C3"
+          ],
+          "join_ids": [],
+          "relation": "supports",
+          "basis": "intervention",
+          "causal_test": "established",
+          "passage_ids": [
+            "M1:P025",
+            "M1:P026",
+            "M1:P027",
+            "M1:P028",
+            "M1:P029"
+          ],
+          "context": {
+            "species": "mouse",
+            "system": "cultured developing hippocampal pyramidal neurons",
+            "disease": null
+          },
+          "applicability": {
+            "species": "matched",
+            "system": "matched",
+            "disease": "not_required"
+          },
+          "rationale": "在 E18 小鼠海马锥体细胞中，MEK1/2 抑制剂 PD98059 预处理阻断了 APRIL 的促轴突生长作用，而单独 PD98059 与对照无显著差异；该实验既显示 APRIL 单独处理促进轴突延长，也证明 MEK/ERK 信号对 APRIL 促轴突生长是必需的。",
+          "limitations": [
+            "该结果证明 MEK/ERK 参与轴突生长效应，但未测试 ERK 是否通过 Akt 发挥作用"
+          ]
+        },
+        {
+          "id": "L5",
+          "claim_ids": [
+            "C3"
+          ],
+          "join_ids": [],
+          "relation": "supports",
+          "basis": "intervention",
+          "causal_test": "established",
+          "passage_ids": [
+            "M1:P030",
+            "M1:P031",
+            "M1:P032",
+            "M1:P034",
+            "M1:P035",
+            "M1:P037"
+          ],
+          "context": {
+            "species": "mouse",
+            "system": "cultured developing hippocampal pyramidal neurons",
+            "disease": null
+          },
+          "applicability": {
+            "species": "matched",
+            "system": "matched",
+            "disease": "not_required"
+          },
+          "rationale": "在 E18 小鼠海马锥体细胞中，PI3K 抑制剂 LY294002 和显性负性 p85α 均阻断了 APRIL 的促轴突生长作用；该结果支持 PI3K 信号对 APRIL 促轴突生长是必需的。",
+          "limitations": [
+            "该结果证明 PI3K 参与，但未直接检验 ERK 与 Akt 之间的顺序关系"
+          ]
+        },
+        {
+          "id": "L6",
+          "claim_ids": [
+            "C3"
+          ],
+          "join_ids": [],
+          "relation": "supports",
+          "basis": "intervention",
+          "causal_test": "established",
+          "passage_ids": [
+            "M1:P043",
+            "M1:P044",
+            "M1:P045",
+            "M1:P047",
+            "M1:P048",
+            "M1:P050"
+          ],
+          "context": {
+            "species": "mouse",
+            "system": "cultured developing hippocampal pyramidal neurons",
+            "disease": null
+          },
+          "applicability": {
+            "species": "matched",
+            "system": "matched",
+            "disease": "not_required"
+          },
+          "rationale": "在 E18 小鼠海马锥体细胞中，选择性 Akt1/Akt2 抑制剂和功能缺失型 Akt 突变体均完全消除了 APRIL 的促轴突生长作用；该结果支持 Akt 信号对 APRIL 促轴突生长是必需的。",
+          "limitations": [
+            "该结果证明 Akt 参与轴突生长效应，但未证明 Akt 的激活由 ERK 介导"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "claim_ids": [
+            "C1",
+            "C2",
+            "C3"
+          ],
+          "join_ids": [],
+          "reason": "现有证据分别显示 APRIL 可激活 ERK 和 Akt，且 ERK 或 Akt 被抑制均可阻断 APRIL 的促轴突生长作用；但没有任何实验直接检验 ERK 是否位于 Akt 上游并负责激活 Akt。因此无法区分 ERK 和 Akt 是同一线性通路（ERK→Akt）还是两条平行通路，也无法确定时间先后或因果关系。",
+          "missing_experiment": "在培养的小鼠发育中海马锥体神经元中，使用 MEK/ERK 抑制剂（如 PD98059）或 ERK 显性负性/敲低处理，检测 APRIL 诱导的 Akt 磷酸化是否被抑制；同时在 ERK 抑制基础上组成型激活 Akt 观察是否能恢复 APRIL 促轴突延长，或在 Akt 抑制下组成型激活 ERK 观察轴突延长，以验证 ERK→Akt 的上下游顺序。"
+        }
+      ]
+    },
+    "mechanism_review": {
+      "additional_claims": [],
+      "additional_joins": [],
+      "observations": [
+        {
+          "id": "M1",
+          "claim_ids": [
+            "C2",
+            "C3"
+          ],
+          "join_ids": [
+            "J2"
+          ],
+          "relation": "supports",
+          "basis": "intervention",
+          "causal_test": "established",
+          "passage_ids": [
+            "M1:P043",
+            "M1:P044",
+            "M1:P045",
+            "M1:P047",
+            "M1:P048",
+            "M1:P050"
+          ],
+          "context": {
+            "species": "mouse",
+            "system": "cultured developing hippocampal pyramidal neurons",
+            "disease": null
+          },
+          "applicability": {
+            "species": "matched",
+            "system": "matched",
+            "disease": "not_required"
+          },
+          "rationale": "该实验在 E18 小鼠海马锥体细胞培养中，用选择性 Akt1/Akt2 抑制剂或功能缺失型 Akt 突变体阻断 Akt 信号，再给予 APRIL，发现 Akt 抑制剂或 Akt 突变体完全阻止 APRIL 的促轴突延长作用，而单独抑制 Akt 与对照无显著差异；这直接检验了 Akt 信号在 APRIL 促轴突生长中的因果贡献，支持 J2。",
+          "limitations": [
+            "该干预实验证明 Akt 对 APRIL 促轴突生长是必需的，但未在此实验中检测 APRIL 是否通过 ERK 激活 Akt",
+            "选段文本未展示完整免疫印迹或轴突长度定量统计图"
+          ]
+        }
+      ],
+      "combinations": [],
+      "comparisons": [],
+      "whole_assessment": "compatible_only",
+      "rationale": "现有证据分别支持：APRIL 在这些培养锥体神经元中快速激活 ERK1/ERK2（L1）和 Akt（L2），并增强轴突伸长（L3）；MEK/ERK、PI3K 和 Akt 信号均被证明对 APRIL 的促轴突生长是必需的（L4-L6, M1）。但没有任何实验直接检验 APRIL 诱导的 ERK 激活是否位于 Akt 激活上游并介导 Akt 激活（J1）。因此，虽然 Akt 对 APRIL 促轴突生长的作用（J2）已直接验证，但整个候选机制所要求的 ERK→Akt 顺序因果关系尚未建立，故只能判定为 compatible_only。",
+      "gaps": [
+        {
+          "claim_ids": [
+            "C1",
+            "C2"
+          ],
+          "join_ids": [
+            "J1"
+          ],
+          "reason": "现有证据分别显示 APRIL 可激活 ERK 和 Akt，且 ERK 或 Akt 被抑制均可阻断 APRIL 的促轴突生长作用；但没有一个实验在阻断 ERK/MEK 后检测 APRIL 诱导的 Akt 磷酸化，或在干扰 Akt 后检测 ERK 磷酸化，因此无法证明 ERK 是 Akt 的上游并介导其激活。",
+          "missing_experiment": "在培养的小鼠发育中海马锥体神经元中，用 MEK/ERK 抑制剂（如 PD98059）或 ERK 敲低/显性负性处理，检测 APRIL 诱导的 Akt 磷酸化是否被抑制；并在抑制 ERK 的同时组成型激活 Akt，观察是否能恢复 APRIL 的促轴突延长；或进行时间过程与救援实验以直接验证 ERK→Akt 的上下游顺序。"
+        }
+      ]
+    },
+    "decomposition": {
+      "claims": [
+        {
+          "id": "C1",
+          "text": "APRIL activates ERK1/ERK2 in these neurons.",
+          "kind": "causal"
+        },
+        {
+          "id": "C2",
+          "text": "APRIL activates Akt in these neurons.",
+          "kind": "causal"
+        },
+        {
+          "id": "C3",
+          "text": "APRIL enhances axonal elongation in these neurons.",
+          "kind": "causal"
+        }
+      ],
+      "joins": [
+        {
+          "id": "J1",
+          "text": "APRIL-induced ERK activation is upstream of and mediates Akt activation in these neurons.",
+          "claim_ids": [
+            "C1",
+            "C2"
+          ]
+        },
+        {
+          "id": "J2",
+          "text": "Akt signaling contributes to the APRIL-induced axon elongation.",
+          "claim_ids": [
+            "C2",
+            "C3"
+          ]
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "saved_case": "runs/reviewed/Q005/case.json",
+    "saved_evaluation": "runs/reviewed/Q005/full.json",
+    "origin": {
+      "id": "Q005",
+      "source_full": "runs/comparison-02b/Q005/full.json",
+      "source_direct": "runs/comparison-01/Q005/direct.json",
+      "operation": "Reaggregate saved semantic judgments with reviewed code; no new model calls",
+      "full": "partial",
+      "direct": "partial",
+      "all_local_supported": true,
+      "expectation": {
+        "family": "APRIL",
+        "label": "把并列分支串联为 ERK 到 Akt",
+        "reason": "ERK 和 PI3K/Akt/GSK-3β 分支各有干预支持，但提供段落未建立 ERK 位于 Akt 上游。局部激活均支持时仍须发现串联缺口。",
+        "allowed_verdicts": [
+          "partial"
+        ],
+        "annotation_status": "provisional_reviewer_expectation_not_expert_gold",
+        "claims_should_support": [
+          "C1",
+          "C2",
+          "C3"
+        ],
+        "joins_must_not_support": [
+          "J1"
+        ],
+        "gap_kind": "untested_order_between_parallel_branches"
+      }
+    },
+    "fabric_abstract": {
+      "source_id": "europe_pmc",
+      "source_record_id": "MED:24444792",
+      "version_id": "a563c7affeea18aaf80c6edf2af7b91b38780b3c72e8dd0bd53a185e8360f5b8",
+      "source_url": "https://europepmc.org/article/MED/24444792"
+    },
+    "publication": {
+      "pmid": "24444792",
+      "pmcid": "PMC4008386",
+      "doi": "10.1016/j.mcn.2014.01.002"
+    },
+    "fulltext_supplement": {
+      "source_id": "europe_pmc_fulltext_supplement",
+      "record_id": "PMC4008386",
+      "version": "xml-sha256:9aebab47f88770cd28ab2b6bb9da94712ac7df5c6e2207c7dc5c4d6911e4ad01",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC4008386/fullTextXML",
+      "local_xml": "data/fulltexts/PMC4008386.xml",
+      "selection": [
+        {
+          "section_id": "s0085",
+          "paragraph_index": 0,
+          "selected_text_start": 0,
+          "selected_text_end": 506
+        },
+        {
+          "section_id": "s0085",
+          "paragraph_index": 1,
+          "selected_text_start": 508,
+          "selected_text_end": 1606
+        },
+        {
+          "section_id": "s0090",
+          "paragraph_index": 0,
+          "selected_text_start": 1608,
+          "selected_text_end": 2909
+        },
+        {
+          "section_id": "s0095",
+          "paragraph_index": 1,
+          "selected_text_start": 2911,
+          "selected_text_end": 3479
+        },
+        {
+          "section_id": "s0095",
+          "paragraph_index": 2,
+          "selected_text_start": 3481,
+          "selected_text_end": 4416
+        },
+        {
+          "section_id": "s0100",
+          "paragraph_index": 1,
+          "selected_text_start": 4418,
+          "selected_text_end": 5667
+        },
+        {
+          "section_id": "s0100",
+          "paragraph_index": 2,
+          "selected_text_start": 5669,
+          "selected_text_end": 7336
+        },
+        {
+          "section_id": "s0105",
+          "paragraph_index": 0,
+          "selected_text_start": 7338,
+          "selected_text_end": 8555
+        },
+        {
+          "section_id": "s0105",
+          "paragraph_index": 1,
+          "selected_text_start": 8557,
+          "selected_text_end": 9216
+        }
+      ]
+    },
+    "relationship": "摘要与全文通过原记录pmid/pmcid/doi及XML article-id对应同一篇论文；全文不是Fabric摘要版本的内容。",
+    "text_basis": "case.materials[].text 是XML选段按itertext并归一空白后的拼接文本；references.start/end 为该字符串的Unicode字符[start,end)位置，不是XML字节位置，也不是Fabric摘要位置。",
+    "source_group_meaning": "同一论文的记录归组。PMID或DOI不证明不同论文使用了独立队列、独立实验；independent_cohorts保持null。"
+  },
+  "consumer_checks": {
+    "kind": "以下文字是人工编写的交接对照，不是新模型结果或专家金标准。",
+    "required_result_fields": [
+      "claims",
+      "joins",
+      "critical_gaps",
+      "conflicts",
+      "unresolved_counterevidence",
+      "evidence",
+      "scope"
+    ],
+    "must_preserve": [
+      "C1、C2、C3的局部支持",
+      "培养的发育期小鼠海马神经元条件",
+      "J1的ERK→Akt顺序缺口",
+      "J2的Akt参与促轴突作用有支持",
+      "整体partial不等于所有局部都没证据"
+    ],
+    "acceptable_draft": "在培养的发育期小鼠海马神经元中，所给材料支持APRIL激活ERK和Akt，并促进轴突延长；Akt信号参与促轴突作用也有实验支持。但这些选段尚未建立ERK位于Akt上游，因此不能将其写成已证实的APRIL→ERK→Akt串联机制。",
+    "overclaim_draft": "这些实验已经证明APRIL依次通过ERK和Akt的串联激活促进轴突延长。",
+    "overclaim_to_flag": "把J1未建立的ERK→Akt顺序写成已经证明，并遗漏整体评价中的关键缺口。"
+  }
+}

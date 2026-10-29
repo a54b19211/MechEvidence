@@ -45,16 +45,28 @@ def _species(value) -> str:
 
 
 def source_identity(material: Material) -> str:
-    """Publication identity is a deduplication key, never a cohort-independence claim."""
-    for value in (material.source_group, material.record_id, material.url or ""):
-        pmid = re.search(r"(?:pmid[:\s/]*|pubmed\.ncbi\.nlm\.nih\.gov/)(\d+)", value, re.I)
+    """Group records of one publication; this does not establish study independence."""
+    values = (material.source_group.strip(), material.record_id.strip(), (material.url or "").strip())
+    # Search every supplied field for PMID before considering DOI. Europe PMC MED
+    # records and PubMed records share the same PMID, even without source_group.
+    for value in values:
+        pmid = re.search(
+            r"(?:\b(?:pmid|pubmed)[:\s/]*|pubmed\.ncbi\.nlm\.nih\.gov/|europepmc\.org/article/MED/)([1-9]\d*)(?![\w])",
+            value, re.I,
+        )
         if pmid:
             return "pmid:" + pmid.group(1)
+    record_id = material.record_id.strip()
+    source = material.source_id.strip().casefold().replace("-", "_")
+    med = re.fullmatch(r"MED:([1-9]\d*)", record_id, re.I)
+    if source in {"europe_pmc", "europepmc"} and med:
+        return "pmid:" + med.group(1)
+    if source == "pubmed" and re.fullmatch(r"[1-9]\d*", record_id):
+        return "pmid:" + record_id
+    for value in values:
         doi = re.search(r"10\.\d{4,9}/[^\s]+", value, re.I)
         if doi:
             return "doi:" + doi.group().casefold().rstrip("/.,;)")
-        if value.isdigit() and len(value) >= 5:
-            return "pmid:" + value
     if material.source_group:
         return "group:" + _normal(material.source_group)
     if material.record_id:

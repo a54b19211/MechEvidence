@@ -106,16 +106,35 @@ python -m mechevidence fetch --terms APRIL --limit 20 --output data/april-new.js
 
 # 检查代码逻辑，不调用模型
 python -m unittest discover -s tests -v</pre>
-<details><summary>交给李明洋的调用方式</summary><div class="detail"><pre>from mechevidence import evaluate
+<details open id="handoff"><summary>本轮固定给雷达与潘的接口</summary><div class="detail"><pre>from mechevidence import evaluate
 
-# case：问题、机制、背景、材料；材料包括来源和版本
-# call_json：由李的调度提供，统一选择模型和管理调用预算
 result = evaluate(case, call_json)
 
-# result["claims"] / result["joins"]：分别成立到哪一步
-# result["evidence"]：原文、段落位置、来源、版本
-# result["critical_gaps"]：具体缺什么证明
-# result["overall"]：整体支持状态和未解决分歧</pre><p><code>call_json(stage, instructions, payload, schema)</code> 返回 JSON 对象。现成 DeepSeek 适配器采用同一个签名，因此可以在独立研究和雷达调度之间复用方法代码。</p><p>科学判断返回 <code>supported / partial / insufficient</code>；API 失败、截断、无效引用走执行错误。调用方必须分别处理。局部 <code>refuted</code> 和冲突仍保留，不能把整体 <code>insufficient</code> 理解成“没有任何反对证据”。</p></div></details>
+# case：question、mechanism、scope、materials
+# claims / joins 可选；未提供局部主张时，方法先调用模型拆分
+# call_json(stage, instructions, payload, schema) → 已解析的 JSON 对象
+# 阶段：decomposition（按需）、local_review、mechanism_review</pre>
+<p><strong>调用由李控制：</strong>方法不自行调用 HTTP、Fabric 或图谱，不读取密钥；李提供四参数模型回调，统一管理模型、预算和执行错误。雷达可继续只载入 <code>models.py</code> 与 <code>assess.py</code>，函数签名保持不变。</p>
+<p><strong>输入背景应明确传入：</strong><code>scope.species / system / disease</code>。材料使用 <code>id、text、source_id、record_id、version、source_group、source_kind、text_level、url</code>；引用只能来自本次允许的材料。<code>allowed_passage_ids</code> 指定选用句子，未提供时使用材料全部段落。</p>
+<div class="table-wrap"><table><thead><tr><th>必须完整保留的结果</th><th>下游用途</th></tr></thead><tbody>
+<tr><td>claims、joins</td><td>区分局部事实与因果衔接；整体 partial 不代表所有局部都没有证据。</td></tr>
+<tr><td>critical_gaps</td><td>保留具体缺口及需核对的证据，供补查和生成时限定结论。</td></tr>
+<tr><td>conflicts</td><td>已判断可比条件下的相反结果；保留双方依据。</td></tr>
+<tr><td>unresolved_counterevidence</td><td>条件尚未明确的反向材料，不能丢弃，也不能直接写成已证实矛盾。</td></tr>
+<tr><td>evidence、scope、material_assessability、independence</td><td>保存原文、条件、资料完整性和来源口径。</td></tr>
+<tr><td>overall、witnesses、decomposition、local_review、mechanism_review、settings</td><td>总判断、所用证据组合和实际中间结果。保留它们以便复查，但不以 overall 代替其余内容。</td></tr>
+</tbody></table></div>
+<p>科学判断返回 <code>supported / partial / insufficient</code>；局部可以存在 <code>refuted</code>。输入错误、API 失败、截断、无效引用或不完整审核走执行错误；回调异常保留在异常链中，不能伪装成“证据不足”。</p>
+<p><strong>给潘的现成材料：</strong><a href="examples/partial_handoff.json">examples/partial_handoff.json</a>。其中 <code>case</code> 是实际输入，<code>evaluation</code> 是逐字段复用的 Q005 真实结果，<code>provenance</code> 记录出处，<code>consumer_checks</code> 给出人工写的生成检查对照；不要将整个外层交接对象送入 Case。</p>
+<p>Q005 的 C1、C2、C3 均支持；J2（Akt 参与促轴突作用）支持；J1（ERK 在 Akt 上游的串联关系）未建立，整体 <code>partial</code>。生成应保留培养的小鼠发育期海马神经元这一条件及 J1 缺口，不能改写成“已证实 APRIL→ERK→Akt 串联”。交接对照文字不是新增模型结果或专家金标准。</p>
+</div></details>
+<details id="provenance"><summary>论文去重、全文版本和引用位置</summary><div class="detail">
+<p><code>source_group</code> 对文献表示<strong>同一篇论文的记录归组</strong>。PubMed 编号、Europe PMC 的 <code>MED:编号</code>、两站相应 URL 统一为 <code>pmid:编号</code>；已知 PMID 优先于同条材料里的 DOI。其他来源的纯数字编号不会自动当作 PMID。只有 DOI 时保留 DOI；缺少可靠映射时不猜测它对应哪个 PMID。</p>
+<p>去重保留每条记录自己的 <code>source_id / record_id / version</code> 和实际文本。论文编号不同并不证明队列或实验独立；<code>independent_cohorts</code> 仍为 <code>null</code>。没有文献标识时保守按上游归组、来源记录或同文本归组，也不能把该计数宣传成已确认独立研究数。</p>
+<p><strong>全文有自己的版本。</strong>Q005 使用 <code>europe_pmc_fulltext_supplement / PMC4008386</code> 的9个原始全文段落；通过原记录的 PMID 24444792、PMCID 和 DOI 及 XML 的文章标识对应同一论文。Fabric 摘要版本与补读全文 XML 版本分别保存在交接文件里，二者不互相冒充。原论文和补读片段的范围也不相同，判断只限当前提供材料。</p>
+<p><strong>位置的唯一基准是实际输入字符串：</strong><code>references.start / end</code> 为 <code>case.materials[material_id].text</code> 中的 Unicode 字符位置，采用 <code>[start, end)</code>；不是 XML 字节偏移，也不是 Fabric 摘要偏移。程序从这个字符串回填引用，因此下游必须用同一字符串回读。原 XML 的 section / paragraph 选择位置另见交接文件。</p>
+<p>已核对 Q002、Q003、Q005、Q011 的73处引用，均能按上述位置精确回读；全文版本与实际 XML 相符。Q003 是受控删除关键证据的对照，不能据此声称原论文没有做阻断实验。本轮不改变强模型对照、失败与误报的原有解释。</p>
+</div></details>
 <details><summary>数据、版本和费用在哪里看</summary><div class="detail"><p><code>data/fabric_records.json</code> 保存徐的原记录。引用位置对应规范化后的文本；原始内容及 Fabric 版本可回查。三份开放全文补充在 <code>data/fulltexts/</code>，案例中注明其独立来源和版本。</p><p>每次实验写入新的 <code>runs/</code> 目录。案例 JSON、结果 JSON、实际请求、最终回答和用量分别保存；隐藏思考和 API 密钥不保存。网络超时的费用仍需以平台账单核对。已有批次路径与实际结果见本页案例详情。</p><p>项目没有常驻服务、数据库或任务队列。私有 <code>.env</code> 已配置商业 DeepSeek，当前使用 <code>deepseek-v4-pro</code>；源码复制给其他人时不包含这个文件。</p></div></details></section>
 
 <section class="section" id="research"><div class="section-label">07 / 研究问题</div><h2>论文贡献要靠实验回答</h2>

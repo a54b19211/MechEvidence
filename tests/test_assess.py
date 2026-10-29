@@ -1,10 +1,12 @@
 """Boundary tests for provenance, causal coverage and conservative scope handling."""
 
 from copy import deepcopy
+import json
+from pathlib import Path
 import unittest
 
 from mechevidence import (
-    EvaluationError, aggregate, direct_baseline, evaluate, prepare_materials, prepare_passages,
+    EvaluationError, Material, aggregate, direct_baseline, evaluate, prepare_materials, prepare_passages, source_identity,
 )
 
 
@@ -246,6 +248,75 @@ class AssessmentTests(unittest.TestCase):
         self.assertEqual(aggregate(self.case, self.local, self.review, deduplicate=False)["independence"]["distinct_source_groups"], 2)
         self.case["materials"].reverse()
         self.assertEqual(aggregate(self.case, self.local, self.review)["overall"], result["overall"])
+
+    def test_publication_identity_across_database_namespaces(self):
+        base = deepcopy(self.case["materials"][0])
+        base.update(source_group="", source_id="", record_id="", url=None)
+        equivalents = [
+            {"source_group": "PMID/32954360"},
+            {"source_id": "pubmed", "record_id": "32954360"},
+            {"source_id": "europe_pmc", "record_id": "MED:32954360"},
+            {"url": "https://europepmc.org/article/MED/32954360"},
+            {"url": "https://pubmed.ncbi.nlm.nih.gov/32954360/"},
+            {"source_id": "pubmed", "record_id": "32954360", "source_group": "DOI:10.1158/example"},
+            {"source_id": "europe_pmc", "record_id": "MED:32954360", "source_group": "DOI:10.1158/example"},
+        ]
+        for fields in equivalents:
+            with self.subTest(fields=fields):
+                self.assertEqual(source_identity(Material(**(base | fields))), "pmid:32954360")
+        self.assertEqual(source_identity(Material(**(base | {"source_id": "pubmed", "record_id": "123"}))), "pmid:123")
+        self.assertEqual(source_identity(Material(**(base | {"source_id": "europe_pmc", "record_id": "MED:123"}))), "pmid:123")
+        self.assertEqual(source_identity(Material(**(base | {"source_id": "chictr", "record_id": "32954360"}))),
+                         "record:chictr:32954360")
+        self.assertEqual(source_identity(Material(**(base | {"source_id": "clinicaltrials", "source_group": "32954360"}))),
+                         "group:32954360")
+        # An unlinked DOI is kept as a DOI; this function does not guess its PMID.
+        self.assertEqual(source_identity(Material(**(base | {"source_group": "DOI:10.1158/EXAMPLE"}))), "doi:10.1158/example")
+
+    def test_pubmed_and_europe_pmc_keep_original_versions_but_count_one_paper(self):
+        self.case["materials"][0].update(source_group="", source_id="pubmed", record_id="123", version="pubmed-v1")
+        duplicate = {**deepcopy(self.case["materials"][0]), "id": "copy", "source_id": "europe_pmc",
+                     "record_id": "MED:123", "version": "epmc-v2"}
+        self.case["materials"].append(duplicate)
+        self.local["observations"].append({**deepcopy(self.observation), "id": "L2",
+                                           "passage_ids": ["copy:P001", "copy:P002"]})
+        self.review["combinations"][0]["observation_ids"].append("L2")
+        result = aggregate(self.case, self.local, self.review)
+        self.assertEqual(result["independence"]["distinct_source_groups"], 1)
+        self.assertIsNone(result["independence"]["independent_cohorts"])
+        self.assertEqual(result["material_assessability"]["source_groups"], ["pmid:123"])
+        self.assertEqual({m["source_group"] for m in prepare_materials(self.case)}, {"pmid:123"})
+        self.assertEqual(result["claims"][0]["distinct_supporting_source_groups"], ["pmid:123"])
+        references = [ref for evidence in result["evidence"] for ref in evidence["references"]]
+        self.assertEqual({(r["source_id"], r["record_id"], r["version"]) for r in references},
+                         {("pubmed", "123", "pubmed-v1"), ("europe_pmc", "MED:123", "epmc-v2")})
+
+    def test_real_partial_handoff_preserves_complete_result_and_text_positions(self):
+        packet = json.loads((Path(__file__).resolve().parents[1] / "examples/partial_handoff.json").read_text())
+        case, saved = packet["case"], packet["evaluation"]
+        stages = []
+
+        def replay(stage, _instructions, _payload, _schema):
+            stages.append(stage)
+            return deepcopy(saved[stage])
+
+        result = evaluate(case, replay)
+        self.assertEqual(stages, ["local_review", "mechanism_review"])
+        self.assertEqual(result, saved)
+        self.assertEqual(result["overall"]["verdict"], "partial")
+        self.assertTrue(all(row["verdict"] == "supported" for row in result["claims"]))
+        self.assertEqual({row["id"]: row["verdict"] for row in result["joins"]},
+                         {"J1": "unestablished", "J2": "supported"})
+        for field in packet["consumer_checks"]["required_result_fields"]:
+            self.assertIn(field, result)
+        materials = {m["id"]: m for m in case["materials"]}
+        for observation in result["evidence"]:
+            for ref in observation["references"]:
+                material = materials[ref["material_id"]]
+                self.assertEqual(material["text"][ref["start"]:ref["end"]], ref["text"])
+                self.assertEqual(ref["version"], material["version"])
+        self.assertNotEqual(packet["provenance"]["fabric_abstract"]["version_id"],
+                            packet["provenance"]["fulltext_supplement"]["version"])
 
     def test_primary_and_species_checks_override_an_overclaimed_combination(self):
         self.case["materials"][0]["source_kind"] = "review"
