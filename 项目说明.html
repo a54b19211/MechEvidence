@@ -128,6 +128,36 @@ result = evaluate(case, call_json)
 <p><strong>给潘的现成材料：</strong><a href="examples/partial_handoff.json">examples/partial_handoff.json</a>。其中 <code>case</code> 是实际输入，<code>evaluation</code> 是逐字段复用的 Q005 真实结果，<code>provenance</code> 记录出处，<code>consumer_checks</code> 给出人工写的生成检查对照；不要将整个外层交接对象送入 Case。</p>
 <p>Q005 的 C1、C2、C3 均支持；J2（Akt 参与促轴突作用）支持；J1（ERK 在 Akt 上游的串联关系）未建立，整体 <code>partial</code>。生成应保留培养的小鼠发育期海马神经元这一条件及 J1 缺口，不能改写成“已证实 APRIL→ERK→Akt 串联”。交接对照文字不是新增模型结果或专家金标准。</p>
 </div></details>
+<details open id="material-contract"><summary>哪些材料可以交给汪，缺材料时怎样补</summary><div class="detail">
+<p><strong>source_kind 继续必填，不按 external_archive 自动补 primary。</strong>10月30日演练中，汪的两次尝试都因材料缺类型停在 needs_input，只读了能力清单，不能算机制评价。本轮补齐分类说明和反馈位置，保留这条拒绝规则。新增两个可选字段：<code>document_type</code> 描述材料种类，<code>is_demo</code> 保留模拟标记。旧的明确分类输入仍兼容；新归档材料应同时传入这两个字段中已知的信息。</p>
+<div class="table-wrap"><table><thead><tr><th>实际材料</th><th>填写方式</th><th>能用于什么</th></tr></thead><tbody>
+<tr><td>原始研究论文、原始试验结果报告</td><td>source_kind=primary；document_type=research_article 或 trial_results。</td><td>原件可识别，含自身研究方法、条件与已观察结果。只支持实际报告及检验的环节；临床终点改善不自动证明中间机制。普通 Journal Article 标签或 DOI 本身不够。</td></tr>
+<tr><td>原作者会议摘要</td><td>确有原始研究方法、条件与结果时：primary / conference_abstract；text_level=abstract。</td><td>按摘要能读到的原始观察评价，保留方法、对照、样本与初步发表限制。不自动当全文或已同行评议。会议议程、题目列表、公司宣布参会不属于此类。</td></tr>
+<tr><td>原始登记、研究方案</td><td>primary / trial_registration 或 study_protocol。</td><td>保存登记状态、计划和原文，作为背景和取证线索。不给本服务的机制主张提供支持或反驳，包括名为 reported 的主张；也不能确认实际患者重叠或独立研究实施。已发布结果应另取对应原始结果记录或明确分出的结果部分。</td></tr>
+<tr><td>综述，包括综述性质会议摘要</td><td>review / review。</td><td>背景、作者观点与原始研究线索；不算第二项实验。</td></tr>
+<tr><td>图关系</td><td>graph / graph。</td><td>候选和查找原件的线索；图边不代替干预结果。</td></tr>
+<tr><td>新闻、新闻稿、公司披露、社媒帖子</td><td>document_type分别为news、press_release、company_disclosure、social_post；不为进入Mech而填primary或review。</td><td>保留在雷达，供核对谁说了什么、风险线索、竞争假设和后续补查。本服务需要补到对应原始研究才能评价机制或研究/患者关系。公司声称试验成功不等于原始机制证据。</td></tr>
+</tbody></table></div>
+<p>分类看<strong>实际文件及内容</strong>，不只看网站或发布者。公司托管的原始研究报告若确有原始方法和结果，应按该报告本身分类；宣传稿引用某论文，仍是宣传稿，需另外取论文。登记页若混合方案和已发布结果，先保留固定原件版本，再明确所选文本是哪一部分，不能用设计段落补结果缺口。无法确认时保留未知和补读请求。</p>
+<p><strong>不能进入Mech，不等于被雷达排除。</strong>新闻和社媒仍可形成待核假设、反向信号或及时核查任务；应保留归因、可知时间、转载关系和未证实状态。来源之间是否独立传播，与研究或患者队列是否独立是两种关系，不要送同一个接口算。删帖、辟谣和处罚只属于信息环境事件，不能直接证实病原或自动提高风险；SARS类假设不能写成已证实SARS。公卫风险与竞争假设评估仍由雷达负责。</p>
+<p><strong>程序会检查：</strong>显式声明新闻、公司披露或社媒时，即使有人误填 primary，也在第一次模型调用前返回 <code>material_type_not_evaluable</code>。document_type=review/graph 与 source_kind=primary 矛盾时返回 <code>material_type_conflict</code>。登记和方案保留为背景，但聚合、独立性方法和直接基线都防止其被当作已观察结果。未提供 document_type 时服务不会自行读文猜类型，源端仍负责正确分类。</p>
+<p><strong>缺字段反馈：</strong><code>status=needs_input</code> 不代表机制被否定。缺 source_kind 时返回原有 <code>input_invalid</code>，同时给出每条材料的 <code>missing_fields</code> 和 <code>material_feedback</code>：</p>
+<pre>{
+  "status": "needs_input",
+  "error_code": "input_invalid",
+  "missing_fields": ["materials.q123.source_kind"],
+  "material_feedback": [{
+    "material_id": "q123",
+    "field": "source_kind",
+    "input_path": ["arguments", "case", "materials", 0, "source_kind"],
+    "required_information": "从固定原件确认类型；不能按external_archive或声明自动当primary。"
+  }]
+}</pre>
+<p><code>assess_independence</code> 的材料在 <code>arguments.materials</code>，对应 input_path 不带 case。显式不适用的材料返回 <code>material_feedback[].required_information</code> 指明要补原始报告；声明保留为雷达线索。宿主若选取专业材料子集，必须同时保留未评价材料和覆盖限制，尤其不能静默丢掉反向消息，再把结果写成“全部资料支持”。</p>
+<p><strong>B场景新模拟包：</strong>原始试验结果和临床前机制材料应有不同固定ID、原文、版本、明确类型和 <code>is_demo=true</code>；机制问题从真实提供的内容提出，不给预期答案，不因为希望通过验收就把公司稿改成原始研究。用宿主实际执行 evaluate，并留下模型阶段、回执、支持与反证、条件、替代解释和缺口，才算专业方法参与。公卫和产业指标任务不强制经过本服务。</p>
+<p>机器可读规则位于 <code>GET /v1/capabilities → material_contract</code>。本轮独立测试采用随机端口，不替换18561现役进程；新方法版本需由协调侧统一采用。测试使用保存回执及故意过度声称的受控输出验证规则，不代表新的医学效果实验。</p>
+</div></details>
+
 <details open id="http-service"><summary>独立 HTTP 服务：雷达怎样调用汪的两项方法</summary><div class="detail">
 <p>服务只运行专业方法。雷达把固定原件和已收到的模型结果送来；需要下一步模型结果时，服务把提示、材料和输出格式交回雷达。模型请求、预算、超时、未知结果和账单都由雷达处理。服务不读取商业模型密钥、不联网取资料、不建数据库或队列。原来的 <code>evaluate(case, call_json)</code> 仍可在本地使用。</p>
 <div class="table-wrap"><table><thead><tr><th>接口</th><th>用途</th></tr></thead><tbody>

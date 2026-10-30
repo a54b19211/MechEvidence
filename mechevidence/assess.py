@@ -156,9 +156,80 @@ def source_identity(material: Material) -> str:
     return "text:" + digest
 
 
+class MaterialInputError(ValueError):
+    """A source type cannot be used as the asserted professional evidence."""
+
+    def __init__(self, material, code: str, reason: str, needed: str):
+        self.material_id, self.code = material.id, code
+        self.document_type, self.reason, self.needed = material.document_type, reason, needed
+        super().__init__(f'{material.id}: {reason}')
+
+    def as_dict(self) -> dict:
+        return {'status': 'needs_input', 'error_code': self.code, 'material_id': self.material_id,
+                'document_type': self.document_type, 'reason': self.reason,
+                'material_feedback': [{'material_id': self.material_id,
+                    'field': 'document_type/source_kind', 'reason': self.reason,
+                    'required_information': self.needed, 'retain_as_radar_lead': True}]}
+
+
+_DECLARATIONS = {'press_release', 'company_disclosure', 'news', 'social_post'}
+_DESIGNS = {'trial_registration', 'study_protocol'}
+
+
+def _validate_material_type(material: Material) -> None:
+    kind = material.document_type
+    if kind in _DECLARATIONS:
+        raise MaterialInputError(material, 'material_type_not_evaluable',
+            'This declaration is a retrieval lead, not an original mechanism or study/cohort record.',
+            'Keep the declaration and its attribution in Radar; retrieve the versioned original study, methods and results before professional evaluation.')
+    expected = {'research_article': 'primary', 'conference_abstract': 'primary', 'trial_results': 'primary',
+                'trial_registration': 'primary', 'study_protocol': 'primary', 'review': 'review', 'graph': 'graph'}
+    if kind in expected and material.source_kind != expected[kind]:
+        raise MaterialInputError(material, 'material_type_conflict',
+            f'document_type={kind} conflicts with source_kind={material.source_kind}.',
+            'Resolve the source classification from the actual original record; do not relabel it merely to gain admission.')
+
+
+def _original_results(material: Material) -> bool:
+    return material.source_kind == 'primary' and material.document_type not in _DESIGNS | _DECLARATIONS
+
+
+def material_contract() -> dict:
+    """Source classes describe admissibility, never certify causal strength."""
+    return {
+        'version': 'mechevidence.material.v1',
+        'required_fields': ['id', 'text', 'source_id', 'record_id', 'version', 'source_kind', 'text_level'],
+        'optional_fields': ['document_type', 'is_demo', 'pmid', 'doi', 'title', 'url', 'source_group', 'allowed_passage_ids'],
+        'rules': [
+            {'document_types': ['research_article', 'trial_results'], 'source_kind': 'primary',
+             'condition': 'An identifiable original report describes its own methods, participants/system and observed results; journal branding or a company headline alone is insufficient.',
+             'scope': 'Only the reported result and tested relation at its stated conditions; trial outcomes do not automatically prove an intermediate mechanism.'},
+            {'document_types': ['conference_abstract'], 'source_kind': 'primary',
+             'condition': 'An original author abstract with identifiable study, methods, conditions and results; a programme title, commentary or company announcement of a presentation does not qualify.',
+             'scope': 'Abstract-level original observations; retain missing methods, controls and preliminary publication status. No automatic full-text or peer-review claim.'},
+            {'document_types': ['trial_registration', 'study_protocol'], 'source_kind': 'primary',
+             'condition': 'The original registry/protocol record is fixed and identifiable; registration design is separated from any actual posted result report.',
+             'scope': 'Context-only registration/status/design. Preserved for retrieval, but no mechanism claim support/opposition (including kind=reported), and no confirmed study execution or patient relationship.'},
+            {'document_types': ['review'], 'source_kind': 'review',
+             'condition': 'Secondary synthesis, including a review-format conference abstract.',
+             'scope': 'Background and references to primary studies; never a second independent experiment.'},
+            {'document_types': ['graph'], 'source_kind': 'graph',
+             'condition': 'A graph assertion with its original identity and provenance.',
+             'scope': 'Candidate/path and source lookup only; an edge is not an intervention result.'},
+            {'document_types': sorted(_DECLARATIONS), 'source_kind': None,
+             'condition': 'News, press releases, company statements or social posts, regardless of whether a study is mentioned.',
+             'scope': 'Retain in Radar as attributed claims, counter-signals and retrieval leads; obtain original research before this service evaluates mechanisms or study/cohort relations.'},
+        ],
+        'unknown_type': 'Do not infer primary from external_archive, a PMID/DOI, Journal Article, or a nonempty text. Missing source_kind remains an input error.',
+        'legacy_inputs': 'Existing explicitly classified Materials without document_type remain compatible; supply document_type for newly mapped archive materials. The service does not infer it from text.',
+        'demo': 'is_demo is preserved when supplied; synthetic protocol fixtures do not become real biomedical evidence.',
+        'scope_boundary': 'Not admitted to MechEvidence does not mean false, irrelevant, or excluded from Radar. Social-source independence and disease-risk judgments are not study/patient-cohort independence.',
+    }
+
+
 def _material_metadata(material: Material, exclude: set[str]) -> dict:
     # Old inputs retain their exact output shape; supplied identifiers remain in references.
-    absent = {key for key in ("pmid", "doi") if getattr(material, key) is None}
+    absent = {key for key in ("pmid", "doi", "document_type", "is_demo") if getattr(material, key) is None}
     return material.model_dump(exclude=exclude | absent)
 
 
@@ -167,6 +238,7 @@ def prepare_passages(case: Case | dict) -> list[dict]:
     case = Case.model_validate(case)
     passages = []
     for material in case.materials:
+        _validate_material_type(material)
         identity = source_identity(material)
         boundaries = [0] + [match.end() for match in re.finditer(
             r"\n+|(?<=[.!?。！？])\s+(?=[A-Z0-9\u4e00-\u9fffΑ-Ω])", material.text,
@@ -251,6 +323,12 @@ claim is correct. Both supporting and opposing intervention outcomes can have ca
 when that exact question was directly tested; relation separately states supports/opposes/compatible.
 Use not_established only when the source did not directly test that causal question. Retain the
 source-reported limitations.
+document_type=trial_registration or study_protocol describes planned design or recorded status,
+not observed outcomes or study execution. Keep it as context only, not as support/opposition even
+for a kind=reported claim. It cannot establish a causal effect, an observed association,
+or actual cohort membership. Do not promote a registration/protocol to results based on its primary
+source label. Conference abstracts can report original observations, but retain their limited methods,
+controls and preliminary status. is_demo marks simulated material, not real biomedical evidence.
 Primary experimental results reported in an abstract can support an abstract-reported mechanism;
 an abstract is limited detail, not automatically useless. Reviews and graph assertions do not become
 original experiments. Separate source type, experimental basis and text availability.
@@ -328,7 +406,7 @@ def _scope_status(observation: Observation, case: Case, use_context: bool) -> st
 
 def _causal_evidence(observation: Observation, materials: dict, passages: dict) -> bool:
     return (observation.basis == "intervention" and observation.causal_test == "established"
-            and all(materials[passages[pid]["material_id"]].source_kind == "primary"
+            and all(_original_results(materials[passages[pid]["material_id"]])
                     for pid in observation.passage_ids))
 
 
@@ -390,10 +468,12 @@ def _comparison(left: Observation, right: Observation, comparisons: list[Compari
 def _assessability(case: Case, passages: dict) -> dict:
     active = {item["material_id"] for item in passages.values()}
     materials = [item for item in case.materials if item.id in active]
-    primary = [item for item in materials if item.source_kind == "primary"]
+    primary = [item for item in materials if _original_results(item)]
     status = "unassessable" if not passages else "assessable" if any(
         item.text_level == "full_text" and item.allowed_passage_ids is None for item in primary) else "limited"
     limitations = []
+    if any(item.document_type in _DESIGNS for item in materials):
+        limitations.append("登记与研究方案仅作设计或状态背景，不贡献机制结果支持、反驳或已实施研究/患者关系。")
     if not passages:
         limitations.append("没有可供评价的原文段落。")
     if materials and not primary:
@@ -433,8 +513,11 @@ def aggregate(case: Case | dict, local_outputs: LocalReview | dict, mechanism_ou
             strict = obligation not in claim_by_id or claim_by_id[obligation].kind == "causal"
             eligible = causal[observation.id] if strict else (
                 claim_by_id[obligation].kind == "reported" or any(
-                    materials[passages[pid]["material_id"]].source_kind == "primary"
+                    _original_results(materials[passages[pid]["material_id"]])
                     for pid in observation.passage_ids))
+            # A reported claim can still assert an outcome; design records cannot bypass eligibility.
+            eligible = eligible and all(materials[passages[pid]["material_id"]].document_type not in _DESIGNS
+                                        for pid in observation.passage_ids)
             if scope[observation.id] == "unknown" and observation.relation == "opposes" and eligible:
                 unknown_opposition[obligation].append(observation.id)
             if scope[observation.id] != "matched":
@@ -621,6 +704,9 @@ opposing passage IDs; do not output a verdict based on plausibility or uncited e
             raise EvaluationError("direct_baseline cites an unavailable passage")
         if review.verdict == "supported" and not review.supporting_passage_ids:
             raise EvaluationError("direct_baseline claims support without a source passage")
+        materials = {item.id: item for item in case.materials}
+        if any(materials[passages[pid]["material_id"]].document_type in _DESIGNS for pid in references):
+            raise EvaluationError("direct_baseline uses context-only registration/protocol as mechanism support or opposition")
     else:
         review = DirectReview(verdict="insufficient", rationale="没有可供评价的原文段落。",
                               supporting_passage_ids=[], opposing_passage_ids=[], scope_limitations=[],

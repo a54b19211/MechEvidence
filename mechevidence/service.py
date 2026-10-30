@@ -13,7 +13,7 @@ from typing import Literal
 
 from pydantic import Field, ValidationError
 
-from .assess import EvaluationError, IdentityInputError, evaluate
+from .assess import EvaluationError, IdentityInputError, MaterialInputError, evaluate, material_contract
 from .cohorts import CohortArguments, assess_independence
 from .models import Case, Identifier, Record, Text
 
@@ -76,8 +76,8 @@ class ExecuteRequest(Record):
 
 
 class ProtocolError(ValueError):
-    def __init__(self, code: str, message: str):
-        self.code = code
+    def __init__(self, code: str, message: str, details: dict | None = None):
+        self.code, self.details = code, details or {}
         super().__init__(message)
 
 
@@ -123,6 +123,7 @@ def capabilities() -> dict:
             'task_by_operation': {'evaluate': 'mechanism', 'assess_independence': 'independence'},
             'limits': {'request_bytes': MAX_BODY_BYTES, 'model_calls': MAX_MODEL_CALLS},
             'execution': 'stateless_replay_host_owned_models',
+            'material_contract': material_contract(),
             'request_schema': ExecuteRequest.model_json_schema(),
             'context_schema': Context.model_json_schema(),
             'argument_schemas': {'evaluate': EvaluateArguments.model_json_schema(),
@@ -140,7 +141,36 @@ def _require_provenance(materials):
     missing = [f'{item.id}.{field}' for item in materials for field in ('source_id', 'record_id', 'version')
                if not getattr(item, field).strip()]
     if missing:
-        raise ProtocolError('material_provenance_missing', 'Missing fixed source metadata: ' + ', '.join(missing))
+        raise ProtocolError('material_provenance_missing', 'Missing fixed source metadata: ' + ', '.join(missing),
+                            {'missing_fields': ['materials.' + name for name in missing]})
+
+
+def _material_validation_feedback(value, error: ValidationError) -> dict:
+    if not isinstance(value, dict):
+        return {}
+    arguments = value.get('arguments', {})
+    if not isinstance(arguments, dict):
+        return {}
+    nested = value.get('operation') == 'evaluate'
+    container = arguments.get('case', {}) if nested else arguments
+    originals = container.get('materials', []) if isinstance(container, dict) else []
+    feedback, missing = [], []
+    for item in error.errors(include_url=False, include_input=False, include_context=False):
+        location = list(item['loc'])
+        if len(location) < 3 or location[0] != 'materials' or not isinstance(location[1], int):
+            continue
+        index, field = location[1], str(location[-1])
+        original = originals[index] if isinstance(originals, list) and index < len(originals) else {}
+        mid = original.get('id', f'index:{index}') if isinstance(original, dict) else f'index:{index}'
+        if item['type'] == 'missing':
+            missing.append(f'materials.{mid}.{field}')
+        feedback.append({'material_id': mid, 'field': field,
+            'input_path': ['arguments'] + (['case'] if nested else []) + location,
+            'reason': item['msg'], 'error_type': item['type'],
+            'required_information': ('Provide an explicit primary/review/graph classification supported by the original record; '
+                'do not infer primary from external_archive or a declaration.' if field == 'source_kind' else
+                'Supply or correct this field using the fixed original record.')})
+    return {'missing_fields': missing, 'material_feedback': feedback} if feedback else {}
 
 
 def execute(value: dict) -> dict:
@@ -183,13 +213,14 @@ def execute(value: dict) -> dict:
             if isinstance(cause, ModelRequired):
                 return {**response, 'status': 'model_required', 'model_call': cause.call}
             if isinstance(cause, ProtocolError):
-                return {**response, 'status': 'needs_input', 'error_code': cause.code, 'message': str(cause)}
+                return {**response, 'status': 'needs_input', 'error_code': cause.code, 'message': str(cause), **cause.details}
             cause = cause.__cause__
-        if isinstance(error, IdentityInputError):
+        if isinstance(error, (IdentityInputError, MaterialInputError)):
             return {**response, **error.as_dict()}
         if isinstance(error, ValidationError):
             return {**response, 'status': 'needs_input', 'error_code': 'input_invalid',
-                    'errors': error.errors(include_url=False, include_input=False, include_context=False)}
+                    'errors': error.errors(include_url=False, include_input=False, include_context=False),
+                    **_material_validation_feedback(value, error)}
         if isinstance(error, (ValueError, TypeError)):
             return {**response, 'status': 'needs_input', 'error_code': 'input_invalid', 'message': str(error)[:800]}
         if isinstance(error, EvaluationError):

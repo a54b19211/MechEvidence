@@ -7,7 +7,7 @@ from typing import Literal
 from pydantic import ConfigDict, Field, model_validator
 
 from .assess import (
-    CallJSON, EvaluationError, _call, _references, prepare_materials,
+    CallJSON, EvaluationError, _call, _references, _original_results, prepare_materials,
     prepare_passages, source_identity,
 )
 from .models import Identifier, Material, Record, Text, unique_ids
@@ -104,6 +104,7 @@ independence. Nor does absence of a reported link establish no patient overlap.
 Shared registry labels alone also do not establish identical included patients.
 When original participant/sampling details do not resolve this, return unknown.
 
+Registry/protocol design cannot establish actual enrolment, execution or participant overlap.
 Graph assertions and reviews provide retrieval leads, not original evidence for
 determinate relations. Select basis=publication_identity, graph, time_only or
 insufficient where appropriate and return unknown. Do not recast those sources as
@@ -175,8 +176,8 @@ def assess_independence(arguments: CohortArguments | dict, call_json: CallJSON) 
                 member_refs = [ref for ref in refs if ref["material_id"] == mid]
                 if not member_refs:
                     issues.append(f"No permitted source passage covers material {mid}.")
-                elif materials[mid].source_kind != "primary":
-                    issues.append(f"Material {mid} is not original study evidence; it is a retrieval lead.")
+                elif not _original_results(materials[mid]):
+                    issues.append(f"Material {mid} is not an original observed study/cohort result; registration/protocol and secondary records are retrieval leads.")
                 if member_refs and not materials[mid].version.strip():
                     issues.append(f"The cited material {mid} has no supplied source version.")
             if issues:
