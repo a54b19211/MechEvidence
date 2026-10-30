@@ -1,0 +1,1513 @@
+{
+  "format_version": 1,
+  "description": "固定真实材料及保存回执的离线联调样例；不是新的模型实验、自然检索历史或专家标签。",
+  "method_commit": "56df2db96f161913c2aa43b54ecc16f272c4c55b",
+  "interface": "evaluate(case, call_json)",
+  "replay": "回调按stage返回对应evaluation.local_review或mechanism_review；无需API。测试会逐字段比较完整结果。",
+  "request_status": "下列evidence_request为人工编写的取证需求示例，不是新增返回字段，也不是自动planner运行结果。",
+  "snapshots": {
+    "Q003": {
+      "case": {
+        "id": "Q003",
+        "question": "在培养的小鼠发育期海马锥体神经元中，哪些证据支持 ERK 信号参与介导 APRIL 的促轴突延长作用？",
+        "mechanism": "APRIL 激活 ERK1/ERK2，ERK 信号分支参与介导 APRIL 诱导的轴突延长。",
+        "scope": {
+          "species": "mouse",
+          "system": "cultured developing hippocampal pyramidal neurons",
+          "disease": null
+        },
+        "claims": [
+          {
+            "id": "C1",
+            "text": "APRIL treatment activates ERK1/ERK2 in cultured developing mouse hippocampal pyramidal neurons.",
+            "kind": "causal"
+          },
+          {
+            "id": "C2",
+            "text": "APRIL treatment enhances axonal elongation in these cultured neurons.",
+            "kind": "causal"
+          }
+        ],
+        "joins": [
+          {
+            "id": "J1",
+            "text": "ERK signaling contributes to mediating the axon-elongating effect of APRIL in these cultured neurons.",
+            "claim_ids": [
+              "C1",
+              "C2"
+            ]
+          }
+        ],
+        "materials": [
+          {
+            "id": "M1",
+            "text": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.\n\nAPRIL (A Proliferation-Inducing Ligand, TNFSF13) is a member of the tumor necrosis factor superfamily that regulates lymphocyte survival and activation and has been implicated in tumorigenesis and autoimmune diseases. Here we report the expression and first known activity of APRIL in the nervous system. APRIL and one of its receptors, BCMA (B-Cell Maturation Antigen, TNFRSF17), are expressed by hippocampal pyramidal cells of fetal and postnatal mice. In culture, these neurons secreted APRIL, and function-blocking antibodies to either APRIL or BCMA reduced axonal elongation. Recombinant APRIL enhanced axonal elongation, but did not influence dendrite elongation. The effect of APRIL on axon elongation was inhibited by anti-BCMA and the expression of a signaling-defective BCMA mutant in these neurons, suggesting that the axon growth-promoting effect of APRIL is mediated by BCMA. APRIL promoted phosphorylation and activation of ERK1, ERK2 and Akt and serine phosphorylation and inactivation of GSK-3β in cultured hippocampal pyramidal cells. Inhibition of MEK1/MEK2 (activators of ERK1/ERK2), PI3-kinase (activator of Akt) or Akt inhibited the axon growth-promoting action of APRIL, as did pharmacological activation of GSK-3β and the expression of a constitutively active form of GSK-3β. These findings suggest that APRIL promotes axon elongation by a mechanism that depends both on ERK signaling and PI3-kinase/Akt/GSK-3β signaling.",
+            "source_id": "europe_pmc",
+            "record_id": "MED:24444792",
+            "version": "a563c7affeea18aaf80c6edf2af7b91b38780b3c72e8dd0bd53a185e8360f5b8",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "PMID:24444792",
+            "source_kind": "primary",
+            "text_level": "selected_passages",
+            "url": "https://europepmc.org/article/MED/24444792",
+            "allowed_passage_ids": [
+              "M1:P004",
+              "M1:P006",
+              "M1:P008"
+            ]
+          }
+        ]
+      },
+      "evaluation": {
+        "case_id": "Q003",
+        "question": "在培养的小鼠发育期海马锥体神经元中，哪些证据支持 ERK 信号参与介导 APRIL 的促轴突延长作用？",
+        "mechanism": "APRIL 激活 ERK1/ERK2，ERK 信号分支参与介导 APRIL 诱导的轴突延长。",
+        "scope": {
+          "species": "mouse",
+          "system": "cultured developing hippocampal pyramidal neurons",
+          "disease": null
+        },
+        "overall": {
+          "verdict": "partial",
+          "rationale": "部分义务获得适用支持；整体机制仍有覆盖、衔接或相反结果问题。现有证据 L1 和 L2 分别支持 APRIL 激活 ERK1/ERK2（C1）以及 APRIL 促进培养的小鼠发育期海马锥体神经元轴突延长（C2），且两者均来自同一原始研究 M1，背景与目标范围匹配。但没有实验直接检验阻断或抑制 ERK 信号后 APRIL 的促轴突延长作用是否改变，因此 J1 所要求的 ERK 信号分支参与介导 APRIL 促轴突延长这一因果义务未被测试。当前结果只能说明该机制与观察相容，尚不能判定该指定介导关系已被证实。",
+          "valid_witness_ids": [],
+          "has_comparable_conflict": false,
+          "has_unresolved_counterevidence": false
+        },
+        "claims": [
+          {
+            "id": "C1",
+            "text": "APRIL treatment activates ERK1/ERK2 in cultured developing mouse hippocampal pyramidal neurons.",
+            "kind": "causal",
+            "verdict": "supported",
+            "supporting_observation_ids": [
+              "L1"
+            ],
+            "opposing_observation_ids": [],
+            "compatible_observation_ids": [],
+            "applicability_gaps": [],
+            "distinct_supporting_source_groups": [
+              "pmid:24444792"
+            ]
+          },
+          {
+            "id": "C2",
+            "text": "APRIL treatment enhances axonal elongation in these cultured neurons.",
+            "kind": "causal",
+            "verdict": "supported",
+            "supporting_observation_ids": [
+              "L2"
+            ],
+            "opposing_observation_ids": [],
+            "compatible_observation_ids": [],
+            "applicability_gaps": [],
+            "distinct_supporting_source_groups": [
+              "pmid:24444792"
+            ]
+          }
+        ],
+        "joins": [
+          {
+            "id": "J1",
+            "text": "ERK signaling contributes to mediating the axon-elongating effect of APRIL in these cultured neurons.",
+            "claim_ids": [
+              "C1",
+              "C2"
+            ],
+            "verdict": "unestablished",
+            "supporting_observation_ids": [],
+            "opposing_observation_ids": [],
+            "compatible_observation_ids": [],
+            "applicability_gaps": [],
+            "distinct_supporting_source_groups": []
+          }
+        ],
+        "evidence": [
+          {
+            "id": "L1",
+            "claim_ids": [
+              "C1"
+            ],
+            "join_ids": [],
+            "relation": "supports",
+            "basis": "intervention",
+            "causal_test": "established",
+            "passage_ids": [
+              "M1:P008"
+            ],
+            "context": {
+              "species": "mouse",
+              "system": "cultured hippocampal pyramidal cells",
+              "disease": null
+            },
+            "applicability": {
+              "species": "matched",
+              "system": "matched",
+              "disease": "not_required"
+            },
+            "rationale": "M1:P008 报告 APRIL 促进培养的海马锥体细胞中 ERK1 和 ERK2 的磷酸化与活化，直接支持 APRIL 处理激活 ERK1/ERK2。",
+            "limitations": [
+              "摘要级证据，未提供定量、时间过程或抑制剂对照。",
+              "该句本身未明确“发育期”，发育期背景需结合来源标题或其他段落推断。"
+            ],
+            "effective_applicability": "matched",
+            "causal_evidence_eligible": true,
+            "source_groups": [
+              "pmid:24444792"
+            ],
+            "references": [
+              {
+                "source_id": "europe_pmc",
+                "record_id": "MED:24444792",
+                "version": "a563c7affeea18aaf80c6edf2af7b91b38780b3c72e8dd0bd53a185e8360f5b8",
+                "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+                "source_group": "pmid:24444792",
+                "source_kind": "primary",
+                "text_level": "selected_passages",
+                "url": "https://europepmc.org/article/MED/24444792",
+                "id": "M1:P008",
+                "material_id": "M1",
+                "start": 1015,
+                "end": 1177,
+                "text": "APRIL promoted phosphorylation and activation of ERK1, ERK2 and Akt and serine phosphorylation and inactivation of GSK-3β in cultured hippocampal pyramidal cells."
+              }
+            ]
+          },
+          {
+            "id": "L2",
+            "claim_ids": [
+              "C2"
+            ],
+            "join_ids": [],
+            "relation": "supports",
+            "basis": "intervention",
+            "causal_test": "established",
+            "passage_ids": [
+              "M1:P006"
+            ],
+            "context": {
+              "species": "mouse",
+              "system": "cultured developing hippocampal pyramidal neurons",
+              "disease": null
+            },
+            "applicability": {
+              "species": "matched",
+              "system": "matched",
+              "disease": "not_required"
+            },
+            "rationale": "M1:P006 报告重组 APRIL 促进轴突延长但不影响树突延长，直接支持 APRIL 处理增强这些培养神经元的轴突延长。",
+            "limitations": [
+              "摘要级证据，未提供定量和统计细节。",
+              "该句本身未明确种属和发育阶段，需结合来源标题和其他段落推断。"
+            ],
+            "effective_applicability": "matched",
+            "causal_evidence_eligible": true,
+            "source_groups": [
+              "pmid:24444792"
+            ],
+            "references": [
+              {
+                "source_id": "europe_pmc",
+                "record_id": "MED:24444792",
+                "version": "a563c7affeea18aaf80c6edf2af7b91b38780b3c72e8dd0bd53a185e8360f5b8",
+                "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+                "source_group": "pmid:24444792",
+                "source_kind": "primary",
+                "text_level": "selected_passages",
+                "url": "https://europepmc.org/article/MED/24444792",
+                "id": "M1:P006",
+                "material_id": "M1",
+                "start": 707,
+                "end": 795,
+                "text": "Recombinant APRIL enhanced axonal elongation, but did not influence dendrite elongation."
+              }
+            ]
+          }
+        ],
+        "witnesses": [],
+        "conflicts": [],
+        "unresolved_counterevidence": [],
+        "critical_gaps": [
+          {
+            "claim_ids": [
+              "C1",
+              "C2"
+            ],
+            "join_ids": [
+              "J1"
+            ],
+            "reason": "现有证据仅分别显示 APRIL 促进 ERK1/2 磷酸化活化和 APRIL 促进轴突延长，未对 ERK 信号在 APRIL 促轴突延长效应中的介导作用进行因果检验；仅凭两个独立结果不能推出 ERK 信号分支参与介导。",
+            "missing_experiment": "在培养的小鼠发育期海马锥体神经元中，使用 MEK/ERK 通路抑制剂（如 U0126 或 PD98059）、ERK1/2 敲低或显性负突变，再给予 APRIL 并检测轴突延长；同时设置单独 APRIL、单独抑制剂/敲低及溶剂对照，以判断阻断 ERK 后 APRIL 的促轴突延长作用是否消失或减弱。"
+          }
+        ],
+        "material_assessability": {
+          "status": "limited",
+          "material_count": 1,
+          "passage_count": 3,
+          "source_groups": [
+            "pmid:24444792"
+          ],
+          "source_kinds": [
+            "primary"
+          ],
+          "text_levels": [
+            "selected_passages"
+          ],
+          "limitations": [
+            "选取段落不能证明已覆盖原报告的全部相关结果。"
+          ]
+        },
+        "independence": {
+          "distinct_source_groups": 1,
+          "independent_cohorts": null,
+          "note": "来源去重不等于确认队列或实验相互独立。"
+        },
+        "settings": {
+          "use_context": true,
+          "use_joins": true,
+          "deduplicate": true
+        },
+        "local_review": {
+          "observations": [
+            {
+              "id": "L1",
+              "claim_ids": [
+                "C1"
+              ],
+              "join_ids": [],
+              "relation": "supports",
+              "basis": "intervention",
+              "causal_test": "established",
+              "passage_ids": [
+                "M1:P008"
+              ],
+              "context": {
+                "species": "mouse",
+                "system": "cultured hippocampal pyramidal cells",
+                "disease": null
+              },
+              "applicability": {
+                "species": "matched",
+                "system": "matched",
+                "disease": "not_required"
+              },
+              "rationale": "M1:P008 报告 APRIL 促进培养的海马锥体细胞中 ERK1 和 ERK2 的磷酸化与活化，直接支持 APRIL 处理激活 ERK1/ERK2。",
+              "limitations": [
+                "摘要级证据，未提供定量、时间过程或抑制剂对照。",
+                "该句本身未明确“发育期”，发育期背景需结合来源标题或其他段落推断。"
+              ]
+            },
+            {
+              "id": "L2",
+              "claim_ids": [
+                "C2"
+              ],
+              "join_ids": [],
+              "relation": "supports",
+              "basis": "intervention",
+              "causal_test": "established",
+              "passage_ids": [
+                "M1:P006"
+              ],
+              "context": {
+                "species": "mouse",
+                "system": "cultured developing hippocampal pyramidal neurons",
+                "disease": null
+              },
+              "applicability": {
+                "species": "matched",
+                "system": "matched",
+                "disease": "not_required"
+              },
+              "rationale": "M1:P006 报告重组 APRIL 促进轴突延长但不影响树突延长，直接支持 APRIL 处理增强这些培养神经元的轴突延长。",
+              "limitations": [
+                "摘要级证据，未提供定量和统计细节。",
+                "该句本身未明确种属和发育阶段，需结合来源标题和其他段落推断。"
+              ]
+            }
+          ],
+          "gaps": [
+            {
+              "claim_ids": [
+                "C1",
+                "C2"
+              ],
+              "join_ids": [],
+              "reason": "现有证据仅分别显示 APRIL 激活 ERK1/ERK2 以及 APRIL 促进轴突延长，未提供 ERK 在该促轴突延长效应中作为中介分支的因果实验证据，因此不能由这两项观察直接推出 ERK 介导 APRIL 的促轴突延长作用。",
+              "missing_experiment": "在培养的小鼠发育期海马锥体神经元中，使用 MEK/ERK 通路抑制剂（如 U0126 或 PD98059）或 ERK 敲低/显性负突变，再给予 APRIL 并检测轴突延长；若阻断 ERK 后 APRIL 的促轴突延长作用消失或减弱，则可确立 ERK 信号分支的介导作用。"
+            }
+          ]
+        },
+        "mechanism_review": {
+          "additional_claims": [],
+          "additional_joins": [],
+          "observations": [],
+          "combinations": [],
+          "comparisons": [],
+          "whole_assessment": "compatible_only",
+          "rationale": "现有证据 L1 和 L2 分别支持 APRIL 激活 ERK1/ERK2（C1）以及 APRIL 促进培养的小鼠发育期海马锥体神经元轴突延长（C2），且两者均来自同一原始研究 M1，背景与目标范围匹配。但没有实验直接检验阻断或抑制 ERK 信号后 APRIL 的促轴突延长作用是否改变，因此 J1 所要求的 ERK 信号分支参与介导 APRIL 促轴突延长这一因果义务未被测试。当前结果只能说明该机制与观察相容，尚不能判定该指定介导关系已被证实。",
+          "gaps": [
+            {
+              "claim_ids": [
+                "C1",
+                "C2"
+              ],
+              "join_ids": [
+                "J1"
+              ],
+              "reason": "现有证据仅分别显示 APRIL 促进 ERK1/2 磷酸化活化和 APRIL 促进轴突延长，未对 ERK 信号在 APRIL 促轴突延长效应中的介导作用进行因果检验；仅凭两个独立结果不能推出 ERK 信号分支参与介导。",
+              "missing_experiment": "在培养的小鼠发育期海马锥体神经元中，使用 MEK/ERK 通路抑制剂（如 U0126 或 PD98059）、ERK1/2 敲低或显性负突变，再给予 APRIL 并检测轴突延长；同时设置单独 APRIL、单独抑制剂/敲低及溶剂对照，以判断阻断 ERK 后 APRIL 的促轴突延长作用是否消失或减弱。"
+            }
+          ]
+        },
+        "decomposition": {
+          "claims": [
+            {
+              "id": "C1",
+              "text": "APRIL treatment activates ERK1/ERK2 in cultured developing mouse hippocampal pyramidal neurons.",
+              "kind": "causal"
+            },
+            {
+              "id": "C2",
+              "text": "APRIL treatment enhances axonal elongation in these cultured neurons.",
+              "kind": "causal"
+            }
+          ],
+          "joins": [
+            {
+              "id": "J1",
+              "text": "ERK signaling contributes to mediating the axon-elongating effect of APRIL in these cultured neurons.",
+              "claim_ids": [
+                "C1",
+                "C2"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "Q001": {
+      "case": {
+        "id": "Q001",
+        "question": "在培养的小鼠发育期海马锥体神经元中，哪些证据支持 ERK 信号参与介导 APRIL 的促轴突延长作用？",
+        "mechanism": "APRIL 激活 ERK1/ERK2，ERK 信号分支参与介导 APRIL 诱导的轴突延长。",
+        "scope": {
+          "species": "mouse",
+          "system": "cultured developing hippocampal pyramidal neurons",
+          "disease": null
+        },
+        "claims": [
+          {
+            "id": "C1",
+            "text": "APRIL treatment activates ERK1/ERK2 in cultured developing mouse hippocampal pyramidal neurons.",
+            "kind": "causal"
+          },
+          {
+            "id": "C2",
+            "text": "APRIL treatment enhances axonal elongation in these cultured neurons.",
+            "kind": "causal"
+          }
+        ],
+        "joins": [
+          {
+            "id": "J1",
+            "text": "ERK signaling contributes to mediating the axon-elongating effect of APRIL in these cultured neurons.",
+            "claim_ids": [
+              "C1",
+              "C2"
+            ]
+          }
+        ],
+        "materials": [
+          {
+            "id": "M1",
+            "text": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.\n\nAPRIL (A Proliferation-Inducing Ligand, TNFSF13) is a member of the tumor necrosis factor superfamily that regulates lymphocyte survival and activation and has been implicated in tumorigenesis and autoimmune diseases. Here we report the expression and first known activity of APRIL in the nervous system. APRIL and one of its receptors, BCMA (B-Cell Maturation Antigen, TNFRSF17), are expressed by hippocampal pyramidal cells of fetal and postnatal mice. In culture, these neurons secreted APRIL, and function-blocking antibodies to either APRIL or BCMA reduced axonal elongation. Recombinant APRIL enhanced axonal elongation, but did not influence dendrite elongation. The effect of APRIL on axon elongation was inhibited by anti-BCMA and the expression of a signaling-defective BCMA mutant in these neurons, suggesting that the axon growth-promoting effect of APRIL is mediated by BCMA. APRIL promoted phosphorylation and activation of ERK1, ERK2 and Akt and serine phosphorylation and inactivation of GSK-3β in cultured hippocampal pyramidal cells. Inhibition of MEK1/MEK2 (activators of ERK1/ERK2), PI3-kinase (activator of Akt) or Akt inhibited the axon growth-promoting action of APRIL, as did pharmacological activation of GSK-3β and the expression of a constitutively active form of GSK-3β. These findings suggest that APRIL promotes axon elongation by a mechanism that depends both on ERK signaling and PI3-kinase/Akt/GSK-3β signaling.",
+            "source_id": "europe_pmc",
+            "record_id": "MED:24444792",
+            "version": "a563c7affeea18aaf80c6edf2af7b91b38780b3c72e8dd0bd53a185e8360f5b8",
+            "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+            "source_group": "PMID:24444792",
+            "source_kind": "primary",
+            "text_level": "abstract",
+            "url": "https://europepmc.org/article/MED/24444792"
+          }
+        ]
+      },
+      "evaluation": {
+        "case_id": "Q001",
+        "question": "在培养的小鼠发育期海马锥体神经元中，哪些证据支持 ERK 信号参与介导 APRIL 的促轴突延长作用？",
+        "mechanism": "APRIL 激活 ERK1/ERK2，ERK 信号分支参与介导 APRIL 诱导的轴突延长。",
+        "scope": {
+          "species": "mouse",
+          "system": "cultured developing hippocampal pyramidal neurons",
+          "disease": null
+        },
+        "overall": {
+          "verdict": "supported",
+          "rationale": "存在覆盖全部义务且背景一致的有效见证。同一原始文献摘要报告了 APRIL 在培养发育期小鼠海马锥体神经元中促进 ERK1/2 磷酸化活化（支持 C1）、重组 APRIL 增强轴突延长（支持 C2），并通过 MEK1/MEK2 抑制实验阻断 APRIL 的促轴突生长作用（支持 J1）。因此候选机制中 APRIL 激活 ERK1/2 且 ERK 信号分支参与介导 APRIL 诱导轴突延长的因果链在所述范围内已被直接测试并得到支持。",
+          "valid_witness_ids": [
+            "COMBO1"
+          ],
+          "has_comparable_conflict": false,
+          "has_unresolved_counterevidence": false
+        },
+        "claims": [
+          {
+            "id": "C1",
+            "text": "APRIL treatment activates ERK1/ERK2 in cultured developing mouse hippocampal pyramidal neurons.",
+            "kind": "causal",
+            "verdict": "supported",
+            "supporting_observation_ids": [
+              "L1"
+            ],
+            "opposing_observation_ids": [],
+            "compatible_observation_ids": [],
+            "applicability_gaps": [],
+            "distinct_supporting_source_groups": [
+              "pmid:24444792"
+            ]
+          },
+          {
+            "id": "C2",
+            "text": "APRIL treatment enhances axonal elongation in these cultured neurons.",
+            "kind": "causal",
+            "verdict": "supported",
+            "supporting_observation_ids": [
+              "L2"
+            ],
+            "opposing_observation_ids": [],
+            "compatible_observation_ids": [
+              "L3"
+            ],
+            "applicability_gaps": [],
+            "distinct_supporting_source_groups": [
+              "pmid:24444792"
+            ]
+          }
+        ],
+        "joins": [
+          {
+            "id": "J1",
+            "text": "ERK signaling contributes to mediating the axon-elongating effect of APRIL in these cultured neurons.",
+            "claim_ids": [
+              "C1",
+              "C2"
+            ],
+            "verdict": "supported",
+            "supporting_observation_ids": [
+              "M1"
+            ],
+            "opposing_observation_ids": [],
+            "compatible_observation_ids": [],
+            "applicability_gaps": [],
+            "distinct_supporting_source_groups": [
+              "pmid:24444792"
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "id": "L1",
+            "claim_ids": [
+              "C1"
+            ],
+            "join_ids": [],
+            "relation": "supports",
+            "basis": "intervention",
+            "causal_test": "established",
+            "passage_ids": [
+              "M1:P008"
+            ],
+            "context": {
+              "species": "mouse",
+              "system": "cultured developing hippocampal pyramidal neurons",
+              "disease": null
+            },
+            "applicability": {
+              "species": "matched",
+              "system": "matched",
+              "disease": "not_required"
+            },
+            "rationale": "该摘要直接报告 APRIL 在培养的海马锥体细胞中促进 ERK1、ERK2 的磷酸化与活化，与 C1 所述 APRIL 处理激活 ERK1/ERK2 相符。",
+            "limitations": [
+              "仅为摘要，缺乏剂量、时间、统计与实验重复数等细节",
+              "未说明发育阶段的具体天数，但来源标题/描述为发育期海马神经元",
+              "同时报告 Akt/GSK-3β 变化，不能单独分离 ERK 激活"
+            ],
+            "effective_applicability": "matched",
+            "causal_evidence_eligible": true,
+            "source_groups": [
+              "pmid:24444792"
+            ],
+            "references": [
+              {
+                "source_id": "europe_pmc",
+                "record_id": "MED:24444792",
+                "version": "a563c7affeea18aaf80c6edf2af7b91b38780b3c72e8dd0bd53a185e8360f5b8",
+                "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+                "source_group": "pmid:24444792",
+                "source_kind": "primary",
+                "text_level": "abstract",
+                "url": "https://europepmc.org/article/MED/24444792",
+                "id": "M1:P008",
+                "material_id": "M1",
+                "start": 1015,
+                "end": 1177,
+                "text": "APRIL promoted phosphorylation and activation of ERK1, ERK2 and Akt and serine phosphorylation and inactivation of GSK-3β in cultured hippocampal pyramidal cells."
+              }
+            ]
+          },
+          {
+            "id": "L2",
+            "claim_ids": [
+              "C2"
+            ],
+            "join_ids": [],
+            "relation": "supports",
+            "basis": "intervention",
+            "causal_test": "established",
+            "passage_ids": [
+              "M1:P006"
+            ],
+            "context": {
+              "species": "mouse",
+              "system": "cultured developing hippocampal pyramidal neurons",
+              "disease": null
+            },
+            "applicability": {
+              "species": "matched",
+              "system": "matched",
+              "disease": "not_required"
+            },
+            "rationale": "摘要报告重组 APRIL 增强轴突延长但不影响树突延长，直接支持 C2 中 APRIL 处理增强轴突延长的因果效应。",
+            "limitations": [
+              "仅为摘要，缺乏轴突长度定量、统计与实验重复数",
+              "摘要未说明是否在相同培养条件下直接比较 APRIL 与对照，但“enhanced”提示有对照"
+            ],
+            "effective_applicability": "matched",
+            "causal_evidence_eligible": true,
+            "source_groups": [
+              "pmid:24444792"
+            ],
+            "references": [
+              {
+                "source_id": "europe_pmc",
+                "record_id": "MED:24444792",
+                "version": "a563c7affeea18aaf80c6edf2af7b91b38780b3c72e8dd0bd53a185e8360f5b8",
+                "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+                "source_group": "pmid:24444792",
+                "source_kind": "primary",
+                "text_level": "abstract",
+                "url": "https://europepmc.org/article/MED/24444792",
+                "id": "M1:P006",
+                "material_id": "M1",
+                "start": 707,
+                "end": 795,
+                "text": "Recombinant APRIL enhanced axonal elongation, but did not influence dendrite elongation."
+              }
+            ]
+          },
+          {
+            "id": "L3",
+            "claim_ids": [
+              "C2"
+            ],
+            "join_ids": [],
+            "relation": "compatible",
+            "basis": "intervention",
+            "causal_test": "not_established",
+            "passage_ids": [
+              "M1:P009"
+            ],
+            "context": {
+              "species": "mouse",
+              "system": "cultured developing hippocampal pyramidal neurons",
+              "disease": null
+            },
+            "applicability": {
+              "species": "matched",
+              "system": "matched",
+              "disease": "not_required"
+            },
+            "rationale": "该摘要还报告 MEK1/MEK2 抑制剂可抑制 APRIL 的促轴突生长作用，与 C2 中 APRIL 的促轴突延长效应一致，并提示 ERK 信号分支参与介导该效应；但该实验的直接目标是通路依赖性，不是单独重复 APRIL 与对照的轴突延长比较。",
+            "limitations": [
+              "摘要未给出 MEK 抑制剂处理相对于 APRIL 单独处理的定量结果",
+              "不能区分 ERK1/ERK2 与上游或平行 PI3K/Akt/GSK-3β 分支的交互作用",
+              "未说明抑制剂对基础轴突生长的影响"
+            ],
+            "effective_applicability": "matched",
+            "causal_evidence_eligible": false,
+            "source_groups": [
+              "pmid:24444792"
+            ],
+            "references": [
+              {
+                "source_id": "europe_pmc",
+                "record_id": "MED:24444792",
+                "version": "a563c7affeea18aaf80c6edf2af7b91b38780b3c72e8dd0bd53a185e8360f5b8",
+                "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+                "source_group": "pmid:24444792",
+                "source_kind": "primary",
+                "text_level": "abstract",
+                "url": "https://europepmc.org/article/MED/24444792",
+                "id": "M1:P009",
+                "material_id": "M1",
+                "start": 1178,
+                "end": 1424,
+                "text": "Inhibition of MEK1/MEK2 (activators of ERK1/ERK2), PI3-kinase (activator of Akt) or Akt inhibited the axon growth-promoting action of APRIL, as did pharmacological activation of GSK-3β and the expression of a constitutively active form of GSK-3β."
+              }
+            ]
+          },
+          {
+            "id": "M1",
+            "claim_ids": [],
+            "join_ids": [
+              "J1"
+            ],
+            "relation": "supports",
+            "basis": "intervention",
+            "causal_test": "established",
+            "passage_ids": [
+              "M1:P009"
+            ],
+            "context": {
+              "species": "mouse",
+              "system": "cultured developing hippocampal pyramidal neurons",
+              "disease": null
+            },
+            "applicability": {
+              "species": "matched",
+              "system": "matched",
+              "disease": "not_required"
+            },
+            "rationale": "摘要报告 MEK1/MEK2 抑制剂可抑制 APRIL 的促轴突生长作用，并作出结论该作用依赖于 ERK 信号和 PI3K/Akt/GSK-3β 信号；因此直接测试了 ERK 信号分支参与介导 APRIL 的轴突延长效应。",
+            "limitations": [
+              "仅为摘要，未给出抑制剂浓度、处理时间、定量结果和统计细节",
+              "MEK 抑制剂主要通过 ERK1/2 上游起作用，但不能完全排除 MEK 的其他底物或间接影响",
+              "同一摘要还报告 PI3K/Akt/GSK-3β 分支也参与，不能单独分离 ERK 的贡献比例"
+            ],
+            "effective_applicability": "matched",
+            "causal_evidence_eligible": true,
+            "source_groups": [
+              "pmid:24444792"
+            ],
+            "references": [
+              {
+                "source_id": "europe_pmc",
+                "record_id": "MED:24444792",
+                "version": "a563c7affeea18aaf80c6edf2af7b91b38780b3c72e8dd0bd53a185e8360f5b8",
+                "title": "Selective regulation of axonal growth from developing hippocampal neurons by tumor necrosis factor superfamily member APRIL.",
+                "source_group": "pmid:24444792",
+                "source_kind": "primary",
+                "text_level": "abstract",
+                "url": "https://europepmc.org/article/MED/24444792",
+                "id": "M1:P009",
+                "material_id": "M1",
+                "start": 1178,
+                "end": 1424,
+                "text": "Inhibition of MEK1/MEK2 (activators of ERK1/ERK2), PI3-kinase (activator of Akt) or Akt inhibited the axon growth-promoting action of APRIL, as did pharmacological activation of GSK-3β and the expression of a constitutively active form of GSK-3β."
+              }
+            ]
+          }
+        ],
+        "witnesses": [
+          {
+            "id": "COMBO1",
+            "observation_ids": [
+              "L1",
+              "L2",
+              "M1"
+            ],
+            "context_coherence": "matched",
+            "rationale": "L1 直接支持 APRIL 激活 ERK1/2（C1），L2 直接支持 APRIL 增强轴突延长（C2），M1 通过 MEK/ERK 抑制实验支持 ERK 信号分支介导 APRIL 的促轴突延长作用（J1）；三者均来自同一篇原始研究中的培养小鼠发育期海马锥体神经元，语境一致。",
+            "support_assignments": {
+              "C1": [
+                "L1"
+              ],
+              "C2": [
+                "L2"
+              ],
+              "J1": [
+                "M1"
+              ]
+            },
+            "missing_obligation_ids": [],
+            "known_species_consistent": true,
+            "valid": true,
+            "source_groups": [
+              "pmid:24444792"
+            ]
+          }
+        ],
+        "conflicts": [],
+        "unresolved_counterevidence": [],
+        "critical_gaps": [],
+        "material_assessability": {
+          "status": "limited",
+          "material_count": 1,
+          "passage_count": 10,
+          "source_groups": [
+            "pmid:24444792"
+          ],
+          "source_kinds": [
+            "primary"
+          ],
+          "text_levels": [
+            "abstract"
+          ],
+          "limitations": [
+            "摘要报告的实验缺少完整方法和结果细节。"
+          ]
+        },
+        "independence": {
+          "distinct_source_groups": 1,
+          "independent_cohorts": null,
+          "note": "来源去重不等于确认队列或实验相互独立。"
+        },
+        "settings": {
+          "use_context": true,
+          "use_joins": true,
+          "deduplicate": true
+        },
+        "local_review": {
+          "observations": [
+            {
+              "id": "L1",
+              "claim_ids": [
+                "C1"
+              ],
+              "join_ids": [],
+              "relation": "supports",
+              "basis": "intervention",
+              "causal_test": "established",
+              "passage_ids": [
+                "M1:P008"
+              ],
+              "context": {
+                "species": "mouse",
+                "system": "cultured developing hippocampal pyramidal neurons",
+                "disease": null
+              },
+              "applicability": {
+                "species": "matched",
+                "system": "matched",
+                "disease": "not_required"
+              },
+              "rationale": "该摘要直接报告 APRIL 在培养的海马锥体细胞中促进 ERK1、ERK2 的磷酸化与活化，与 C1 所述 APRIL 处理激活 ERK1/ERK2 相符。",
+              "limitations": [
+                "仅为摘要，缺乏剂量、时间、统计与实验重复数等细节",
+                "未说明发育阶段的具体天数，但来源标题/描述为发育期海马神经元",
+                "同时报告 Akt/GSK-3β 变化，不能单独分离 ERK 激活"
+              ]
+            },
+            {
+              "id": "L2",
+              "claim_ids": [
+                "C2"
+              ],
+              "join_ids": [],
+              "relation": "supports",
+              "basis": "intervention",
+              "causal_test": "established",
+              "passage_ids": [
+                "M1:P006"
+              ],
+              "context": {
+                "species": "mouse",
+                "system": "cultured developing hippocampal pyramidal neurons",
+                "disease": null
+              },
+              "applicability": {
+                "species": "matched",
+                "system": "matched",
+                "disease": "not_required"
+              },
+              "rationale": "摘要报告重组 APRIL 增强轴突延长但不影响树突延长，直接支持 C2 中 APRIL 处理增强轴突延长的因果效应。",
+              "limitations": [
+                "仅为摘要，缺乏轴突长度定量、统计与实验重复数",
+                "摘要未说明是否在相同培养条件下直接比较 APRIL 与对照，但“enhanced”提示有对照"
+              ]
+            },
+            {
+              "id": "L3",
+              "claim_ids": [
+                "C2"
+              ],
+              "join_ids": [],
+              "relation": "compatible",
+              "basis": "intervention",
+              "causal_test": "not_established",
+              "passage_ids": [
+                "M1:P009"
+              ],
+              "context": {
+                "species": "mouse",
+                "system": "cultured developing hippocampal pyramidal neurons",
+                "disease": null
+              },
+              "applicability": {
+                "species": "matched",
+                "system": "matched",
+                "disease": "not_required"
+              },
+              "rationale": "该摘要还报告 MEK1/MEK2 抑制剂可抑制 APRIL 的促轴突生长作用，与 C2 中 APRIL 的促轴突延长效应一致，并提示 ERK 信号分支参与介导该效应；但该实验的直接目标是通路依赖性，不是单独重复 APRIL 与对照的轴突延长比较。",
+              "limitations": [
+                "摘要未给出 MEK 抑制剂处理相对于 APRIL 单独处理的定量结果",
+                "不能区分 ERK1/ERK2 与上游或平行 PI3K/Akt/GSK-3β 分支的交互作用",
+                "未说明抑制剂对基础轴突生长的影响"
+              ]
+            }
+          ],
+          "gaps": []
+        },
+        "mechanism_review": {
+          "additional_claims": [],
+          "additional_joins": [],
+          "observations": [
+            {
+              "id": "M1",
+              "claim_ids": [],
+              "join_ids": [
+                "J1"
+              ],
+              "relation": "supports",
+              "basis": "intervention",
+              "causal_test": "established",
+              "passage_ids": [
+                "M1:P009"
+              ],
+              "context": {
+                "species": "mouse",
+                "system": "cultured developing hippocampal pyramidal neurons",
+                "disease": null
+              },
+              "applicability": {
+                "species": "matched",
+                "system": "matched",
+                "disease": "not_required"
+              },
+              "rationale": "摘要报告 MEK1/MEK2 抑制剂可抑制 APRIL 的促轴突生长作用，并作出结论该作用依赖于 ERK 信号和 PI3K/Akt/GSK-3β 信号；因此直接测试了 ERK 信号分支参与介导 APRIL 的轴突延长效应。",
+              "limitations": [
+                "仅为摘要，未给出抑制剂浓度、处理时间、定量结果和统计细节",
+                "MEK 抑制剂主要通过 ERK1/2 上游起作用，但不能完全排除 MEK 的其他底物或间接影响",
+                "同一摘要还报告 PI3K/Akt/GSK-3β 分支也参与，不能单独分离 ERK 的贡献比例"
+              ]
+            }
+          ],
+          "combinations": [
+            {
+              "id": "COMBO1",
+              "observation_ids": [
+                "L1",
+                "L2",
+                "M1"
+              ],
+              "context_coherence": "matched",
+              "rationale": "L1 直接支持 APRIL 激活 ERK1/2（C1），L2 直接支持 APRIL 增强轴突延长（C2），M1 通过 MEK/ERK 抑制实验支持 ERK 信号分支介导 APRIL 的促轴突延长作用（J1）；三者均来自同一篇原始研究中的培养小鼠发育期海马锥体神经元，语境一致。"
+            }
+          ],
+          "comparisons": [
+            {
+              "observation_ids": [
+                "L2",
+                "L3"
+              ],
+              "context_relation": "comparable",
+              "rationale": "L2 与 L3 均来自同一培养小鼠发育期海马锥体神经元模型，且都涉及 APRIL 对轴突生长的作用；L2 显示 APRIL 直接增强轴突延长，L3 显示 MEK 抑制可阻断 APRIL 的促轴突生长作用，二者方向一致而非相互冲突。"
+            }
+          ],
+          "whole_assessment": "supported",
+          "rationale": "同一原始文献摘要报告了 APRIL 在培养发育期小鼠海马锥体神经元中促进 ERK1/2 磷酸化活化（支持 C1）、重组 APRIL 增强轴突延长（支持 C2），并通过 MEK1/MEK2 抑制实验阻断 APRIL 的促轴突生长作用（支持 J1）。因此候选机制中 APRIL 激活 ERK1/2 且 ERK 信号分支参与介导 APRIL 诱导轴突延长的因果链在所述范围内已被直接测试并得到支持。",
+          "gaps": []
+        },
+        "decomposition": {
+          "claims": [
+            {
+              "id": "C1",
+              "text": "APRIL treatment activates ERK1/ERK2 in cultured developing mouse hippocampal pyramidal neurons.",
+              "kind": "causal"
+            },
+            {
+              "id": "C2",
+              "text": "APRIL treatment enhances axonal elongation in these cultured neurons.",
+              "kind": "causal"
+            }
+          ],
+          "joins": [
+            {
+              "id": "J1",
+              "text": "ERK signaling contributes to mediating the axon-elongating effect of APRIL in these cultured neurons.",
+              "claim_ids": [
+                "C1",
+                "C2"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "Q020": {
+      "case": {
+        "id": "Q020",
+        "question": "未观察到 CAR T fratricide 是否就证明该 CD229 方案无 on-target off-tumour 作用？",
+        "mechanism": "未见 CAR T 自相残杀，且该方案完全不清除非激活 T 细胞，因此不存在 on-target off-tumour 作用。",
+        "scope": {
+          "species": null,
+          "system": "reported preclinical dual-antigen multiple myeloma models",
+          "disease": "multiple myeloma"
+        },
+        "claims": [
+          {
+            "id": "C1",
+            "text": "No fratricide among CAR T cells was observed in the reported experiments.",
+            "kind": "reported"
+          },
+          {
+            "id": "C2",
+            "text": "No elimination of nonactivated T cells was observed with the CD229 CAR system.",
+            "kind": "reported"
+          }
+        ],
+        "joins": [
+          {
+            "id": "J1",
+            "text": "The absence of CAR T-cell fratricide establishes absence of on-target off-tumour toxicity.",
+            "claim_ids": [
+              "C1",
+              "C2"
+            ]
+          }
+        ],
+        "materials": [
+          {
+            "id": "M1",
+            "text": "Bicistronic CAR T Cell against BCMA and CD229 Effectively Controls Myeloma Even When BCMA Expression Is Limited.\n\nAnti-B-cell maturation antigen (BCMA) chimeric antigen receptor (CAR) T-cell therapy has revolutionized the prognosis of patients with relapsed/refractory multiple myeloma. Regrettably, despite unprecedented overall response rates achieved with this approach, most patients eventually relapse. One of the primary reasons for this is the complete loss or reduced expression of BCMA on the malignant plasma cell surface. Consequently, new therapeutic targets are under investigation. Another potential therapeutic approach involves the use of CAR T cells targeting two tumor antigens. In this study, we developed and validated a monospecific CAR targeting CD229, which was effective in in vitro and in vivo NOD.Cg-Prkdcscid Il2rdtm1Wjl/SzJ mouse models with both homogeneous and heterogeneous BCMA expression. Additionally, we created a bicistronic CAR T cell targeting both CD229 and BCMA, which demonstrated efficacy in models with homogeneous BCMA expression, in heterogeneous models featuring small clonal populations with biallelic BCMA deletion, and in cases with reduced BCMA expression both in vivo and in vitro. Regarding \"on-target off-tumor toxicity,\" no fratricide was observed among CAR T cells, but there was a limited elimination of nonactivated T cells. The immune pressure exerted by anti-CD229 CAR T cells led to the loss of the CD229 antigen expression in some instances. In summary, this work underscores the potential utility of CD229 alone or in combination with BCMA as an immunotherapeutic target in multiple myeloma, especially in cases marked by diminished or absent BCMA expression.",
+            "source_id": "europe_pmc",
+            "record_id": "MED:40576564",
+            "version": "491109a6bb65f9821db1be7ade2e624f056a6d354e561f9383a181db7cab38fe",
+            "title": "Bicistronic CAR T Cell against BCMA and CD229 Effectively Controls Myeloma Even When BCMA Expression Is Limited.",
+            "source_group": "PMID:40576564",
+            "source_kind": "primary",
+            "text_level": "abstract",
+            "url": "https://europepmc.org/article/MED/40576564"
+          }
+        ]
+      },
+      "evaluation": {
+        "case_id": "Q020",
+        "question": "未观察到 CAR T fratricide 是否就证明该 CD229 方案无 on-target off-tumour 作用？",
+        "mechanism": "未见 CAR T 自相残杀，且该方案完全不清除非激活 T 细胞，因此不存在 on-target off-tumour 作用。",
+        "scope": {
+          "species": null,
+          "system": "reported preclinical dual-antigen multiple myeloma models",
+          "disease": "multiple myeloma"
+        },
+        "overall": {
+          "verdict": "partial",
+          "rationale": "部分义务获得适用支持；整体机制仍有覆盖、衔接或相反结果问题。该候选机制把未观察到 CAR T fratricide 和完全不清除非激活 T 细胞作为依据，推断不存在 on-target off-tumour 作用。原始摘要 M1:P009 明确报告未观察到 CAR T 细胞间 fratricide（支持 C1），但同时报告存在对非活化 T 细胞的有限清除（反对 C2），因此候选机制的第二个前提与直接证据不符。更重要的是，摘要未提供实验直接检验“无 fratricide 即可证明无 on-target off-tumour 毒性”的因果推断（J1/J2），也未报告在表达 CD229 的正常细胞和组织中系统检测 CD229 CAR T 的杀伤或毒性，因此不能建立 C3。",
+          "valid_witness_ids": [],
+          "has_comparable_conflict": false,
+          "has_unresolved_counterevidence": false
+        },
+        "claims": [
+          {
+            "id": "C1",
+            "text": "No fratricide among CAR T cells was observed in the reported experiments.",
+            "kind": "reported",
+            "verdict": "supported",
+            "supporting_observation_ids": [
+              "L1"
+            ],
+            "opposing_observation_ids": [],
+            "compatible_observation_ids": [],
+            "applicability_gaps": [],
+            "distinct_supporting_source_groups": [
+              "pmid:40576564"
+            ]
+          },
+          {
+            "id": "C2",
+            "text": "No elimination of nonactivated T cells was observed with the CD229 CAR system.",
+            "kind": "reported",
+            "verdict": "refuted",
+            "supporting_observation_ids": [],
+            "opposing_observation_ids": [
+              "L2"
+            ],
+            "compatible_observation_ids": [],
+            "applicability_gaps": [],
+            "distinct_supporting_source_groups": []
+          },
+          {
+            "id": "C3",
+            "text": "The CD229 CAR system has no on-target off-tumour effect.",
+            "kind": "causal",
+            "verdict": "insufficient",
+            "supporting_observation_ids": [],
+            "opposing_observation_ids": [],
+            "compatible_observation_ids": [],
+            "applicability_gaps": [],
+            "distinct_supporting_source_groups": []
+          }
+        ],
+        "joins": [
+          {
+            "id": "J1",
+            "text": "The absence of CAR T-cell fratricide establishes absence of on-target off-tumour toxicity.",
+            "claim_ids": [
+              "C1",
+              "C2"
+            ],
+            "verdict": "unestablished",
+            "supporting_observation_ids": [],
+            "opposing_observation_ids": [],
+            "compatible_observation_ids": [],
+            "applicability_gaps": [],
+            "distinct_supporting_source_groups": []
+          },
+          {
+            "id": "J2",
+            "text": "The absence of CAR T-cell fratricide and the absence of nonactivated T-cell elimination together establish the absence of on-target off-tumour effect.",
+            "claim_ids": [
+              "C1",
+              "C2",
+              "C3"
+            ],
+            "verdict": "unestablished",
+            "supporting_observation_ids": [],
+            "opposing_observation_ids": [],
+            "compatible_observation_ids": [],
+            "applicability_gaps": [],
+            "distinct_supporting_source_groups": []
+          }
+        ],
+        "evidence": [
+          {
+            "id": "L1",
+            "claim_ids": [
+              "C1"
+            ],
+            "join_ids": [],
+            "relation": "supports",
+            "basis": "association",
+            "causal_test": "not_applicable",
+            "passage_ids": [
+              "M1:P009"
+            ],
+            "context": {
+              "species": null,
+              "system": "CD229 CAR T-cell on-target off-tumor toxicity assessment in reported preclinical multiple myeloma models",
+              "disease": "multiple myeloma"
+            },
+            "applicability": {
+              "species": "not_required",
+              "system": "matched",
+              "disease": "matched"
+            },
+            "rationale": "来源摘要明确报告在评估 on-target off-tumor toxicity 时未观察到 CAR T 细胞间的 fratricide，直接支持 C1 的观察性表述。",
+            "limitations": [
+              "仅摘要级证据，未提供 fratricide 检测方法、时间点、定量数据和对照",
+              "未明确该结果来自单靶 CD229 CAR、双靶 BCMA/CD229 CAR 还是合并分析",
+              "未报告 CAR T 细胞的物种来源；观察性结果不能单独外推至不存在 on-target off-tumour"
+            ],
+            "effective_applicability": "matched",
+            "causal_evidence_eligible": false,
+            "source_groups": [
+              "pmid:40576564"
+            ],
+            "references": [
+              {
+                "source_id": "europe_pmc",
+                "record_id": "MED:40576564",
+                "version": "491109a6bb65f9821db1be7ade2e624f056a6d354e561f9383a181db7cab38fe",
+                "title": "Bicistronic CAR T Cell against BCMA and CD229 Effectively Controls Myeloma Even When BCMA Expression Is Limited.",
+                "source_group": "pmid:40576564",
+                "source_kind": "primary",
+                "text_level": "abstract",
+                "url": "https://europepmc.org/article/MED/40576564",
+                "id": "M1:P009",
+                "material_id": "M1",
+                "start": 1233,
+                "end": 1381,
+                "text": "Regarding \"on-target off-tumor toxicity,\" no fratricide was observed among CAR T cells, but there was a limited elimination of nonactivated T cells."
+              }
+            ]
+          },
+          {
+            "id": "L2",
+            "claim_ids": [
+              "C2"
+            ],
+            "join_ids": [],
+            "relation": "opposes",
+            "basis": "association",
+            "causal_test": "not_applicable",
+            "passage_ids": [
+              "M1:P009"
+            ],
+            "context": {
+              "species": null,
+              "system": "CD229 CAR T-cell on-target off-tumor toxicity assessment in reported preclinical multiple myeloma models",
+              "disease": "multiple myeloma"
+            },
+            "applicability": {
+              "species": "not_required",
+              "system": "matched",
+              "disease": "matched"
+            },
+            "rationale": "同一来源明确报告存在对非活化 T 细胞的有限清除（limited elimination），与 C2 所称未观察到非活化 T 细胞被清除相反。",
+            "limitations": [
+              "摘要未量化 limited elimination，也未提供检测方法、时间点或对照",
+              "未明确该清除由 CD229 CAR 单独、双靶 CAR 还是其他实验条件引起",
+              "未说明对非活化 T 细胞的清除在功能上是否足以构成有临床意义的 on-target off-tumour 毒性"
+            ],
+            "effective_applicability": "matched",
+            "causal_evidence_eligible": false,
+            "source_groups": [
+              "pmid:40576564"
+            ],
+            "references": [
+              {
+                "source_id": "europe_pmc",
+                "record_id": "MED:40576564",
+                "version": "491109a6bb65f9821db1be7ade2e624f056a6d354e561f9383a181db7cab38fe",
+                "title": "Bicistronic CAR T Cell against BCMA and CD229 Effectively Controls Myeloma Even When BCMA Expression Is Limited.",
+                "source_group": "pmid:40576564",
+                "source_kind": "primary",
+                "text_level": "abstract",
+                "url": "https://europepmc.org/article/MED/40576564",
+                "id": "M1:P009",
+                "material_id": "M1",
+                "start": 1233,
+                "end": 1381,
+                "text": "Regarding \"on-target off-tumor toxicity,\" no fratricide was observed among CAR T cells, but there was a limited elimination of nonactivated T cells."
+              }
+            ]
+          }
+        ],
+        "witnesses": [],
+        "conflicts": [],
+        "unresolved_counterevidence": [],
+        "critical_gaps": [
+          {
+            "claim_ids": [
+              "C1",
+              "C2"
+            ],
+            "join_ids": [],
+            "reason": "即使未观察到 CAR T fratricide 且非活化 T 细胞清除有限，也不能据此证明该 CD229 方案不存在 on-target off-tumour 作用；需要直接检测 CD229 表达的正常细胞/组织是否被清除。",
+            "missing_experiment": "在表达 CD229 的正常细胞和组织（包括非活化/活化 T 细胞、其他免疫细胞及组织切片）中，用抗 CD229 CAR T 进行杀伤/毒性实验，并设 CD229 阴性对照，定量评估 on-target off-tumour 清除。"
+          },
+          {
+            "claim_ids": [
+              "C3"
+            ],
+            "join_ids": [
+              "J1",
+              "J2"
+            ],
+            "reason": "来源未直接检验无 fratricide 及无非活化 T 细胞清除是否足以证明该 CD229 方案不存在 on-target off-tumour 作用；且 M1:P009 报告存在对非活化 T 细胞的有限清除，动摇了候选机制的前提。",
+            "missing_experiment": "在表达 CD229 的正常细胞和组织（包括静息/活化 T 细胞、B 细胞、NK 细胞及其他 CD229 阳性正常组织）中，用该 CD229 单靶或 BCMA/CD229 双靶 CAR T 细胞进行体外杀伤/毒性实验和体内毒理实验，设 CD229 阴性细胞、不相关 CAR T 和未转导 T 细胞对照，定量检测清除/损伤、细胞因子释放及组织病理变化；同时比较 CAR T 细胞自身 fratricide 与正常 CD229+ 细胞清除之间的关系，以直接检验 on-target off-tumour 毒性的存在与程度。"
+          },
+          {
+            "claim_ids": [
+              "C2"
+            ],
+            "join_ids": [],
+            "reason": "C2 与原始证据直接冲突，来源报告存在有限清除而非完全不清除；摘要未提供定量、时程和对照，因此需要进一步实验解决证据冲突。",
+            "missing_experiment": "用可区分 CAR T 细胞与内源非活化 T 细胞的多色流式或遗传标记，定量检测 CD229 CAR T 对静息 CD4+/CD8+ T 细胞、不同激活状态 T 细胞和 CD229 阴性 T 细胞的杀伤；设置剂量梯度、多个时间点及独立供体，明确 limited elimination 的幅度、特异性和是否可重复。"
+          }
+        ],
+        "material_assessability": {
+          "status": "limited",
+          "material_count": 1,
+          "passage_count": 11,
+          "source_groups": [
+            "pmid:40576564"
+          ],
+          "source_kinds": [
+            "primary"
+          ],
+          "text_levels": [
+            "abstract"
+          ],
+          "limitations": [
+            "摘要报告的实验缺少完整方法和结果细节。"
+          ]
+        },
+        "independence": {
+          "distinct_source_groups": 1,
+          "independent_cohorts": null,
+          "note": "来源去重不等于确认队列或实验相互独立。"
+        },
+        "settings": {
+          "use_context": true,
+          "use_joins": true,
+          "deduplicate": true
+        },
+        "local_review": {
+          "observations": [
+            {
+              "id": "L1",
+              "claim_ids": [
+                "C1"
+              ],
+              "join_ids": [],
+              "relation": "supports",
+              "basis": "association",
+              "causal_test": "not_applicable",
+              "passage_ids": [
+                "M1:P009"
+              ],
+              "context": {
+                "species": null,
+                "system": "CD229 CAR T-cell on-target off-tumor toxicity assessment in reported preclinical multiple myeloma models",
+                "disease": "multiple myeloma"
+              },
+              "applicability": {
+                "species": "not_required",
+                "system": "matched",
+                "disease": "matched"
+              },
+              "rationale": "来源摘要明确报告在评估 on-target off-tumor toxicity 时未观察到 CAR T 细胞间的 fratricide，直接支持 C1 的观察性表述。",
+              "limitations": [
+                "仅摘要级证据，未提供 fratricide 检测方法、时间点、定量数据和对照",
+                "未明确该结果来自单靶 CD229 CAR、双靶 BCMA/CD229 CAR 还是合并分析",
+                "未报告 CAR T 细胞的物种来源；观察性结果不能单独外推至不存在 on-target off-tumour"
+              ]
+            },
+            {
+              "id": "L2",
+              "claim_ids": [
+                "C2"
+              ],
+              "join_ids": [],
+              "relation": "opposes",
+              "basis": "association",
+              "causal_test": "not_applicable",
+              "passage_ids": [
+                "M1:P009"
+              ],
+              "context": {
+                "species": null,
+                "system": "CD229 CAR T-cell on-target off-tumor toxicity assessment in reported preclinical multiple myeloma models",
+                "disease": "multiple myeloma"
+              },
+              "applicability": {
+                "species": "not_required",
+                "system": "matched",
+                "disease": "matched"
+              },
+              "rationale": "同一来源明确报告存在对非活化 T 细胞的有限清除（limited elimination），与 C2 所称未观察到非活化 T 细胞被清除相反。",
+              "limitations": [
+                "摘要未量化 limited elimination，也未提供检测方法、时间点或对照",
+                "未明确该清除由 CD229 CAR 单独、双靶 CAR 还是其他实验条件引起",
+                "未说明对非活化 T 细胞的清除在功能上是否足以构成有临床意义的 on-target off-tumour 毒性"
+              ]
+            }
+          ],
+          "gaps": [
+            {
+              "claim_ids": [
+                "C1",
+                "C2"
+              ],
+              "join_ids": [],
+              "reason": "即使未观察到 CAR T fratricide 且非活化 T 细胞清除有限，也不能据此证明该 CD229 方案不存在 on-target off-tumour 作用；需要直接检测 CD229 表达的正常细胞/组织是否被清除。",
+              "missing_experiment": "在表达 CD229 的正常细胞和组织（包括非活化/活化 T 细胞、其他免疫细胞及组织切片）中，用抗 CD229 CAR T 进行杀伤/毒性实验，并设 CD229 阴性对照，定量评估 on-target off-tumour 清除。"
+            }
+          ]
+        },
+        "mechanism_review": {
+          "additional_claims": [
+            {
+              "id": "C3",
+              "text": "The CD229 CAR system has no on-target off-tumour effect.",
+              "kind": "causal"
+            }
+          ],
+          "additional_joins": [
+            {
+              "id": "J2",
+              "text": "The absence of CAR T-cell fratricide and the absence of nonactivated T-cell elimination together establish the absence of on-target off-tumour effect.",
+              "claim_ids": [
+                "C1",
+                "C2",
+                "C3"
+              ]
+            }
+          ],
+          "observations": [],
+          "combinations": [],
+          "comparisons": [
+            {
+              "observation_ids": [
+                "L1",
+                "L2"
+              ],
+              "context_relation": "comparable",
+              "rationale": "L1 和 L2 来自同一篇原始研究摘要中关于 on-target off-tumor toxicity 的同一句描述（M1:P009），物种、实验系统和疾病背景一致，因此可进行比较；它们共同显示来源报告了无 CAR T fratricide，但同时报告了对非活化 T 细胞的有限清除，这与候选机制中的第二个前提直接冲突。"
+            }
+          ],
+          "whole_assessment": "unestablished",
+          "rationale": "该候选机制把未观察到 CAR T fratricide 和完全不清除非激活 T 细胞作为依据，推断不存在 on-target off-tumour 作用。原始摘要 M1:P009 明确报告未观察到 CAR T 细胞间 fratricide（支持 C1），但同时报告存在对非活化 T 细胞的有限清除（反对 C2），因此候选机制的第二个前提与直接证据不符。更重要的是，摘要未提供实验直接检验“无 fratricide 即可证明无 on-target off-tumour 毒性”的因果推断（J1/J2），也未报告在表达 CD229 的正常细胞和组织中系统检测 CD229 CAR T 的杀伤或毒性，因此不能建立 C3。",
+          "gaps": [
+            {
+              "claim_ids": [
+                "C3"
+              ],
+              "join_ids": [
+                "J1",
+                "J2"
+              ],
+              "reason": "来源未直接检验无 fratricide 及无非活化 T 细胞清除是否足以证明该 CD229 方案不存在 on-target off-tumour 作用；且 M1:P009 报告存在对非活化 T 细胞的有限清除，动摇了候选机制的前提。",
+              "missing_experiment": "在表达 CD229 的正常细胞和组织（包括静息/活化 T 细胞、B 细胞、NK 细胞及其他 CD229 阳性正常组织）中，用该 CD229 单靶或 BCMA/CD229 双靶 CAR T 细胞进行体外杀伤/毒性实验和体内毒理实验，设 CD229 阴性细胞、不相关 CAR T 和未转导 T 细胞对照，定量检测清除/损伤、细胞因子释放及组织病理变化；同时比较 CAR T 细胞自身 fratricide 与正常 CD229+ 细胞清除之间的关系，以直接检验 on-target off-tumour 毒性的存在与程度。"
+            },
+            {
+              "claim_ids": [
+                "C2"
+              ],
+              "join_ids": [],
+              "reason": "C2 与原始证据直接冲突，来源报告存在有限清除而非完全不清除；摘要未提供定量、时程和对照，因此需要进一步实验解决证据冲突。",
+              "missing_experiment": "用可区分 CAR T 细胞与内源非活化 T 细胞的多色流式或遗传标记，定量检测 CD229 CAR T 对静息 CD4+/CD8+ T 细胞、不同激活状态 T 细胞和 CD229 阴性 T 细胞的杀伤；设置剂量梯度、多个时间点及独立供体，明确 limited elimination 的幅度、特异性和是否可重复。"
+            }
+          ]
+        },
+        "decomposition": {
+          "claims": [
+            {
+              "id": "C1",
+              "text": "No fratricide among CAR T cells was observed in the reported experiments.",
+              "kind": "reported"
+            },
+            {
+              "id": "C2",
+              "text": "No elimination of nonactivated T cells was observed with the CD229 CAR system.",
+              "kind": "reported"
+            }
+          ],
+          "joins": [
+            {
+              "id": "J1",
+              "text": "The absence of CAR T-cell fratricide establishes absence of on-target off-tumour toxicity.",
+              "claim_ids": [
+                "C1",
+                "C2"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "id": "restore_mediation_evidence",
+      "kind": "controlled_evidence_restoration",
+      "before_case_id": "Q003",
+      "after_case_id": "Q001",
+      "changed_input": "同一Fabric摘要；Q003只开放P004/P006/P008，Q001恢复全部段落。问题、候选、背景和主张均未改变。原论文早已包含中介证据。",
+      "evidence_request": {
+        "case_id": "Q003",
+        "gap_indices": [
+          0
+        ],
+        "claim_ids": [
+          "C1",
+          "C2"
+        ],
+        "join_ids": [
+          "J1"
+        ],
+        "observation_ids": [
+          "L1",
+          "L2"
+        ],
+        "evidence_question": "补读当前论文关于MEK/ERK干预与APRIL促轴突作用的原始结果及对照。核对阻断该分支后轴突终点是否变化，限培养的小鼠发育期海马锥体神经元。",
+        "scope": {
+          "species": "mouse",
+          "system": "cultured developing hippocampal pyramidal neurons",
+          "disease": null
+        },
+        "starting_references": [
+          {
+            "observation_id": "L1",
+            "material_id": "M1",
+            "passage_id": "M1:P008"
+          },
+          {
+            "observation_id": "L2",
+            "material_id": "M1",
+            "passage_id": "M1:P006"
+          }
+        ],
+        "reason": "C1/C2已有支持，缺的是J1的中介作用；继续重复检索APRIL与ERK共现不能补上。"
+      },
+      "after_check": {
+        "obligation_id": "J1",
+        "before_verdict": "unestablished",
+        "after_verdict": "supported",
+        "supporting_observation_id": "M1",
+        "passage_id": "M1:P009",
+        "overall_before": "partial",
+        "overall_after": "supported"
+      },
+      "conclusion_limit": "支持ERK分支参与APRIL促轴突作用，保留培养细胞条件和摘要细节限制；不证明ERK位于Akt上游，不增加独立研究数。"
+    },
+    {
+      "id": "counterevidence_narrows_safety_claim",
+      "kind": "candidate_checked_against_existing_evidence",
+      "case_id": "Q020",
+      "candidate": "未见 CAR T 自相残杀，且该方案完全不清除非激活 T 细胞，因此不存在 on-target off-tumour 作用。",
+      "observed_result": "C1支持未见CAR T自相残杀；同一句原文反对C2的完全不清除非活化T细胞。C3尚缺支持，J1/J2未建立，整体partial。",
+      "narrowed_statement": "该研究摘要报告未观察到CAR T自相残杀，同时报告对非活化T细胞的有限清除；目前不能据此断言不存在on-target off-tumour作用，也不能从摘要推定临床毒性的大小。",
+      "evidence_request": {
+        "case_id": "Q020",
+        "gap_indices": [
+          1,
+          2
+        ],
+        "claim_ids": [
+          "C2",
+          "C3"
+        ],
+        "join_ids": [
+          "J1",
+          "J2"
+        ],
+        "observation_ids": [
+          "L1",
+          "L2"
+        ],
+        "evidence_question": "补读当前论文全文及补充材料，核对有限清除非活化T细胞这一结果对应单靶CD229还是BCMA/CD229双靶构型、实验背景、定量幅度、观察时间和对照；寻找已报告的正常细胞或组织安全性资料。",
+        "scope": {
+          "species": null,
+          "system": "reported preclinical dual-antigen multiple myeloma models",
+          "disease": "multiple myeloma"
+        },
+        "starting_references": [
+          {
+            "observation_id": "L2",
+            "material_id": "M1",
+            "passage_id": "M1:P009"
+          }
+        ],
+        "reason": "先核对已出现的反向观察及适用条件，不能为原来的绝对安全结论继续只找支持证据。"
+      },
+      "consumer_check": "conflicts与unresolved_counterevidence均为空，但C2.opposing_observation_ids为[L2]；必须读取claims/joins和evidence中的反向记录。",
+      "limitation": "这是候选与现有原文的评价，不是两轮自然检索前后的标签翻转；不把有限清除直接升格为已证实临床毒性。"
+    }
+  ],
+  "integration_rules": [
+    "每个ID只在本次评价结果内有效。跨运行引用必须同时固定case及其结果；不能拿另一轮L1或M1替换。",
+    "gap_indices只是固定evaluation.critical_gaps的零基索引，不是跨版本稳定ID。",
+    "缺口先通过claim_ids/join_ids定位命题，再通过该命题及其依赖的观察ID找evidence与references。",
+    "conflicts是可比支持与反向结果成对存在；只有反向结果时也要读取opposing_observation_ids。",
+    "unresolved_counterevidence先补查条件，applicability_gaps保留背景不匹配或未知，不把它们自动当反驳。",
+    "missing_experiment保留模型原文以便审查；其中实验设计式措辞只能理解为寻找已有报告的建议，不能直接作为工具动作或要求开展实验。",
+    "专业反馈不决定预算、查询动作或停止；这些由李的可替换策略决定，Radar管理调查、执行及报告更新。",
+    "图路径提供候选和检索线索。机制支持必须回到primary原文及条件，不能把source_kind=graph改标primary。",
+    "新证据返回后以更新材料重新evaluate；程序不靠人工直接将缺口状态改成已解决。",
+    "Q004/Q007等已记录误判仍保留；本样例没有证明所有自动缺口均正确，也没有证明方法超过强模型。"
+  ]
+}

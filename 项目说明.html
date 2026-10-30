@@ -128,6 +128,24 @@ result = evaluate(case, call_json)
 <p><strong>给潘的现成材料：</strong><a href="examples/partial_handoff.json">examples/partial_handoff.json</a>。其中 <code>case</code> 是实际输入，<code>evaluation</code> 是逐字段复用的 Q005 真实结果，<code>provenance</code> 记录出处，<code>consumer_checks</code> 给出人工写的生成检查对照；不要将整个外层交接对象送入 Case。</p>
 <p>Q005 的 C1、C2、C3 均支持；J2（Akt 参与促轴突作用）支持；J1（ERK 在 Akt 上游的串联关系）未建立，整体 <code>partial</code>。生成应保留培养的小鼠发育期海马神经元这一条件及 J1 缺口，不能改写成“已证实 APRIL→ERK→Akt 串联”。交接对照文字不是新增模型结果或专家金标准。</p>
 </div></details>
+<details id="investigation"><summary>评价以后，雷达和李怎样决定下一次查什么</summary><div class="detail">
+<p><strong>现有接口已够用，本轮不增加评价函数或检索循环。</strong>雷达保存这次调查及完整结果；李的查询策略决定查什么、调用哪个工具、花多少预算以及何时停止。汪负责指出哪个主张缺什么依据、哪些原文支持或反对它。新的材料回来后，再调用同一个 <code>evaluate(case, call_json)</code>，由实际证据重新评价。</p>
+<div class="table-wrap"><table><thead><tr><th>先读什么</th><th>怎么找到依据</th><th>下一次取证要解决什么</th></tr></thead><tbody>
+<tr><td>critical_gaps</td><td>用 claim_ids / join_ids 找结果中的主张与衔接；如果是衔接，继续看它依赖的局部主张。通过观察 ID 找 evidence 和 references。</td><td>补缺失的直接证据或适用条件。已有两个局部结果时，继续搜共现材料未必能补上中介联系。</td></tr>
+<tr><td>conflicts</td><td>obligation_id 定位主张；supporting_observation_id / opposing_observation_id 指向双方原文。</td><td>核对方法、条件与终点差异，保留双方结果，不能只检索支持材料。</td></tr>
+<tr><td>unresolved_counterevidence</td><td>定位相反观察及已有的支持观察；其中支持观察 ID 允许为空。</td><td>先查清背景是否可比。条件未知时，不能直接判为反驳，也不能忽略。</td></tr>
+<tr><td>claims / joins 中的 opposing_observation_ids、applicability_gaps</td><td>回读反向观察、原文及物种、系统、疾病等条件。</td><td><strong>conflicts 为空也必须看这里。</strong>只有反向结果、没有支持结果时，不会形成成对的 conflicts；条件不适用也不等同于反驳。</td></tr>
+</tbody></table></div>
+<p>所有 ID 都属于本次结果。雷达必须把反馈绑定到它保存的具体调查结果，不能把另一轮的 <code>L1</code> 当成本轮 <code>L1</code>。旧回执的 <code>missing_experiment</code> 有实验设计式措辞，保留原文供复核；转交查询策略时应解释为<strong>寻找已报告的相关观察、方法、对照和终点</strong>，不直接当工具调用，更不是要求开展实验。模型建议也可能错；例如现有 Q004、Q007 的问题仍按原记录保留。</p>
+<p><strong>样例一：缺的是中介作用，而不是更多共现。</strong>Q003 已支持“APRIL 激活 ERK”和“APRIL 促进轴突延长”，但 J1 的“ERK 参与介导”未建立。恢复同一摘要的 <code>M1:P009 [1178,1424)</code> 后，Q001 的 J1 获得支持，整体从 partial 变为 supported。恢复的是 MEK/ERK 相关抑制与轴突终点的原始结果；只支持所述培养小鼠神经元条件下的 ERK 分支，不能转成 ERK→Akt 串联关系。</p>
+<p>这是<strong>受控删除后恢复原文</strong>的接口回放，原论文早已包含该材料；没有将它写成自然检索发现或历史预测。两次输入的问题、候选与背景不变，论文仍只计一组。</p>
+<p><strong>样例二：反证使安全性表述收窄。</strong>Q020 的候选把“未见 CAR T 自相残杀”推成“没有 on-target off-tumour 作用”。但同一句 <code>M1:P009 [1233,1381)</code> 还报告了对非活化 T 细胞的有限清除：C1 支持，C2 反驳，整体 partial。报告应保留这两个事实，并说明摘要不足以确认临床毒性的大小；下一步补读全文及补充材料，核对单靶/双靶构型、实验条件、定量幅度与对照。</p>
+<p>Q020 的 <code>conflicts</code> 和 <code>unresolved_counterevidence</code> 均为空，反向依据在 <code>C2.opposing_observation_ids → L2 → references</code>。这是输入候选被现有原文收窄的样例，不是假称两轮自然检索已经产生结论翻转。</p>
+<p><strong>直接拿去联调：</strong><a href="examples/investigation_feedback.json">examples/investigation_feedback.json</a> 保存上述三个原始 case、完整 evaluation 和两种情形。<code>evidence_request</code> 是人工写的取证需求示例，展示怎么绑定主张与引用；它不属于 evaluate 的新增返回字段，也不代表自动策略已经生成查询。里面的 gap_indices 仅指该固定结果中 critical_gaps 的零基位置，不能跨版本使用。</p>
+<pre>python -m unittest discover -s tests -p 'test_investigation.py' -v</pre>
+<p>测试用保存的局部审核和机制审核作为回调，重新走 evaluate 并比较完整输出，检查原文位置、缺口绑定和反证保留。另外故意将材料标为 graph，验证即便给出原来的支持性模型回执，图断言也不能取代原始机制证据。图路径仍用于提出候选或检索线索；不能为了获得支持，把图数据改标 primary。</p>
+</div></details>
+
 <details id="identity"><summary>PMID、DOI 怎样传入；输入有问题时怎样处理</summary><div class="detail">
 <p><strong>雷达把原件里的明确标识交给 MechEvidence：</strong>材料可新增 <code>pmid</code>、<code>doi</code>，均可省略或为 <code>null</code>。雷达不需要再写一套归组算法；Fabric 适配器也只透传 <code>facts.pmid / facts.doi</code>。这些规则检查格式与一致性，不联网确认文献是否存在。</p>
 <div class="table-wrap"><table><thead><tr><th>输入位置</th><th>接受什么</th><th>怎样处理</th></tr></thead><tbody>
