@@ -128,6 +128,52 @@ result = evaluate(case, call_json)
 <p><strong>给潘的现成材料：</strong><a href="examples/partial_handoff.json">examples/partial_handoff.json</a>。其中 <code>case</code> 是实际输入，<code>evaluation</code> 是逐字段复用的 Q005 真实结果，<code>provenance</code> 记录出处，<code>consumer_checks</code> 给出人工写的生成检查对照；不要将整个外层交接对象送入 Case。</p>
 <p>Q005 的 C1、C2、C3 均支持；J2（Akt 参与促轴突作用）支持；J1（ERK 在 Akt 上游的串联关系）未建立，整体 <code>partial</code>。生成应保留培养的小鼠发育期海马神经元这一条件及 J1 缺口，不能改写成“已证实 APRIL→ERK→Akt 串联”。交接对照文字不是新增模型结果或专家金标准。</p>
 </div></details>
+<details open id="http-service"><summary>独立 HTTP 服务：雷达怎样调用汪的两项方法</summary><div class="detail">
+<p>服务只运行专业方法。雷达把固定原件和已收到的模型结果送来；需要下一步模型结果时，服务把提示、材料和输出格式交回雷达。模型请求、预算、超时、未知结果和账单都由雷达处理。服务不读取商业模型密钥、不联网取资料、不建数据库或队列。原来的 <code>evaluate(case, call_json)</code> 仍可在本地使用。</p>
+<div class="table-wrap"><table><thead><tr><th>接口</th><th>用途</th></tr></thead><tbody>
+<tr><td>GET /health</td><td>检查服务进程，返回实际 provider_version。</td></tr>
+<tr><td>GET /v1/capabilities</td><td>返回操作、允许的模型阶段、输入 JSON Schema 和请求上限。</td></tr>
+<tr><td>POST /v1/execute</td><td>执行到下一次需要模型结果，或利用已收回执完成。三个接口均须 Bearer 服务令牌。</td></tr>
+</tbody></table></div>
+<pre>{
+  "schema_version": "bioradar.professional.v1",
+  "operation_id": "由雷达固定的操作ID",
+  "operation": "evaluate",
+  "provider_version": null,
+  "arguments": {
+    "mode": "biomedical_research",
+    "task": "mechanism",
+    "case": { "...": "原有完整Case，不改变字段" },
+    "computation_refs": [{
+      "run_id": "分析运行ID", "result_id": "计算结果ID",
+      "version": "固定结果版本", "finding_ids": ["待查候选ID"]
+    }]
+  },
+  "model_receipts": []
+}</pre>
+<p>原件须带非空 <code>source_id、record_id、version</code>。论文标识冲突规则沿用下文。计算结果引用用于把专业意见关联回雷达的某次统计和候选，放在返回的 <code>context</code> 中；它们不进入原文材料，也不自动证明机制成立。</p>
+<p><strong>两项操作：</strong><code>evaluate</code> 对应 <code>task=mechanism</code>，额外输入只有 <code>case</code>，返回现有完整评价。<code>assess_independence</code> 对应 <code>task=independence</code>，额外输入为 <code>materials</code>、显式 <code>pairs</code> 和可选 <code>question</code>：</p>
+<pre>"pairs": [{
+  "left_material_id": "原件A", "right_material_id": "原件B",
+  "unit": "patient_cohort"
+}]</pre>
+<p><code>unit</code> 可为 <code>study</code>（研究实施或数据）或 <code>patient_cohort</code>（实际纳入患者）。每对结果的 <code>relation</code> 为 same、overlap、independent、unknown；附原文引用、版本、理由、未知项和需要补读的已有资料。<code>proposed_relation</code> 保留模型原判断，<code>cohort_review</code> 保留完整回执。确定关系要求双方原始研究材料的有效引用；只凭论文编号、时间或图关系时降为 unknown。语义是否正确仍须用真实研究检验，模型判断不充当专家标签。</p>
+<p>论文归组仍由现有身份规则完成；同一论文可能报告多个队列，不同论文也可能复用患者。关系方法只评请求中的配对，最多128份材料、64对，不自动排列全部组合，不做关系传递，也不直接给独立研究或患者总数。雷达结合业务口径决定统计单位。图断言只提供线索。</p>
+<p><strong>适用方向：</strong><code>mode=business</code> 或 <code>public_health_metrics</code>，以及 <code>task=metrics</code>，返回 <code>not_applicable</code>，不会请求模型；这不妨碍雷达继续计算商业或公卫指标。生医请求的操作和 task 必须对应，缺失或错误值返回输入错误。</p>
+<p><strong>一次操作怎样继续：</strong></p>
+<ol><li>首轮提交完整输入和空回执。收到 <code>model_required</code> 后，雷达先保存实际 <code>provider_version</code> 及 <code>model_call</code>，再决定是否付费执行。</li><li>雷达用既有执行入口处理 <code>stage / instruction / payload / schema</code>。已收到且成功的模型内容，作为 <code>{call_id, request_hash, output}</code> 加入回执数组；两种标识原样回传。unknown、failed、not_sent 留在宿主账本中，不能伪装成成功回执。</li><li>重发相同 operation_id、arguments、固定 provider_version 及此前所有回执。服务按顺序重放，直到返回下一次 model_required 或 completed。错标识、错请求摘要、换版本、错序或多余回执均拒绝。</li><li>完成时 <code>result</code> 是方法原生结果，<code>context</code> 保留计算关联。机制评价的局部支持、反证、适用条件和缺口均保留，不能只取 overall。</li></ol>
+<p>服务从异常原因链恢复内部暂停信号，所以核心把回调异常包装成 EvaluationError 后仍能正确暂停。<code>request_hash</code> 覆盖实际模型请求；<code>call_id</code> 还绑定完整输入、方法版本、操作 ID 和步骤顺序。宿主以 provider、operation_id、call_id 保存执行记录，不能仅以 stage 作主键。</p>
+<p>HTTP 重放本身没有付费副作用；它不等于服务替宿主保证模型“只收费一次”。宿主仍须冻结操作输入、核对未知回执并按 call_id 去重。不得在 HTTP 失败后悄悄退回本地方法再付费调用。源代码版本在服务进程启动时固定，采用新代码应重启服务；旧回执不能静默接到新提示上。</p>
+<p><code>status</code> 包括 model_required、completed、not_applicable、needs_input、failed。身份冲突与其他输入错误均为 needs_input；已成功送达但不符合专业格式的模型输出会产生 failed/method_failed，不能当作科学上的 insufficient。模型失败或未知状态不得由本服务重试。</p>
+<p><strong>隔离启动：</strong>本轮使用指定 worktree 和端口18561，现役 main 保持不变。令牌保存在该目录忽略的私有 <code>.env</code>，只含服务令牌；不要复制商业模型 .env。使用已有依赖环境即可：</p>
+<pre>cd /home/zk_test/zk_projects/.bioradar-kdd-integration/mechevidence
+set -a
+. ./.env
+set +a
+/home/zk_test/zk_projects/MechEvidence/.venv/bin/python -B -m mechevidence.service --host 127.0.0.1 --port 18561</pre>
+<p><strong>验证：</strong><code>python -m unittest discover -s tests -v</code>。HTTP 测试真实启动服务并完成暂停、两步恢复、重复请求、错误回执及非适用任务；保存的 Q005 完整结果与本地方法逐字段一致。独立性方法使用明确标注的受控回执检验来源和关系边界，不把这些测试写成新医学实验。跨项目真实付费案例由雷达统一组织。</p>
+</div></details>
+
 <details id="investigation"><summary>评价以后，雷达和李怎样决定下一次查什么</summary><div class="detail">
 <p><strong>现有接口已够用，本轮不增加评价函数或检索循环。</strong>雷达保存这次调查及完整结果；李的查询策略决定查什么、调用哪个工具、花多少预算以及何时停止。汪负责指出哪个主张缺什么依据、哪些原文支持或反对它。新的材料回来后，再调用同一个 <code>evaluate(case, call_json)</code>，由实际证据重新评价。</p>
 <div class="table-wrap"><table><thead><tr><th>先读什么</th><th>怎么找到依据</th><th>下一次取证要解决什么</th></tr></thead><tbody>
