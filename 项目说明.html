@@ -116,6 +116,8 @@ result = evaluate(case, call_json)
 # 阶段：decomposition（按需）、local_review、mechanism_review</pre>
 <p><strong>调用由李控制：</strong>方法不自行调用 HTTP、Fabric 或图谱，不读取密钥；李提供四参数模型回调，统一管理模型、预算和执行错误。雷达可继续只载入 <code>models.py</code> 与 <code>assess.py</code>，函数签名保持不变。</p>
 <p><strong>输入背景应明确传入：</strong><code>scope.species / system / disease</code>。材料使用 <code>id、text、source_id、record_id、version、source_group、source_kind、text_level、url</code>，并可附 <code>pmid、doi</code>；引用只能来自本次允许的材料。<code>allowed_passage_ids</code> 指定选用句子，未提供时使用材料全部段落。</p>
+<p id="scope-check"><strong>范围怎样判断：</strong>matched 只表示观察适用于本次明确提出的 species / system / disease。程序会覆盖“目标是人、观察是小鼠、模型却说匹配”这类已知物种矛盾；支持和反向结果使用同一规则，原观察和引用继续保留。物种相同不代表细胞与患者相同，更不证明每个细胞模型都测过每个终点。现有审读阶段要求按实际模型或人群、终点、干预和时程分别记录；这些细节仍依赖原文语义核查，尚无程序逐项证明其正确。</p>
+<p>背景全未指定时，允许保留各研究自己的局部事实，不自动推广到目标人群。比如 Q023 的三个局部结果仍可支持，跨治疗体系的联系仍待补证。发现模型适用性标记与明确物种冲突时，结果额外返回 <code>diagnostics</code>：rule_id、observation_id、claim_ids / join_ids、requested_species、observed_species、source_records 和 reason。source_records 保留 material_id、source_id、record_id、version；没有这种纠正时省略该字段。模型原始审核不改写，最终总判断使用程序计算后的资格。</p>
 <div class="table-wrap"><table><thead><tr><th>必须完整保留的结果</th><th>下游用途</th></tr></thead><tbody>
 <tr><td>claims、joins</td><td>区分局部事实与因果衔接；整体 partial 不代表所有局部都没有证据。</td></tr>
 <tr><td>critical_gaps</td><td>保留具体缺口及需核对的证据，供补查和生成时限定结论。</td></tr>

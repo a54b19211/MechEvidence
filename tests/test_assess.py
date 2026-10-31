@@ -96,6 +96,72 @@ class AssessmentTests(unittest.TestCase):
         self.assertEqual(sum(item == gap for item in gaps), 1)
         self.assertEqual(sum(item["reason"] == gap["reason"] for item in gaps), 3)
 
+    def test_known_target_species_overrides_model_match(self):
+        self.case["scope"]["species"] = "human"
+        result = aggregate(self.case, self.local, self.review)
+        self.assertEqual(result["overall"]["verdict"], "insufficient")
+        self.assertFalse(result["overall"]["valid_witness_ids"])
+        for row in result["claims"] + result["joins"]:
+            self.assertFalse(row["supporting_observation_ids"])
+            self.assertTrue(all(gap["status"] == "mismatched" for gap in row["applicability_gaps"]))
+        self.assertEqual({row["observation_id"] for row in result["diagnostics"]}, {"L1", "M1"})
+        for diagnostic in result["diagnostics"]:
+            self.assertEqual(diagnostic["rule_id"], "known_species_conflict")
+            self.assertEqual(diagnostic["source_records"], [{"material_id": "m", "source_id": "fabric-paper",
+                                                           "record_id": "12345678", "version": "v3"}])
+        # The model's statement and exact source spans remain inspectable.
+        self.assertEqual(result["local_review"]["observations"][0]["applicability"]["species"], "matched")
+        for observation in result["evidence"]:
+            self.assertEqual(observation["effective_applicability"], "mismatched")
+            for ref in observation["references"]:
+                self.assertEqual(self.case["materials"][0]["text"][ref["start"]:ref["end"]], ref["text"])
+        ablated = aggregate(self.case, self.local, self.review, use_context=False)
+        self.assertEqual(ablated["overall"]["verdict"], "supported")
+        self.assertNotIn("diagnostics", ablated)
+
+    def test_wrong_species_opposition_is_retained_without_refuting_target(self):
+        negative = {**deepcopy(self.observation), "id": "M2", "relation": "opposes",
+                    "context": {"species": "human", "system": "S"}}
+        self.review["observations"].append(negative)
+        self.review["comparisons"] = [{"observation_ids": ["L1", "M2"], "context_relation": "comparable",
+                                       "rationale": "Deliberately overclaimed comparison."}]
+        result = aggregate(self.case, self.local, self.review)
+        self.assertEqual(result["overall"]["verdict"], "supported")
+        self.assertFalse(result["conflicts"])
+        self.assertFalse(result["unresolved_counterevidence"])
+        for row in result["claims"]:
+            self.assertFalse(row["opposing_observation_ids"])
+            self.assertEqual(row["applicability_gaps"][0]["observation_id"], "M2")
+            self.assertEqual(row["applicability_gaps"][0]["status"], "mismatched")
+        retained = next(row for row in result["evidence"] if row["id"] == "M2")
+        self.assertEqual(retained["relation"], "opposes")
+        self.assertTrue(retained["references"])
+        self.assertEqual(result["diagnostics"][0]["observation_id"], "M2")
+
+    def test_species_aliases_do_not_create_scope_conflict(self):
+        for target, observed in [("human", "Homo sapiens"), ("小鼠", "Mus musculus")]:
+            with self.subTest(target=target, observed=observed):
+                self.case["scope"]["species"] = target
+                for row in self.local["observations"] + self.review["observations"]:
+                    row["context"]["species"] = observed
+                result = aggregate(self.case, self.local, self.review)
+                self.assertEqual(result["overall"]["verdict"], "supported")
+                self.assertNotIn("diagnostics", result)
+
+    def test_unknown_species_and_unspecified_target_keep_existing_meaning(self):
+        self.case["scope"]["species"] = "unknown"
+        self.assertEqual(aggregate(self.case, self.local, self.review)["overall"]["verdict"], "insufficient")
+        self.case["scope"]["species"] = "mouse"
+        for row in self.local["observations"] + self.review["observations"]:
+            row["context"]["species"] = None
+        result = aggregate(self.case, self.local, self.review)
+        self.assertEqual(result["overall"]["verdict"], "insufficient")
+        self.assertNotIn("diagnostics", result)
+        self.case["scope"] = {}
+        result = aggregate(self.case, self.local, self.review)
+        self.assertEqual(result["overall"]["verdict"], "supported")
+        self.assertNotIn("diagnostics", result)
+
     def test_all_counterevidence_is_checked_outside_the_witness(self):
         negative = {**deepcopy(self.observation), "id": "M2", "relation": "opposes"}
         self.review["observations"].append(negative)
