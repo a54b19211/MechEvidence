@@ -12,8 +12,10 @@ from pydantic import ValidationError
 
 from .models import (
     Case, Comparison, Decomposition, DirectReview, LocalReview, Material,
-    MechanismReview, Observation, unique_ids,
+    MechanismReview, Observation, ReviewedLocalReview, ReviewedMechanismReview, unique_ids,
 )
+
+from .source_notes import review_source_notes
 
 CallJSON = Callable[[str, str, dict, dict], dict]
 
@@ -355,7 +357,35 @@ outcomes and animal outcomes cannot substitute for patient endpoint evidence. St
 was not seen in THIS supplied package, never that a study has never been performed anywhere.
 Do not assign numeric confidence or an arbitrary overall score."""
 
-_LOCAL = _GROUNDING + """
+_SOURCE_NOTES = """
+Distinguish reported facts, explicitly reported negatives, and information not reported in the supplied
+material. Missing data, no disclosure, or not finding a method in this package NEVER establishes that
+an experiment was not performed. This applies to rationale, limitations, gaps, comparisons and summaries,
+not just the missing_experiment field. Preserve the source's conditions and uncertainty.
+Return source_notes for EACH observation's main finding and for EVERY statement about whether a method
+was performed, data exist/were disclosed, or evidence is absent. Cover such statements wherever they
+occur, including short phrases inside rationale and gap reasons; do not hide a factual assertion in
+unannotated prose. A real reported result can coexist with a not_reported limitation.
+States: reported = an affirmative fact actually reported; explicit_negative = an explicit source
+negative, classified as method_not_performed, negative_result, or not_disclosed. These three are distinct:
+an experiment done with a negative result is not an experiment never done. not_reported = the supplied
+material does not establish the fact; implementation/outcome stays unknown, not supports or opposes.
+For reported/explicit_negative, anchors must quote exact original allowed text with its passage ID and
+absolute start/end offsets in the material (same coordinates as supplied passages). Use the whole
+passage if needed for accurate offsets. Quotes must support the particular statement, not merely mention
+its topic. For not_reported use no anchors; statement names the unresolved question neutrally, without
+asserting its answer. The program adds the supplied-material/unknown qualification.
+Targets: local.observations.L1.finding or mechanism.observations.M1.finding (one per observation; original="").
+Text targets: local/mechanism.observations.<ID>.rationale or .limitations.<zero-based index>;
+local/mechanism.gaps.<zero-based index>.reason or .missing_experiment; mechanism.rationale;
+mechanism.comparisons.<zero-based index>.rationale; mechanism.combinations.<zero-based index>.rationale.
+For a text target, original is an exact short fragment occurring ONCE in that field; statement replaces
+only that fragment. Do not overlap fragments. Targets cannot change relationships, obligations, causal
+classifications, material IDs or citations. Source notes only check their stated assertions: do not claim
+all text is machine-proven or that quote matching establishes semantic entailment.
+"""
+
+_LOCAL = _GROUNDING + _SOURCE_NOTES + """
 Review atomic claims. Emit observations only for supplied claim IDs and keep join_ids empty.
 One observation may cover several claims only if that same result directly addresses each.
 Use supports/opposes for the exact claim, compatible for a result that is only consistent with it.
@@ -365,8 +395,12 @@ rather than inventing evidence or an intervention plan.
 Use local observation IDs L1, L2, ... only; keep them unique within this review.
 Retain all relevant counterevidence for the later audit."""
 
-_MECHANISM = _GROUNDING + """
+_MECHANISM = _GROUNDING + _SOURCE_NOTES + """
 Audit the candidate's whole causal meaning using the SAME original passages and the local review.
+Recheck every local source_note directly against the original passages, not against its prior wording.
+Return each local target+original again with your reviewed status, anchors and statement; correct any
+unwarranted certainty. Also add missing source notes you detect in the local text, and annotate all of
+your own findings and information-state statements. Local notes do not count as original evidence.
 First check question + candidate text for missing mediator, endpoint, direction, ordering or
 necessity obligations, even if supplied joins are empty. Add only obligations genuinely required
 by that candidate; do not strengthen it or replace it with a better-supported mechanism.
@@ -505,7 +539,8 @@ def _assessability(case: Case, passages: dict) -> dict:
 
 
 def aggregate(case: Case | dict, local_outputs: LocalReview | dict, mechanism_outputs: MechanismReview | dict,
-              *, use_context: bool = True, use_joins: bool = True, deduplicate: bool = True) -> dict:
+              *, use_context: bool = True, use_joins: bool = True, deduplicate: bool = True,
+              legacy_replay: bool = False) -> dict:
     """Reuse the SAME semantic outputs for aggregation and explicitly named ablations."""
     case = Case.model_validate(case)
     try:
@@ -515,9 +550,23 @@ def aggregate(case: Case | dict, local_outputs: LocalReview | dict, mechanism_ou
     passages = {item["id"]: item for item in prepare_passages(case)}
     materials = {item.id: item for item in case.materials}
     claims, joins, observations = _validate(case, local, review, passages)
+    if legacy_replay and (local.source_notes is not None or review.source_notes is not None):
+        raise EvaluationError("new source_notes cannot bypass validation through legacy_replay")
+    reporting = {"status": "legacy_unreviewed"}
+    if not legacy_replay:
+        try:
+            revised_local, revised_review, reporting = review_source_notes(local, review, passages, materials)
+            local, review = LocalReview.model_validate(revised_local), MechanismReview.model_validate(revised_review)
+        except (ValueError, ValidationError) as error:
+            raise EvaluationError(f"source reporting review is invalid: {error}") from error
+        claims, joins, observations = _validate(case, local, review, passages)
+    findings = reporting.get("findings", {})
     by_id = {item.id: item for item in observations}
     scope = {item.id: _scope_status(item, case, use_context) for item in observations}
-    causal = {item.id: _causal_evidence(item, materials, passages) for item in observations}
+    causal = {item.id: (_causal_evidence(item, materials, passages)
+                       and findings.get(item.id, {}).get("status") != "not_reported"
+                       and findings.get(item.id, {}).get("negative_kind") not in {"method_not_performed", "not_disclosed"})
+              for item in observations}
     source_groups = {item.id: sorted({passages[pid]["source_group"] if deduplicate
                                      else passages[pid]["material_id"] for pid in item.passage_ids})
                      for item in observations}
@@ -525,6 +574,11 @@ def aggregate(case: Case | dict, local_outputs: LocalReview | dict, mechanism_ou
     unknown_opposition = defaultdict(list)
     claim_by_id = {item.id: item for item in claims}
     for observation in observations:
+        # Missing information is neither a supporting result nor a negative experiment.
+        information = findings.get(observation.id, {})
+        if (information.get("status") == "not_reported"
+                or information.get("negative_kind") in {"not_disclosed", "method_not_performed"}):
+            continue
         for obligation in observation.claim_ids + observation.join_ids:
             strict = obligation not in claim_by_id or claim_by_id[obligation].kind == "causal"
             eligible = causal[observation.id] if strict else (
@@ -686,6 +740,7 @@ def aggregate(case: Case | dict, local_outputs: LocalReview | dict, mechanism_ou
             "local_review": local.model_dump(), "mechanism_review": review.model_dump(),
             "decomposition": {"claims": [item.model_dump() for item in case.claims],
                               "joins": [item.model_dump() for item in case.joins]},
+            "source_reporting": reporting,
             **({"diagnostics": diagnostics} if diagnostics else {})}
 
 
@@ -695,10 +750,13 @@ def _empty_reviews() -> tuple[LocalReview, MechanismReview]:
         whole_assessment="unestablished", rationale="没有可供评价的原文段落。", gaps=[]))
 
 
-def evaluate(case: Case | dict, call_json: CallJSON) -> dict:
+def evaluate(case: Case | dict, call_json: CallJSON, *, legacy_replay: bool = False) -> dict:
     case = Case.model_validate(case)
     if not prepare_passages(case):
-        return aggregate(case, *_empty_reviews())
+        local, review = _empty_reviews()
+        if not legacy_replay:
+            local.source_notes, review.source_notes = [], []
+        return aggregate(case, local, review, legacy_replay=legacy_replay)
     if not case.claims:
         decomposition = _call(call_json, "decomposition", _GROUNDING + """
 Decompose only the candidate's stated meaning, independent of whether it is likely true. Return
@@ -709,13 +767,21 @@ Use unique C1/C2 claim IDs and J1/J2 join IDs with valid claim_ids. Do not infer
         case = case.model_copy(update={"claims": decomposition.claims, "joins": decomposition.joins})
     local_payload = _payload(case)
     local_payload.pop("joins")
-    local = _call(call_json, "local_review", _LOCAL, local_payload, LocalReview)
+    local = _call(call_json, "local_review", _LOCAL, local_payload,
+                  LocalReview if legacy_replay else ReviewedLocalReview)
     # Validate local grounding before passing its judgments into the next review.
     empty = _empty_reviews()[1]
-    _validate(case, local, empty, {item["id"]: item for item in prepare_passages(case)}, require_join_review=False)
+    passages = {item["id"]: item for item in prepare_passages(case)}
+    _validate(case, local, empty, passages, require_join_review=False)
+    if not legacy_replay:
+        try:
+            review_source_notes(local, None, passages, {m.id: m for m in case.materials})
+        except ValueError as error:
+            raise EvaluationError(f"local source reporting review is invalid: {error}") from error
     review = _call(call_json, "mechanism_review", _MECHANISM,
-                   {**_payload(case), "local_review": local.model_dump()}, MechanismReview)
-    return aggregate(case, local, review)
+                   {**_payload(case), "local_review": local.model_dump()},
+                   MechanismReview if legacy_replay else ReviewedMechanismReview)
+    return aggregate(case, local, review, legacy_replay=legacy_replay)
 
 
 def direct_baseline(case: Case | dict, call_json: CallJSON) -> dict:

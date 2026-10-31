@@ -63,7 +63,8 @@ def compare(case: dict, output: Path, baseline: bool = True, reuse_from: Path | 
                 structured = case | result["decomposition"]
                 for name, options in [("without_joins", {"use_joins": False}),
                                       ("without_context", {"use_context": False})]:
-                    changed = aggregate(structured, result["local_review"], result["mechanism_review"], **options)
+                    raw = result["source_reporting"]["raw_reviews"]
+                    changed = aggregate(structured, raw["local_review"], raw["mechanism_review"], **options)
                     write_json(folder / f"{name}.json", changed)
                     row["methods"][name] = {"status": "completed", "verdict": changed["overall"]["verdict"]}
                 claims = result["claims"]

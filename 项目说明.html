@@ -114,7 +114,7 @@ result = evaluate(case, call_json)
 # claims / joins 可选；未提供局部主张时，方法先调用模型拆分
 # call_json(stage, instructions, payload, schema) → 已解析的 JSON 对象
 # 阶段：decomposition（按需）、local_review、mechanism_review</pre>
-<p><strong>调用由李控制：</strong>方法不自行调用 HTTP、Fabric 或图谱，不读取密钥；李提供四参数模型回调，统一管理模型、预算和执行错误。雷达可继续只载入 <code>models.py</code> 与 <code>assess.py</code>，函数签名保持不变。</p>
+<p><strong>调用由李控制：</strong>方法不自行调用 HTTP、Fabric 或图谱，不读取密钥；李提供四参数模型回调，统一管理模型、预算和执行错误。本地集成须载入完整 <code>mechevidence</code> 包（含 source_notes.py）；HTTP 输入与原调用方式保持不变。</p>
 <p><strong>输入背景应明确传入：</strong><code>scope.species / system / disease</code>。材料使用 <code>id、text、source_id、record_id、version、source_group、source_kind、text_level、url</code>，并可附 <code>pmid、doi</code>；引用只能来自本次允许的材料。<code>allowed_passage_ids</code> 指定选用句子，未提供时使用材料全部段落。</p>
 <p id="scope-check"><strong>范围怎样判断：</strong>matched 只表示观察适用于本次明确提出的 species / system / disease。程序会覆盖“目标是人、观察是小鼠、模型却说匹配”这类已知物种矛盾；支持和反向结果使用同一规则，原观察和引用继续保留。物种相同不代表细胞与患者相同，更不证明每个细胞模型都测过每个终点。现有审读阶段要求按实际模型或人群、终点、干预和时程分别记录；这些细节仍依赖原文语义核查，尚无程序逐项证明其正确。</p>
 <p>背景全未指定时，允许保留各研究自己的局部事实，不自动推广到目标人群。比如 Q023 的三个局部结果仍可支持，跨治疗体系的联系仍待补证。发现模型适用性标记与明确物种冲突时，结果额外返回 <code>diagnostics</code>：rule_id、observation_id、claim_ids / join_ids、requested_species、observed_species、source_records 和 reason。source_records 保留 material_id、source_id、record_id、version；没有这种纠正时省略该字段。模型原始审核不改写，最终总判断使用程序计算后的资格。</p>
@@ -222,6 +222,24 @@ set +a
 <p><strong>直接拿去联调：</strong><a href="examples/investigation_feedback.json">examples/investigation_feedback.json</a> 保存上述三个原始 case、完整 evaluation 和两种情形。<code>evidence_request</code> 是人工写的取证需求示例，展示怎么绑定主张与引用；它不属于 evaluate 的新增返回字段，也不代表自动策略已经生成查询。里面的 gap_indices 仅指该固定结果中 critical_gaps 的零基位置，不能跨版本使用。</p>
 <pre>python -m unittest discover -s tests -p 'test_investigation.py' -v</pre>
 <p>测试用保存的局部审核和机制审核作为回调，重新走 evaluate 并比较完整输出，检查原文位置、缺口绑定和反证保留。另外故意将材料标为 graph，验证即便给出原来的支持性模型回执，图断言也不能取代原始机制证据。图路径仍用于提出候选或检索线索；不能为了获得支持，把图数据改标 primary。</p>
+</div></details>
+
+<details id="source-reporting"><summary>未报告、明确未实施和阴性结果，怎样分开</summary><div class="detail">
+<p><strong>没有写，不等于没有做。</strong>材料没披露原始数据、没说明某项方法，或本轮检索没有看到，只能说明本次材料的证据范围。系统不能由此断言实验未实施。B5 的历史失败就发生在这里：局部审核把未交代的方法写成确定未实施，后续审核和报告继续采用；原记录保持封存。</p>
+<p>调用仍是 <code>evaluate(case, call_json)</code>，阶段仍是 decomposition（按需）、local_review、mechanism_review。后两阶段新增必填 <code>source_notes</code>。每项观察的主结果必须有一条 finding 记录；所有涉及方法是否实施、数据是否披露和证据是否缺失的具体断言也要记录。状态针对断言：真实实验结果仍可成立，同时另一项方法的实施情况保持未知。</p>
+<table><thead><tr><th>状态</th><th>含义和处理</th></tr></thead><tbody><tr><td>reported</td><td>材料实际报告的事实，必须有允许原文中的准确引句与位置。它本身不等于因果关系已经确立，仍需原有方法、背景和衔接检查。</td></tr><tr><td>not_reported</td><td>本次允许材料未报告或未充分说明。程序在表述中保留“本次材料”和“相关事实仍未知”；主结果若属此类，不贡献支持或反驳。局限性属此类，不抹去同一观察的真实结果。</td></tr><tr><td>explicit_negative</td><td>原文明确否定，必须有准确引句。negative_kind 区分 method_not_performed（方法未实施）、negative_result（实施后的阴性结果）、not_disclosed（明确未披露）。方法未实施和未披露都不计为结果支持或反驳，即使主张 kind=reported；方法与披露状况仍保留为带原文的说明。</td></tr></tbody></table>
+<p>每条 source_note 包含 <code>target、original、status、statement、anchors、negative_kind</code>。finding 的 target 形如 <code>local.observations.L1.finding</code>，original 为空；文字修订指向既有 rationale、limitations 中的一项、gap 的 reason / missing_experiment，或机制审核的比较、组合与总说明。original 必须是该字段中只出现一次的准确片段，修订不能重叠。anchors 记录 passage_id、原材料中的 start/end 和准确 quote；not_reported 不伪造否定引句。finding 的引句限原观察引用；文字说明可补读同材料或由规范 PMID/DOI 确认同论文的允许段落，不凭普通分组标签扩范围。新增说明引句也保留自己的 source_id、record_id、version。生产代码不识别特定案例或按否定词做替换。</p>
+<p>机制审核同时读取原文和局部审核，必须重新判断每条局部 source_note，按相同 target + original 返回修正后的状态与表述，并补上局部漏标的相关断言。程序只应用被准确定位的文字修订；L 观察的关系、主张编号、causal_test 和引用不因此改写。修正后的副本进入 local_review、mechanism_review、evidence、critical_gaps 和整体说明。资格判定额外读取各观察的 finding 状态。主结果属于未报告、方法未实施或未披露时，活动 rationale 采用带正确范围的 finding 说明；原长文只保留审计。</p>
+<p><strong>给雷达和潘：</strong>完整结果新增 <code>source_reporting</code>，包含 status、method、notes、findings 和 raw_reviews。notes 是已处理的状态、范围、引句及位置；findings 按观察 ID 保存状态。<code>source_reporting.raw_reviews.local_review / mechanism_review</code> 保存原模型输出，仅供审计，不能再次当作原始证据或正文依据。先保存完整结果，生成和规划时调用下面的公开函数，不复制判断算法：</p>
+<pre>from mechevidence import evaluate, generation_view
+result = evaluate(case, call_json)
+# 完整 result 交调查记录保存；原始模型回执也继续保存。
+context = generation_view(result)
+# context 保留修订结果和有效模态记录，排除 source_reporting.raw_reviews。
+# 专业摘要仍不能代替 references 指向的原始材料。</pre>
+<p><code>source_reporting.status=reviewed</code> 表示本轮结构化审查已完成处理，<strong>不是科学结论通过或专家认可</strong>。精确引句和位置证明文字确实存在，不自动证明它蕴含模型的判断；模型也可能漏标自由文本中的错误。这些仍需真实新运行和独立核验，不能用受控回执回归代替。</p>
+<p><strong>历史兼容：</strong>旧回执只可显式使用 <code>evaluate(..., legacy_replay=True)</code> 或 <code>aggregate(..., legacy_replay=True)</code> 做离线历史回放，结果标为 legacy_unreviewed。科学字段保留原样，B5 的旧错误不会被回写。新格式已带 source_notes 时，也禁止通过 legacy_replay 跳过检查。当前 HTTP 没有 legacy 开关；新输出缺 source_notes、缺观察 finding、漏复核局部 note 或引句位置不符均失败。generation_view 拒绝 legacy 结果。方法版本已纳入 source_notes.py，旧版本的模型回执不能续到新 provider。</p>
+<p><strong>测试口径：</strong>三种信息状态、真假引句、定位、重叠修订和保护字段使用受控回执；B5 从私有封存路径读取，分别验证原失败保留和显式修订可应用，不作为新的模型效果结论。设置 MECHEVIDENCE_B5_ROW 后可运行对应离线回归；测试不复制原件。是否完成真实 B6，另以协调侧实际运行记录为准。</p>
 </div></details>
 
 <details id="identity"><summary>PMID、DOI 怎样传入；输入有问题时怎样处理</summary><div class="detail">

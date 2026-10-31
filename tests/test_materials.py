@@ -6,6 +6,7 @@ from pathlib import Path
 import threading
 import unittest
 
+from test_service import controlled_review
 from mechevidence import MaterialInputError, aggregate, direct_baseline, evaluate
 from mechevidence.assess import EvaluationError, prepare_materials
 from mechevidence.cohorts import assess_independence
@@ -70,7 +71,7 @@ class MaterialContractTests(unittest.TestCase):
                     for claim in case['claims']:
                         claim['kind'] = claim_kind
                     # Deliberately reuse favourable experimental observations to test the program boundary.
-                    result = aggregate(case, saved['local_review'], saved['mechanism_review'])
+                    result = aggregate(case, saved['local_review'], saved['mechanism_review'], legacy_replay=True)
                     self.assertEqual(result['overall']['verdict'], 'insufficient')
                     self.assertTrue(all(not row['supporting_observation_ids'] for row in result['claims'] + result['joins']))
                     self.assertTrue(all(not row['causal_evidence_eligible'] for row in result['evidence']))
@@ -135,9 +136,9 @@ class MaterialContractTests(unittest.TestCase):
                 self.assertTrue(call['payload']['materials'][0]['is_demo'])
                 request['provider_version'] = result['provider_version']
                 request['model_receipts'].append({'call_id': call['call_id'], 'request_hash': call['request_hash'],
-                                                 'output': deepcopy(self.saved['evaluation'][call['stage']])})
+                                                 'output': controlled_review(case, self.saved['evaluation'], call['stage'])})
             self.assertEqual(result['status'], 'completed')
-            native = evaluate(case, lambda stage, *_: deepcopy(self.saved['evaluation'][stage]))
+            native = evaluate(case, lambda stage, *_: controlled_review(case, self.saved['evaluation'], stage))
             self.assertEqual(result['result'], native)
             self.assertEqual(native['overall'], self.saved['evaluation']['overall'])
             for observation in native['evidence']:

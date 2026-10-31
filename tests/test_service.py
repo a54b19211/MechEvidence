@@ -6,7 +6,23 @@ from pathlib import Path
 import threading
 import unittest
 
-from mechevidence import service
+from mechevidence import service, prepare_passages
+
+
+def controlled_review(case, saved, stage):
+    """Transport fixture annotations, not new biomedical model judgments."""
+    passages = {p["id"]: p for p in prepare_passages(case)}
+    notes = []
+    for prefix, key in [("local", "local_review"), ("mechanism", "mechanism_review")]:
+        if stage == "local_review" and prefix == "mechanism":
+            continue
+        for observation in saved[key]["observations"]:
+            passage = passages[observation["passage_ids"][0]]
+            notes.append({"target": f'{prefix}.observations.{observation["id"]}.finding',
+                "original": "", "status": "reported", "statement": "受控接口回执中的已报告观察。",
+                "negative_kind": None, "anchors": [{"passage_id": passage["id"],
+                    "start": passage["start"], "end": passage["end"], "quote": passage["text"]}]})
+    return {**deepcopy(saved[stage]), "source_notes": notes}
 
 
 class ServiceTests(unittest.TestCase):
@@ -53,7 +69,7 @@ class ServiceTests(unittest.TestCase):
         call = response['model_call']
         request['provider_version'] = response['provider_version']
         request['model_receipts'].append({'call_id': call['call_id'], 'request_hash': call['request_hash'],
-                                         'output': deepcopy(output if output is not None else self.snapshot['evaluation'][call['stage']])})
+                                         'output': deepcopy(output) if output is not None else controlled_review(request['arguments']['case'], self.snapshot['evaluation'], call['stage'])})
 
     def test_http_two_step_resume_and_saved_local_result_are_identical(self):
         request = self.request()
@@ -70,7 +86,8 @@ class ServiceTests(unittest.TestCase):
         self.add_receipt(request, second)
         completed = self.post(request)
         self.assertEqual(completed['status'], 'completed')
-        self.assertEqual(completed['result'], self.snapshot['evaluation'])
+        self.assertEqual(completed['result']['source_reporting']['status'], 'reviewed')
+        self.assertEqual({k: v for k, v in completed['result'].items() if k != 'source_reporting'}, self.snapshot['evaluation'])
         self.assertEqual(completed['context']['computation_refs'], request['arguments']['computation_refs'])
         self.assertEqual(self.post(request), completed)
 

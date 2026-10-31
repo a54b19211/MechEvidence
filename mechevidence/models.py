@@ -154,6 +154,32 @@ class Gap(Record):
     ))
 
 
+class SourceAnchor(Record):
+    passage_id: Identifier
+    start: StrictInt = Field(ge=0)
+    end: StrictInt = Field(gt=0)
+    quote: Text
+
+
+class SourceNote(Record):
+    target: Identifier
+    original: str = ""
+    status: Literal["reported", "not_reported", "explicit_negative"]
+    statement: Text
+    anchors: list[SourceAnchor]
+    negative_kind: Literal["method_not_performed", "negative_result", "not_disclosed"] | None = None
+
+    @model_validator(mode="after")
+    def information_boundary(self):
+        if (self.status == "explicit_negative") != (self.negative_kind is not None):
+            raise ValueError("explicit_negative requires its kind; other states must not supply one")
+        if self.status == "not_reported" and self.anchors:
+            raise ValueError("absence of a report has no affirmative or negative source quote")
+        if self.status != "not_reported" and not self.anchors:
+            raise ValueError("reported facts and explicit negatives require original source anchors")
+        return self
+
+
 class LocalObservation(Observation):
     id: Annotated[str, Field(pattern=r"^L[0-9]+$")]
     claim_ids: list[Identifier] = Field(min_length=1)
@@ -163,6 +189,11 @@ class LocalObservation(Observation):
 class LocalReview(Record):
     observations: list[LocalObservation]
     gaps: list[Gap]
+    source_notes: list[SourceNote] | None = Field(default=None, exclude_if=lambda value: value is None)
+
+
+class ReviewedLocalReview(LocalReview):
+    source_notes: list[SourceNote]
 
 
 class MechanismObservation(Observation):
@@ -191,6 +222,11 @@ class MechanismReview(Record):
     whole_assessment: Literal["supported", "compatible_only", "unestablished"]
     rationale: Text
     gaps: list[Gap]
+    source_notes: list[SourceNote] | None = Field(default=None, exclude_if=lambda value: value is None)
+
+
+class ReviewedMechanismReview(MechanismReview):
+    source_notes: list[SourceNote]
 
 
 class DirectReview(Record):

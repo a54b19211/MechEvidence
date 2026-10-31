@@ -30,7 +30,7 @@ def _digest(value) -> str:
 
 def _version() -> str:
     root = Path(__file__).parent
-    names = ('models.py', 'assess.py', 'cohorts.py', 'service.py')
+    names = ('models.py', 'assess.py', 'source_notes.py', 'cohorts.py', 'service.py')
     return hashlib.sha256(b''.join(name.encode() + b'\0' + (root / name).read_bytes() for name in names)).hexdigest()
 
 
@@ -124,6 +124,9 @@ def capabilities() -> dict:
             'limits': {'request_bytes': MAX_BODY_BYTES, 'model_calls': MAX_MODEL_CALLS},
             'execution': 'stateless_replay_host_owned_models',
             'material_contract': material_contract(),
+            'source_reporting': {'method': 'source-reporting-v1', 'required_model_field': 'source_notes',
+                'states': ['reported', 'not_reported', 'explicit_negative'],
+                'raw_reviews_use': 'audit_only_not_source_evidence', 'legacy_http_replay': False},
             'request_schema': ExecuteRequest.model_json_schema(),
             'context_schema': Context.model_json_schema(),
             'argument_schemas': {'evaluate': EvaluateArguments.model_json_schema(),
