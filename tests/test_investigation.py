@@ -24,7 +24,8 @@ class InvestigationFeedbackTests(unittest.TestCase):
                     stages.append(stage)
                     return deepcopy(saved[stage])
 
-                self.assertEqual(evaluate(snapshot['case'], replay), saved)
+                self.assertEqual(evaluate(snapshot['case'], replay, legacy_replay=True),
+                                 {**saved, 'source_reporting': {'status': 'legacy_unreviewed'}})
                 self.assertEqual(stages, ['local_review', 'mechanism_review'])
                 materials = {m['id']: m for m in snapshot['case']['materials']}
                 for observation in saved['evidence']:
@@ -96,7 +97,7 @@ class InvestigationFeedbackTests(unittest.TestCase):
         for material in case['materials']:
             material['source_kind'] = 'graph'
         # Deliberately reuse a favourable semantic review; the program must still reject it.
-        result = evaluate(case, lambda stage, *_: deepcopy(snapshot['evaluation'][stage]))
+        result = evaluate(case, lambda stage, *_: deepcopy(snapshot['evaluation'][stage]), legacy_replay=True)
         self.assertEqual(result['overall']['verdict'], 'insufficient')
         self.assertTrue(all(not row['causal_evidence_eligible'] for row in result['evidence']))
         self.assertTrue(all(not row['supporting_observation_ids'] for row in result['claims'] + result['joins']))

@@ -114,8 +114,10 @@ result = evaluate(case, call_json)
 # claims / joins 可选；未提供局部主张时，方法先调用模型拆分
 # call_json(stage, instructions, payload, schema) → 已解析的 JSON 对象
 # 阶段：decomposition（按需）、local_review、mechanism_review</pre>
-<p><strong>调用由李控制：</strong>方法不自行调用 HTTP、Fabric 或图谱，不读取密钥；李提供四参数模型回调，统一管理模型、预算和执行错误。雷达可继续只载入 <code>models.py</code> 与 <code>assess.py</code>，函数签名保持不变。</p>
+<p><strong>调用由李控制：</strong>方法不自行调用 HTTP、Fabric 或图谱，不读取密钥；李提供四参数模型回调，统一管理模型、预算和执行错误。本地集成须载入完整 <code>mechevidence</code> 包（含 source_notes.py）；HTTP 输入与原调用方式保持不变。</p>
 <p><strong>输入背景应明确传入：</strong><code>scope.species / system / disease</code>。材料使用 <code>id、text、source_id、record_id、version、source_group、source_kind、text_level、url</code>，并可附 <code>pmid、doi</code>；引用只能来自本次允许的材料。<code>allowed_passage_ids</code> 指定选用句子，未提供时使用材料全部段落。</p>
+<p id="scope-check"><strong>范围怎样判断：</strong>matched 只表示观察适用于本次明确提出的 species / system / disease。程序会覆盖“目标是人、观察是小鼠、模型却说匹配”这类已知物种矛盾；支持和反向结果使用同一规则，原观察和引用继续保留。物种相同不代表细胞与患者相同，更不证明每个细胞模型都测过每个终点。现有审读阶段要求按实际模型或人群、终点、干预和时程分别记录；这些细节仍依赖原文语义核查，尚无程序逐项证明其正确。</p>
+<p>背景全未指定时，允许保留各研究自己的局部事实，不自动推广到目标人群。比如 Q023 的三个局部结果仍可支持，跨治疗体系的联系仍待补证。发现模型适用性标记与明确物种冲突时，结果额外返回 <code>diagnostics</code>：rule_id、observation_id、claim_ids / join_ids、requested_species、observed_species、source_records 和 reason。source_records 保留 material_id、source_id、record_id、version；没有这种纠正时省略该字段。模型原始审核不改写，最终总判断使用程序计算后的资格。</p>
 <div class="table-wrap"><table><thead><tr><th>必须完整保留的结果</th><th>下游用途</th></tr></thead><tbody>
 <tr><td>claims、joins</td><td>区分局部事实与因果衔接；整体 partial 不代表所有局部都没有证据。</td></tr>
 <tr><td>critical_gaps</td><td>保留具体缺口及需核对的证据，供补查和生成时限定结论。</td></tr>
@@ -128,6 +130,82 @@ result = evaluate(case, call_json)
 <p><strong>给潘的现成材料：</strong><a href="examples/partial_handoff.json">examples/partial_handoff.json</a>。其中 <code>case</code> 是实际输入，<code>evaluation</code> 是逐字段复用的 Q005 真实结果，<code>provenance</code> 记录出处，<code>consumer_checks</code> 给出人工写的生成检查对照；不要将整个外层交接对象送入 Case。</p>
 <p>Q005 的 C1、C2、C3 均支持；J2（Akt 参与促轴突作用）支持；J1（ERK 在 Akt 上游的串联关系）未建立，整体 <code>partial</code>。生成应保留培养的小鼠发育期海马神经元这一条件及 J1 缺口，不能改写成“已证实 APRIL→ERK→Akt 串联”。交接对照文字不是新增模型结果或专家金标准。</p>
 </div></details>
+<details open id="material-contract"><summary>哪些材料可以交给汪，缺材料时怎样补</summary><div class="detail">
+<p><strong>source_kind 继续必填，不按 external_archive 自动补 primary。</strong>10月30日演练中，汪的两次尝试都因材料缺类型停在 needs_input，只读了能力清单，不能算机制评价。本轮补齐分类说明和反馈位置，保留这条拒绝规则。新增两个可选字段：<code>document_type</code> 描述材料种类，<code>is_demo</code> 保留模拟标记。旧的明确分类输入仍兼容；新归档材料应同时传入这两个字段中已知的信息。</p>
+<div class="table-wrap"><table><thead><tr><th>实际材料</th><th>填写方式</th><th>能用于什么</th></tr></thead><tbody>
+<tr><td>原始研究论文、原始试验结果报告</td><td>source_kind=primary；document_type=research_article 或 trial_results。</td><td>原件可识别，含自身研究方法、条件与已观察结果。只支持实际报告及检验的环节；临床终点改善不自动证明中间机制。普通 Journal Article 标签或 DOI 本身不够。</td></tr>
+<tr><td>原作者会议摘要</td><td>确有原始研究方法、条件与结果时：primary / conference_abstract；text_level=abstract。</td><td>按摘要能读到的原始观察评价，保留方法、对照、样本与初步发表限制。不自动当全文或已同行评议。会议议程、题目列表、公司宣布参会不属于此类。</td></tr>
+<tr><td>原始登记、研究方案</td><td>primary / trial_registration 或 study_protocol。</td><td>保存登记状态、计划和原文，作为背景和取证线索。不给本服务的机制主张提供支持或反驳，包括名为 reported 的主张；也不能确认实际患者重叠或独立研究实施。已发布结果应另取对应原始结果记录或明确分出的结果部分。</td></tr>
+<tr><td>综述，包括综述性质会议摘要</td><td>review / review。</td><td>背景、作者观点与原始研究线索；不算第二项实验。</td></tr>
+<tr><td>图关系</td><td>graph / graph。</td><td>候选和查找原件的线索；图边不代替干预结果。</td></tr>
+<tr><td>新闻、新闻稿、公司披露、社媒帖子</td><td>document_type分别为news、press_release、company_disclosure、social_post；不为进入Mech而填primary或review。</td><td>保留在雷达，供核对谁说了什么、风险线索、竞争假设和后续补查。本服务需要补到对应原始研究才能评价机制或研究/患者关系。公司声称试验成功不等于原始机制证据。</td></tr>
+</tbody></table></div>
+<p>分类看<strong>实际文件及内容</strong>，不只看网站或发布者。公司托管的原始研究报告若确有原始方法和结果，应按该报告本身分类；宣传稿引用某论文，仍是宣传稿，需另外取论文。登记页若混合方案和已发布结果，先保留固定原件版本，再明确所选文本是哪一部分，不能用设计段落补结果缺口。无法确认时保留未知和补读请求。</p>
+<p><strong>不能进入Mech，不等于被雷达排除。</strong>新闻和社媒仍可形成待核假设、反向信号或及时核查任务；应保留归因、可知时间、转载关系和未证实状态。来源之间是否独立传播，与研究或患者队列是否独立是两种关系，不要送同一个接口算。删帖、辟谣和处罚只属于信息环境事件，不能直接证实病原或自动提高风险；SARS类假设不能写成已证实SARS。公卫风险与竞争假设评估仍由雷达负责。</p>
+<p><strong>程序会检查：</strong>显式声明新闻、公司披露或社媒时，即使有人误填 primary，也在第一次模型调用前返回 <code>material_type_not_evaluable</code>。document_type=review/graph 与 source_kind=primary 矛盾时返回 <code>material_type_conflict</code>。登记和方案保留为背景，但聚合、独立性方法和直接基线都防止其被当作已观察结果。未提供 document_type 时服务不会自行读文猜类型，源端仍负责正确分类。</p>
+<p><strong>缺字段反馈：</strong><code>status=needs_input</code> 不代表机制被否定。缺 source_kind 时返回原有 <code>input_invalid</code>，同时给出每条材料的 <code>missing_fields</code> 和 <code>material_feedback</code>：</p>
+<pre>{
+  "status": "needs_input",
+  "error_code": "input_invalid",
+  "missing_fields": ["materials.q123.source_kind"],
+  "material_feedback": [{
+    "material_id": "q123",
+    "field": "source_kind",
+    "input_path": ["arguments", "case", "materials", 0, "source_kind"],
+    "required_information": "从固定原件确认类型；不能按external_archive或声明自动当primary。"
+  }]
+}</pre>
+<p><code>assess_independence</code> 的材料在 <code>arguments.materials</code>，对应 input_path 不带 case。显式不适用的材料返回 <code>material_feedback[].required_information</code> 指明要补原始报告；声明保留为雷达线索。宿主若选取专业材料子集，必须同时保留未评价材料和覆盖限制，尤其不能静默丢掉反向消息，再把结果写成“全部资料支持”。</p>
+<p><strong>B场景新模拟包：</strong>原始试验结果和临床前机制材料应有不同固定ID、原文、版本、明确类型和 <code>is_demo=true</code>；机制问题从真实提供的内容提出，不给预期答案，不因为希望通过验收就把公司稿改成原始研究。用宿主实际执行 evaluate，并留下模型阶段、回执、支持与反证、条件、替代解释和缺口，才算专业方法参与。公卫和产业指标任务不强制经过本服务。</p>
+<p>机器可读规则位于 <code>GET /v1/capabilities → material_contract</code>。本轮独立测试采用随机端口，不替换18561现役进程；新方法版本需由协调侧统一采用。测试使用保存回执及故意过度声称的受控输出验证规则，不代表新的医学效果实验。</p>
+</div></details>
+
+<details open id="http-service"><summary>独立 HTTP 服务：雷达怎样调用汪的两项方法</summary><div class="detail">
+<p>服务只运行专业方法。雷达把固定原件和已收到的模型结果送来；需要下一步模型结果时，服务把提示、材料和输出格式交回雷达。模型请求、预算、超时、未知结果和账单都由雷达处理。服务不读取商业模型密钥、不联网取资料、不建数据库或队列。原来的 <code>evaluate(case, call_json)</code> 仍可在本地使用。</p>
+<div class="table-wrap"><table><thead><tr><th>接口</th><th>用途</th></tr></thead><tbody>
+<tr><td>GET /health</td><td>检查服务进程，返回实际 provider_version。</td></tr>
+<tr><td>GET /v1/capabilities</td><td>返回操作、允许的模型阶段、输入 JSON Schema 和请求上限。</td></tr>
+<tr><td>POST /v1/execute</td><td>执行到下一次需要模型结果，或利用已收回执完成。三个接口均须 Bearer 服务令牌。</td></tr>
+</tbody></table></div>
+<pre>{
+  "schema_version": "bioradar.professional.v1",
+  "operation_id": "由雷达固定的操作ID",
+  "operation": "evaluate",
+  "provider_version": null,
+  "arguments": {
+    "mode": "biomedical_research",
+    "task": "mechanism",
+    "case": { "...": "原有完整Case，不改变字段" },
+    "computation_refs": [{
+      "run_id": "分析运行ID", "result_id": "计算结果ID",
+      "version": "固定结果版本", "finding_ids": ["待查候选ID"]
+    }]
+  },
+  "model_receipts": []
+}</pre>
+<p>原件须带非空 <code>source_id、record_id、version</code>。论文标识冲突规则沿用下文。计算结果引用用于把专业意见关联回雷达的某次统计和候选，放在返回的 <code>context</code> 中；它们不进入原文材料，也不自动证明机制成立。</p>
+<p><strong>两项操作：</strong><code>evaluate</code> 对应 <code>task=mechanism</code>，额外输入只有 <code>case</code>，返回现有完整评价。<code>assess_independence</code> 对应 <code>task=independence</code>，额外输入为 <code>materials</code>、显式 <code>pairs</code> 和可选 <code>question</code>：</p>
+<pre>"pairs": [{
+  "left_material_id": "原件A", "right_material_id": "原件B",
+  "unit": "patient_cohort"
+}]</pre>
+<p><code>unit</code> 可为 <code>study</code>（研究实施或数据）或 <code>patient_cohort</code>（实际纳入患者）。每对结果的 <code>relation</code> 为 same、overlap、independent、unknown；附原文引用、版本、理由、未知项和需要补读的已有资料。<code>proposed_relation</code> 保留模型原判断，<code>cohort_review</code> 保留完整回执。确定关系要求双方原始研究材料的有效引用；只凭论文编号、时间或图关系时降为 unknown。语义是否正确仍须用真实研究检验，模型判断不充当专家标签。</p>
+<p>论文归组仍由现有身份规则完成；同一论文可能报告多个队列，不同论文也可能复用患者。关系方法只评请求中的配对，最多128份材料、64对，不自动排列全部组合，不做关系传递，也不直接给独立研究或患者总数。雷达结合业务口径决定统计单位。图断言只提供线索。</p>
+<p><strong>适用方向：</strong><code>mode=business</code> 或 <code>public_health_metrics</code>，以及 <code>task=metrics</code>，返回 <code>not_applicable</code>，不会请求模型；这不妨碍雷达继续计算商业或公卫指标。生医请求的操作和 task 必须对应，缺失或错误值返回输入错误。</p>
+<p><strong>一次操作怎样继续：</strong></p>
+<ol><li>首轮提交完整输入和空回执。收到 <code>model_required</code> 后，雷达先保存实际 <code>provider_version</code> 及 <code>model_call</code>，再决定是否付费执行。</li><li>雷达用既有执行入口处理 <code>stage / instruction / payload / schema</code>。已收到且成功的模型内容，作为 <code>{call_id, request_hash, output}</code> 加入回执数组；两种标识原样回传。unknown、failed、not_sent 留在宿主账本中，不能伪装成成功回执。</li><li>重发相同 operation_id、arguments、固定 provider_version 及此前所有回执。服务按顺序重放，直到返回下一次 model_required 或 completed。错标识、错请求摘要、换版本、错序或多余回执均拒绝。</li><li>完成时 <code>result</code> 是方法原生结果，<code>context</code> 保留计算关联。机制评价的局部支持、反证、适用条件和缺口均保留，不能只取 overall。</li></ol>
+<p>服务从异常原因链恢复内部暂停信号，所以核心把回调异常包装成 EvaluationError 后仍能正确暂停。<code>request_hash</code> 覆盖实际模型请求；<code>call_id</code> 还绑定完整输入、方法版本、操作 ID 和步骤顺序。宿主以 provider、operation_id、call_id 保存执行记录，不能仅以 stage 作主键。</p>
+<p>HTTP 重放本身没有付费副作用；它不等于服务替宿主保证模型“只收费一次”。宿主仍须冻结操作输入、核对未知回执并按 call_id 去重。不得在 HTTP 失败后悄悄退回本地方法再付费调用。源代码版本在服务进程启动时固定，采用新代码应重启服务；旧回执不能静默接到新提示上。</p>
+<p><code>status</code> 包括 model_required、completed、not_applicable、needs_input、failed。身份冲突与其他输入错误均为 needs_input；已成功送达但不符合专业格式的模型输出会产生 failed/method_failed，不能当作科学上的 insufficient。模型失败或未知状态不得由本服务重试。</p>
+<p><strong>隔离启动：</strong>本轮使用指定 worktree 和端口18561，现役 main 保持不变。令牌保存在该目录忽略的私有 <code>.env</code>，只含服务令牌；不要复制商业模型 .env。使用已有依赖环境即可：</p>
+<pre>cd /home/zk_test/zk_projects/.bioradar-kdd-integration/mechevidence
+set -a
+. ./.env
+set +a
+/home/zk_test/zk_projects/MechEvidence/.venv/bin/python -B -m mechevidence.service --host 127.0.0.1 --port 18561</pre>
+<p><strong>验证：</strong><code>python -m unittest discover -s tests -v</code>。HTTP 测试真实启动服务并完成暂停、两步恢复、重复请求、错误回执及非适用任务；保存的 Q005 完整结果与本地方法逐字段一致。独立性方法使用明确标注的受控回执检验来源和关系边界，不把这些测试写成新医学实验。跨项目真实付费案例由雷达统一组织。</p>
+</div></details>
+
 <details id="investigation"><summary>评价以后，雷达和李怎样决定下一次查什么</summary><div class="detail">
 <p><strong>现有接口已够用，本轮不增加评价函数或检索循环。</strong>雷达保存这次调查及完整结果；李的查询策略决定查什么、调用哪个工具、花多少预算以及何时停止。汪负责指出哪个主张缺什么依据、哪些原文支持或反对它。新的材料回来后，再调用同一个 <code>evaluate(case, call_json)</code>，由实际证据重新评价。</p>
 <div class="table-wrap"><table><thead><tr><th>先读什么</th><th>怎么找到依据</th><th>下一次取证要解决什么</th></tr></thead><tbody>
@@ -144,6 +222,24 @@ result = evaluate(case, call_json)
 <p><strong>直接拿去联调：</strong><a href="examples/investigation_feedback.json">examples/investigation_feedback.json</a> 保存上述三个原始 case、完整 evaluation 和两种情形。<code>evidence_request</code> 是人工写的取证需求示例，展示怎么绑定主张与引用；它不属于 evaluate 的新增返回字段，也不代表自动策略已经生成查询。里面的 gap_indices 仅指该固定结果中 critical_gaps 的零基位置，不能跨版本使用。</p>
 <pre>python -m unittest discover -s tests -p 'test_investigation.py' -v</pre>
 <p>测试用保存的局部审核和机制审核作为回调，重新走 evaluate 并比较完整输出，检查原文位置、缺口绑定和反证保留。另外故意将材料标为 graph，验证即便给出原来的支持性模型回执，图断言也不能取代原始机制证据。图路径仍用于提出候选或检索线索；不能为了获得支持，把图数据改标 primary。</p>
+</div></details>
+
+<details id="source-reporting"><summary>未报告、明确未实施和阴性结果，怎样分开</summary><div class="detail">
+<p><strong>没有写，不等于没有做。</strong>材料没披露原始数据、没说明某项方法，或本轮检索没有看到，只能说明本次材料的证据范围。系统不能由此断言实验未实施。B5 的历史失败就发生在这里：局部审核把未交代的方法写成确定未实施，后续审核和报告继续采用；原记录保持封存。</p>
+<p>调用仍是 <code>evaluate(case, call_json)</code>，阶段仍是 decomposition（按需）、local_review、mechanism_review。后两阶段新增必填 <code>source_notes</code>。每项观察的主结果必须有一条 finding 记录；所有涉及方法是否实施、数据是否披露和证据是否缺失的具体断言也要记录。状态针对断言：真实实验结果仍可成立，同时另一项方法的实施情况保持未知。</p>
+<table><thead><tr><th>状态</th><th>含义和处理</th></tr></thead><tbody><tr><td>reported</td><td>材料实际报告的事实，必须有允许原文中的准确引句与位置。它本身不等于因果关系已经确立，仍需原有方法、背景和衔接检查。</td></tr><tr><td>not_reported</td><td>本次允许材料未报告或未充分说明。程序在表述中保留“本次材料”和“相关事实仍未知”；主结果若属此类，不贡献支持或反驳。局限性属此类，不抹去同一观察的真实结果。</td></tr><tr><td>explicit_negative</td><td>原文明确否定，必须有准确引句。negative_kind 区分 method_not_performed（方法未实施）、negative_result（实施后的阴性结果）、not_disclosed（明确未披露）。方法未实施和未披露都不计为结果支持或反驳，即使主张 kind=reported；方法与披露状况仍保留为带原文的说明。</td></tr></tbody></table>
+<p>每条 source_note 包含 <code>target、original、status、statement、anchors、negative_kind</code>。finding 的 target 形如 <code>local.observations.L1.finding</code>，original 为空；文字修订指向既有 rationale、limitations 中的一项、gap 的 reason / missing_experiment，或机制审核的比较、组合与总说明。original 必须是该字段中只出现一次的准确片段，修订不能重叠。anchors 记录 passage_id、原材料中的 start/end 和准确 quote；not_reported 不伪造否定引句。finding 的引句限原观察引用；文字说明可补读同材料或由规范 PMID/DOI 确认同论文的允许段落，不凭普通分组标签扩范围。新增说明引句也保留自己的 source_id、record_id、version。生产代码不识别特定案例或按否定词做替换。</p>
+<p>机制审核同时读取原文和局部审核，必须重新判断每条局部 source_note，按相同 target + original 返回修正后的状态与表述，并补上局部漏标的相关断言。程序只应用被准确定位的文字修订；L 观察的关系、主张编号、causal_test 和引用不因此改写。修正后的副本进入 local_review、mechanism_review、evidence、critical_gaps 和整体说明。资格判定额外读取各观察的 finding 状态。主结果属于未报告、方法未实施或未披露时，活动 rationale 采用带正确范围的 finding 说明；原长文只保留审计。</p>
+<p><strong>给雷达和潘：</strong>完整结果新增 <code>source_reporting</code>，包含 status、method、notes、findings 和 raw_reviews。notes 是已处理的状态、范围、引句及位置；findings 按观察 ID 保存状态。<code>source_reporting.raw_reviews.local_review / mechanism_review</code> 保存原模型输出，仅供审计，不能再次当作原始证据或正文依据。先保存完整结果，生成和规划时调用下面的公开函数，不复制判断算法：</p>
+<pre>from mechevidence import evaluate, generation_view
+result = evaluate(case, call_json)
+# 完整 result 交调查记录保存；原始模型回执也继续保存。
+context = generation_view(result)
+# context 保留修订结果和有效模态记录，排除 source_reporting.raw_reviews。
+# 专业摘要仍不能代替 references 指向的原始材料。</pre>
+<p><code>source_reporting.status=reviewed</code> 表示本轮结构化审查已完成处理，<strong>不是科学结论通过或专家认可</strong>。精确引句和位置证明文字确实存在，不自动证明它蕴含模型的判断；模型也可能漏标自由文本中的错误。这些仍需真实新运行和独立核验，不能用受控回执回归代替。</p>
+<p><strong>历史兼容：</strong>旧回执只可显式使用 <code>evaluate(..., legacy_replay=True)</code> 或 <code>aggregate(..., legacy_replay=True)</code> 做离线历史回放，结果标为 legacy_unreviewed。科学字段保留原样，B5 的旧错误不会被回写。新格式已带 source_notes 时，也禁止通过 legacy_replay 跳过检查。当前 HTTP 没有 legacy 开关；新输出缺 source_notes、缺观察 finding、漏复核局部 note 或引句位置不符均失败。generation_view 拒绝 legacy 结果。方法版本已纳入 source_notes.py，旧版本的模型回执不能续到新 provider。</p>
+<p><strong>测试口径：</strong>三种信息状态、真假引句、定位、重叠修订和保护字段使用受控回执；B5 从私有封存路径读取，分别验证原失败保留和显式修订可应用，不作为新的模型效果结论。设置 MECHEVIDENCE_B5_ROW 后可运行对应离线回归；测试不复制原件。是否完成真实 B6，另以协调侧实际运行记录为准。</p>
 </div></details>
 
 <details id="identity"><summary>PMID、DOI 怎样传入；输入有问题时怎样处理</summary><div class="detail">
