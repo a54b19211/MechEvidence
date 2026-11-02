@@ -1,154 +1,75 @@
-"""Material admission and context-only safeguards; saved/controlled outputs, no model API."""
-from copy import deepcopy
-from http.client import HTTPConnection
+"""材料可评性与文献身份（含协调人复现过的两个身份冲突）。"""
 import json
 from pathlib import Path
-import threading
-import unittest
 
-from test_service import controlled_review
-from mechevidence import MaterialInputError, aggregate, direct_baseline, evaluate
-from mechevidence.assess import EvaluationError, prepare_materials
-from mechevidence.cohorts import assess_independence
-from mechevidence.service import ProfessionalServer, capabilities, execute
+import pytest
+from pydantic import ValidationError
 
+from mechevidence import evaluate
+from mechevidence.materials import prepare, split_passages
+from mechevidence.models import Material
+from stub import TEXT, Stub, case, good_observations, material
 
-class MaterialContractTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.saved = json.loads((Path(__file__).resolve().parents[1] / 'examples/partial_handoff.json').read_text())
-
-    def case(self, document_type=None):
-        case = deepcopy(self.saved['case'])
-        if document_type is not None:
-            case['materials'][0]['document_type'] = document_type
-        return case
-
-    def request(self, case):
-        return {'schema_version': 'bioradar.professional.v1', 'operation_id': 'material-check', 'operation': 'evaluate',
-                'arguments': {'mode': 'biomedical_research', 'task': 'mechanism', 'case': case}, 'model_receipts': []}
-
-    def test_missing_source_kind_is_not_inferred_and_feedback_identifies_each_material(self):
-        case = self.case('research_article')
-        case['materials'][0].pop('source_kind')
-        second = deepcopy(case['materials'][0]);second['id'] = 'other';case['materials'].append(second)
-        result = execute(self.request(case))
-        self.assertEqual(result['status'], 'needs_input')
-        self.assertNotIn('model_call', result)
-        self.assertEqual(result['missing_fields'], ['materials.M1.source_kind', 'materials.other.source_kind'])
-        self.assertEqual([x['material_id'] for x in result['material_feedback']], ['M1', 'other'])
-        self.assertEqual(result['material_feedback'][0]['input_path'], ['arguments', 'case', 'materials', 0, 'source_kind'])
-        case = self.case();case['materials'][0]['version'] = ''
-        self.assertEqual(execute(self.request(case))['missing_fields'], ['materials.M1.version'])
-
-    def test_declarations_cannot_be_promoted_to_primary_even_in_a_demo(self):
-        for kind in ['press_release', 'company_disclosure', 'news', 'social_post']:
-            for function in [evaluate, direct_baseline]:
-                with self.subTest(kind=kind, entry=function.__name__):
-                    case = self.case(kind);case['materials'][0]['is_demo'] = True
-                    calls = []
-                    with self.assertRaises(MaterialInputError) as error:
-                        function(case, lambda *args: calls.append(args))
-                    self.assertEqual(error.exception.as_dict()['error_code'], 'material_type_not_evaluable')
-                    self.assertEqual(calls, [])
-            response = execute(self.request(self.case(kind)))
-            self.assertEqual(response['status'], 'needs_input')
-            self.assertTrue(response['material_feedback'][0]['retain_as_radar_lead'])
-
-    def test_explicit_secondary_or_graph_type_cannot_hide_behind_primary(self):
-        for kind in ['review', 'graph']:
-            with self.subTest(kind=kind):
-                response = execute(self.request(self.case(kind)))
-                self.assertEqual(response['error_code'], 'material_type_conflict')
-                self.assertNotIn('model_call', response)
-
-    def test_registration_and_protocol_are_context_even_for_reported_claims(self):
-        saved = self.saved['evaluation']
-        for kind in ['trial_registration', 'study_protocol']:
-            for claim_kind in ['causal', 'association', 'reported']:
-                with self.subTest(kind=kind, claim_kind=claim_kind):
-                    case = self.case(kind)
-                    for claim in case['claims']:
-                        claim['kind'] = claim_kind
-                    # Deliberately reuse favourable experimental observations to test the program boundary.
-                    result = aggregate(case, saved['local_review'], saved['mechanism_review'], legacy_replay=True)
-                    self.assertEqual(result['overall']['verdict'], 'insufficient')
-                    self.assertTrue(all(not row['supporting_observation_ids'] for row in result['claims'] + result['joins']))
-                    self.assertTrue(all(not row['causal_evidence_eligible'] for row in result['evidence']))
-                    self.assertTrue(all(ref['document_type'] == kind for row in result['evidence'] for ref in row['references']))
-            response = execute(self.request(self.case(kind)))
-            self.assertEqual(response['status'], 'model_required')  # Context remains visible; not silently discarded.
-
-    def test_direct_baseline_cannot_use_design_as_mechanism_support(self):
-        for kind in ['trial_registration', 'study_protocol']:
-            case = self.case(kind)
-            output = {'verdict': 'supported', 'rationale': 'Deliberately invalid protocol fixture.',
-                      'supporting_passage_ids': ['M1:P001'], 'opposing_passage_ids': [],
-                      'scope_limitations': [], 'missing_experiments': []}
-            with self.subTest(kind=kind), self.assertRaises(EvaluationError):
-                direct_baseline(case, lambda *_: deepcopy(output))
-            output.update(verdict='insufficient', supporting_passage_ids=[], missing_experiments=['Retrieve actual results.'])
-            self.assertEqual(direct_baseline(case, lambda *_: deepcopy(output))['verdict'], 'insufficient')
-
-    def test_protocols_cannot_confirm_patient_relationships(self):
-        materials = [deepcopy(self.case('study_protocol')['materials'][0]) for _ in range(2)]
-        materials[0]['id'], materials[1]['id'] = 'a', 'b'
-        arguments = {'materials': materials, 'pairs': [{'left_material_id': 'a', 'right_material_id': 'b', 'unit': 'patient_cohort'}]}
-        output = {'pairs': [{'left_material_id': 'a', 'right_material_id': 'b', 'unit': 'patient_cohort',
-                  'relation': 'independent', 'basis': 'sampling_details', 'passage_ids': ['a:P001', 'b:P001'],
-                  'rationale': 'Deliberately overclaimed planned-cohort fixture.', 'uncertainty': [], 'information_needs': []}]}
-        result = assess_independence(arguments, lambda *_: deepcopy(output))
-        self.assertEqual(result['pairs'][0]['relation'], 'unknown')
-        self.assertEqual(result['pairs'][0]['proposed_relation'], 'independent')
-        self.assertTrue(result['pairs'][0]['information_needs'])
-
-    def test_original_conference_and_trial_results_require_explicit_primary(self):
-        for kind in ['research_article', 'conference_abstract', 'trial_results']:
-            with self.subTest(kind=kind):
-                case = self.case(kind)
-                response = execute(self.request(case))
-                self.assertEqual(response['status'], 'model_required')
-                material = response['model_call']['payload']['materials'][0]
-                self.assertEqual(material['document_type'], kind)
-                self.assertEqual(material['source_kind'], 'primary')
-                case['materials'][0]['source_kind'] = 'review'
-                self.assertEqual(execute(self.request(case))['error_code'], 'material_type_conflict')
-        self.assertIn('material_contract', capabilities())
-        view = prepare_materials(self.case())[0]
-        self.assertNotIn('document_type', view)
-        self.assertNotIn('is_demo', view)
-
-    def test_http_saved_original_mechanism_with_type_and_demo_metadata_round_trips(self):
-        server = ProfessionalServer(('127.0.0.1', 0), 'isolated-material-token')
-        thread = threading.Thread(target=server.serve_forever, daemon=True);thread.start()
-        case = self.case('research_article');case['materials'][0]['is_demo'] = True
-        request = self.request(case)
-        try:
-            for _ in range(3):
-                client = HTTPConnection(*server.server_address, timeout=5)
-                client.request('POST', '/v1/execute', json.dumps(request),
-                               {'Authorization': 'Bearer isolated-material-token', 'Content-Type': 'application/json'})
-                reply = client.getresponse();self.assertEqual(reply.status, 200)
-                result = json.loads(reply.read());client.close()
-                if result['status'] == 'completed':break
-                self.assertEqual(result['status'], 'model_required')
-                call = result['model_call']
-                self.assertTrue(call['payload']['materials'][0]['is_demo'])
-                request['provider_version'] = result['provider_version']
-                request['model_receipts'].append({'call_id': call['call_id'], 'request_hash': call['request_hash'],
-                                                 'output': controlled_review(case, self.saved['evaluation'], call['stage'])})
-            self.assertEqual(result['status'], 'completed')
-            native = evaluate(case, lambda stage, *_: controlled_review(case, self.saved['evaluation'], stage))
-            self.assertEqual(result['result'], native)
-            self.assertEqual(native['overall'], self.saved['evaluation']['overall'])
-            for observation in native['evidence']:
-                for ref in observation['references']:
-                    self.assertTrue(ref['is_demo'])
-                    self.assertEqual(ref['document_type'], 'research_article')
-                    self.assertEqual(ref['version'], case['materials'][0]['version'])
-        finally:
-            server.shutdown();server.server_close();thread.join(timeout=2)
+FIXTURE = json.loads((Path(__file__).resolve().parents[1] / "examples/identity_contract.json").read_text(encoding="utf-8"))
 
 
-if __name__ == '__main__':
-    unittest.main()
+def group(fields):
+    usable, notes = prepare([Material(**(FIXTURE["base_material"] | fields))])
+    return usable[0]["group"] if usable else notes[0]
+
+
+@pytest.mark.parametrize("row", FIXTURE["accepted"], ids=lambda row: row["name"])
+def test_accepted_identifiers(row):
+    assert group(row["fields"]) == row["identity"]
+
+
+@pytest.mark.parametrize("row", FIXTURE["unrecognized"], ids=lambda row: row["name"])
+def test_pseudo_urls_and_free_text_are_not_identifiers(row):
+    assert group(row["fields"]).startswith(row["identity_prefix"])
+
+
+@pytest.mark.parametrize("row", FIXTURE["rejected"], ids=lambda row: row["name"])
+def test_conflicting_or_invalid_identifiers_exclude_the_material(row):
+    note = group(row["fields"])
+    assert note["code"] == row["error_code"] and row["identifier_type"] in note["message"]
+
+
+def test_cross_source_pairs_and_boolean_pmid():
+    for row in FIXTURE["pairs"]:
+        assert (group(row["left"]) == group(row["right"])) == row["same_group"], row["name"]
+    with pytest.raises(ValidationError):
+        Material(**(FIXTURE["base_material"] | {"pmid": True}))
+
+
+def test_same_paper_from_two_databases_counts_one_source_group():
+    materials = [material("E1", pmid="111", source_id="pubmed", record_id="111"),
+                 material("E2", source_id="europe_pmc", record_id="MED:111"),
+                 material("E3"), material("E4", text=TEXT.replace(" ", "  "))]  # 无标识的相同正文只算一组
+    def observations(*ids):
+        return [{**row, "passage": row["passage"].replace("E1", mid)} for mid in ids for row in good_observations()]
+    result = evaluate(case(materials=materials), Stub([observations("E1", "E2", "E3"), observations("E4")]))
+    groups = {row["material"]: row["source_group"] for row in result["observations"]}
+    assert groups["E1"] == groups["E2"] == "pmid:111"
+    assert groups["E3"] == groups["E4"] == "text:E3"
+    assert result["independence"]["distinct_source_groups"] == 2
+
+
+def test_declarations_and_type_conflicts_are_excluded_with_a_note():
+    materials = [material("E1"), material("E2", document_type="news"),
+                 material("E3", document_type="review"),  # source_kind 仍是 primary
+                 material("E4", source_kind="graph", document_type="graph")]
+    stub = Stub()
+    result = evaluate(case(materials=materials), stub)
+    sent = [m["id"] for m in stub.calls[1][1]["materials"]]
+    assert sent == ["E1", "E4"]
+    assert {n["material"]: n["code"] for n in result["material_notes"]} == {
+        "E2": "material_type_not_evaluable", "E3": "material_type_conflict"}
+    assert result["overall"] == "supported"
+
+
+def test_passage_split_keeps_sentences_and_numbers_per_material():
+    text = "First result. Second result in 3 mice.\n\nThird, e.g. lower case stays. 4 cells died."
+    passages = split_passages(Material(**material("E9", text=text)))
+    assert [(p["id"], p["text"]) for p in passages] == [
+        ("E9.1", "First result."), ("E9.2", "Second result in 3 mice."),
+        ("E9.3", "Third, e.g. lower case stays."), ("E9.4", "4 cells died.")]

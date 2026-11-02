@@ -1,421 +1,176 @@
-"""Boundary tests for provenance, causal coverage and conservative scope handling."""
+"""评级规则：范围、因果要求、冲突、整体结论；以及坏观察只丢一条。"""
+import pytest
 
-from copy import deepcopy
-import json
-from pathlib import Path
-import unittest
-
-from mechevidence import (
-    EvaluationError, Material, aggregate, direct_baseline, evaluate, prepare_materials, prepare_passages, source_identity,
-)
+from mechevidence import EvaluationFailed, evaluate
+from stub import Stub, case, good_observations, material, obs
 
 
-class AssessmentTests(unittest.TestCase):
-    def setUp(self):
-        self.case = {
-            "id": "EXPECTED_POSITIVE_VARIANT_MUST_NOT_LEAK",
-            "question": "Does intervention A cause endpoint E through mediator M in system S?",
-            "mechanism": "A changes M; M is necessary for E.",
-            "scope": {"species": "mouse", "system": "S"},
-            "claims": [{"id": "C1", "text": "A changes M"},
-                       {"id": "C2", "text": "M is necessary for E"}],
-            "joins": [{"id": "J1", "text": "A produces E through M", "claim_ids": ["C1", "C2"]}],
-            "materials": [{"id": "m", "source_group": "PMID12345678", "source_id": "fabric-paper",
-                           "record_id": "12345678", "version": "v3", "source_kind": "primary",
-                           "text_level": "abstract", "text": "A changed M. Blocking M prevented the E response."}],
-        }
-        self.observation = {
-            "id": "L1", "claim_ids": ["C1", "C2"], "join_ids": [], "relation": "supports",
-            "basis": "intervention", "causal_test": "established", "passage_ids": ["m:P001", "m:P002"],
-            "context": {"species": "mouse", "system": "S"},
-            "applicability": {"species": "matched", "system": "matched", "disease": "not_required"},
-            "rationale": "Intervention and mediator blockade are reported.", "limitations": ["Abstract methods."],
-        }
-        self.local = {"observations": [deepcopy(self.observation)], "gaps": []}
-        bridge = {**deepcopy(self.observation), "id": "M1", "claim_ids": [], "join_ids": ["J1"]}
-        self.review = {
-            "additional_claims": [], "additional_joins": [], "observations": [bridge],
-            "combinations": [{"id": "W1", "observation_ids": ["L1", "M1"],
-                              "context_coherence": "matched", "rationale": "Same experimental system."}],
-            "comparisons": [], "whole_assessment": "supported", "rationale": "Specified dependency is tested.",
-            "gaps": [],
-        }
-
-    def test_no_material_is_unassessable_without_a_model_call(self):
-        self.case["materials"] = []
-
-        def unexpected_call(*_args):
-            self.fail("No material should not invoke a model")
-
-        result = evaluate(self.case, unexpected_call, legacy_replay=True)
-        self.assertEqual(result["overall"]["verdict"], "insufficient")
-        self.assertEqual(result["material_assessability"]["status"], "unassessable")
-        self.assertTrue(result["critical_gaps"])
-        self.assertEqual(direct_baseline(self.case, unexpected_call)["verdict"], "insufficient")
-
-    def test_evaluation_identity_never_enters_model_payload(self):
-        stages = []
-
-        def call(stage, _instructions, payload, schema):
-            stages.append(stage)
-            self.assertNotIn(self.case["id"], str(payload))
-            self.assertNotIn("case_id", payload)
-            self.assertIn("properties", schema)
-            if stage == "local_review":
-                self.assertNotIn("joins", payload)
-                self.assertEqual(schema["$defs"]["LocalObservation"]["properties"]["join_ids"]["maxItems"], 0)
-                self.assertEqual(schema["$defs"]["LocalObservation"]["properties"]["id"]["pattern"], "^L[0-9]+$")
-            else:
-                self.assertEqual(schema["$defs"]["MechanismObservation"]["properties"]["id"]["pattern"], "^M[0-9]+$")
-            return deepcopy(self.local if stage == "local_review" else self.review)
-
-        result = evaluate(self.case, call, legacy_replay=True)
-        self.assertEqual(stages, ["local_review", "mechanism_review"])
-        self.assertEqual(result["overall"]["verdict"], "supported")
-        self.assertEqual(result["material_assessability"]["status"], "limited")
-        self.assertEqual(result["independence"]["distinct_source_groups"], 1)
-        reference = result["evidence"][0]["references"][0]
-        self.assertEqual((reference["source_id"], reference["record_id"], reference["version"]),
-                         ("fabric-paper", "12345678", "v3"))
-
-    def test_unknown_context_is_not_matching_or_compatible(self):
-        self.local["observations"][0]["context"]["system"] = None
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertEqual(result["claims"][0]["verdict"], "insufficient")
-        self.assertEqual(result["evidence"][0]["effective_applicability"], "unknown")
-        self.assertNotEqual(result["overall"]["verdict"], "supported")
-        self.assertEqual(aggregate(self.case, self.local, self.review, use_context=False, legacy_replay=True)["overall"]["verdict"], "supported")
-        self.case["scope"]["species"] = "unknown"
-        self.assertNotEqual(aggregate(self.case, self.local, self.review, legacy_replay=True)["overall"]["verdict"], "supported")
-        gap = {"claim_ids": ["C1"], "join_ids": [], "reason": "本包未见所需观察。",
-               "missing_experiment": "补查既有原始观察供专家审核。"}
-        self.local["gaps"] = [deepcopy(gap)]
-        self.review["gaps"] = [deepcopy(gap), {**gap, "claim_ids": ["C2"]},
-                               {**gap, "missing_experiment": gap["missing_experiment"] + "另核对终点。"}]
-        gaps = aggregate(self.case, self.local, self.review, legacy_replay=True)["critical_gaps"]
-        self.assertEqual(sum(item == gap for item in gaps), 1)
-        self.assertEqual(sum(item["reason"] == gap["reason"] for item in gaps), 3)
-
-    def test_known_target_species_overrides_model_match(self):
-        self.case["scope"]["species"] = "human"
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertEqual(result["overall"]["verdict"], "insufficient")
-        self.assertFalse(result["overall"]["valid_witness_ids"])
-        for row in result["claims"] + result["joins"]:
-            self.assertFalse(row["supporting_observation_ids"])
-            self.assertTrue(all(gap["status"] == "mismatched" for gap in row["applicability_gaps"]))
-        self.assertEqual({row["observation_id"] for row in result["diagnostics"]}, {"L1", "M1"})
-        for diagnostic in result["diagnostics"]:
-            self.assertEqual(diagnostic["rule_id"], "known_species_conflict")
-            self.assertEqual(diagnostic["source_records"], [{"material_id": "m", "source_id": "fabric-paper",
-                                                           "record_id": "12345678", "version": "v3"}])
-        # The model's statement and exact source spans remain inspectable.
-        self.assertEqual(result["local_review"]["observations"][0]["applicability"]["species"], "matched")
-        for observation in result["evidence"]:
-            self.assertEqual(observation["effective_applicability"], "mismatched")
-            for ref in observation["references"]:
-                self.assertEqual(self.case["materials"][0]["text"][ref["start"]:ref["end"]], ref["text"])
-        ablated = aggregate(self.case, self.local, self.review, use_context=False, legacy_replay=True)
-        self.assertEqual(ablated["overall"]["verdict"], "supported")
-        self.assertNotIn("diagnostics", ablated)
-
-    def test_wrong_species_opposition_is_retained_without_refuting_target(self):
-        negative = {**deepcopy(self.observation), "id": "M2", "relation": "opposes",
-                    "context": {"species": "human", "system": "S"}}
-        self.review["observations"].append(negative)
-        self.review["comparisons"] = [{"observation_ids": ["L1", "M2"], "context_relation": "comparable",
-                                       "rationale": "Deliberately overclaimed comparison."}]
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertEqual(result["overall"]["verdict"], "supported")
-        self.assertFalse(result["conflicts"])
-        self.assertFalse(result["unresolved_counterevidence"])
-        for row in result["claims"]:
-            self.assertFalse(row["opposing_observation_ids"])
-            self.assertEqual(row["applicability_gaps"][0]["observation_id"], "M2")
-            self.assertEqual(row["applicability_gaps"][0]["status"], "mismatched")
-        retained = next(row for row in result["evidence"] if row["id"] == "M2")
-        self.assertEqual(retained["relation"], "opposes")
-        self.assertTrue(retained["references"])
-        self.assertEqual(result["diagnostics"][0]["observation_id"], "M2")
-
-    def test_species_aliases_do_not_create_scope_conflict(self):
-        for target, observed in [("human", "Homo sapiens"), ("小鼠", "Mus musculus")]:
-            with self.subTest(target=target, observed=observed):
-                self.case["scope"]["species"] = target
-                for row in self.local["observations"] + self.review["observations"]:
-                    row["context"]["species"] = observed
-                result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-                self.assertEqual(result["overall"]["verdict"], "supported")
-                self.assertNotIn("diagnostics", result)
-
-    def test_unknown_species_and_unspecified_target_keep_existing_meaning(self):
-        self.case["scope"]["species"] = "unknown"
-        self.assertEqual(aggregate(self.case, self.local, self.review, legacy_replay=True)["overall"]["verdict"], "insufficient")
-        self.case["scope"]["species"] = "mouse"
-        for row in self.local["observations"] + self.review["observations"]:
-            row["context"]["species"] = None
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertEqual(result["overall"]["verdict"], "insufficient")
-        self.assertNotIn("diagnostics", result)
-        self.case["scope"] = {}
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertEqual(result["overall"]["verdict"], "supported")
-        self.assertNotIn("diagnostics", result)
-
-    def test_all_counterevidence_is_checked_outside_the_witness(self):
-        negative = {**deepcopy(self.observation), "id": "M2", "relation": "opposes"}
-        self.review["observations"].append(negative)
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertEqual(result["overall"]["verdict"], "partial")
-        self.assertFalse(result["overall"]["has_comparable_conflict"])
-        self.assertEqual(result["claims"][0]["verdict"], "supported")
-        self.assertTrue(result["unresolved_counterevidence"])
-        self.review["comparisons"] = [{"observation_ids": ["L1", "M2"], "context_relation": "comparable",
-                                       "rationale": "The intervention, controls, endpoint and context are comparable."}]
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertTrue(result["overall"]["has_comparable_conflict"])
-        self.assertEqual(result["claims"][0]["verdict"], "mixed")
-        negative["context"]["species"] = "human"
-        negative["applicability"]["species"] = "mismatched"
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertEqual(result["overall"]["verdict"], "supported")
-        self.assertFalse(result["conflicts"])
-        negative["context"]["species"] = None
-        negative["applicability"]["species"] = "unknown"
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertNotEqual(result["overall"]["verdict"], "supported")
-        self.assertTrue(result["unresolved_counterevidence"])
-        self.assertFalse(result["conflicts"])
-        self.review["comparisons"] = []
-        negative["context"] = {"species": "mouse", "system": "S in culture"}
-        negative["applicability"]["species"] = "matched"
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertNotEqual(result["overall"]["verdict"], "supported")
-        self.assertTrue(result["unresolved_counterevidence"])
-        self.assertFalse(result["conflicts"])
-        self.review["comparisons"] = [{"observation_ids": ["L1", "M2"], "context_relation": "comparable",
-                                       "rationale": "The two system descriptions refer to the same preparation."}]
-        self.assertTrue(aggregate(self.case, self.local, self.review, legacy_replay=True)["conflicts"])
-        self.local["observations"][0]["relation"] = "opposes"
-        self.review["observations"] = []
-        self.review["comparisons"] = []
-        self.review["combinations"] = []
-        self.review["whole_assessment"] = "unestablished"
-        self.review["gaps"] = [{"claim_ids": [], "join_ids": ["J1"], "reason": "The mediator join is not established.",
-                                "missing_experiment": "Clarify the tested mediator-to-endpoint dependency."}]
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertEqual(result["claims"][0]["verdict"], "refuted")
-        gap = next(item for item in result["critical_gaps"] if item["claim_ids"] == ["C1"])
-        self.assertIn("已有适用的反向结果", gap["reason"])
-        self.assertIn("修正主张", gap["missing_experiment"])
-        self.assertNotIn("没有适用证据", gap["reason"])
-
-    def test_atomic_coverage_does_not_supply_a_missing_join(self):
-        self.review["observations"] = []
-        self.review["combinations"][0]["observation_ids"] = ["L1"]
-        self.review["rationale"] = "L1 already establishes causal join J1."
-        with self.assertRaisesRegex(EvaluationError, "response is incomplete.*J1"):
-            aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.review["gaps"] = [{"claim_ids": [], "join_ids": ["J1"], "reason": "Only local atomic results are available.",
-                                "missing_experiment": "Test mediator blockade while measuring the endpoint under A."}]
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertEqual(result["overall"]["verdict"], "partial")
-        self.assertEqual(result["joins"][0]["verdict"], "unestablished")
-        self.assertEqual(result["witnesses"][0]["missing_obligation_ids"], ["J1"])
-        self.assertTrue(result["critical_gaps"])
-        self.assertEqual(aggregate(self.case, self.local, self.review, use_joins=False, legacy_replay=True)["overall"]["verdict"], "supported")
-        self.review["additional_joins"] = [{"id": "J2", "text": "An omitted required dependency.",
-                                            "claim_ids": ["C1", "C2"]}]
-        with self.assertRaisesRegex(EvaluationError, "response is incomplete.*J2"):
-            aggregate(self.case, self.local, self.review, legacy_replay=True)
-
-    def test_invalid_references_and_execution_failures_raise(self):
-        invalid_local = deepcopy(self.local)
-        invalid_local["observations"][0]["join_ids"] = ["J1"]
-        with self.assertRaises(EvaluationError):
-            aggregate(self.case, invalid_local, self.review, legacy_replay=True)
-        self.local["observations"][0]["passage_ids"] = ["invented:P001"]
-        with self.assertRaises(EvaluationError):
-            aggregate(self.case, self.local, self.review, legacy_replay=True)
-        with self.assertRaises(EvaluationError):
-            evaluate(self.case, lambda *_args: {"wrong": "schema"}, legacy_replay=True)
-
-        def unavailable(*_args):
-            raise TimeoutError("upstream timed out")
-
-        with self.assertRaisesRegex(EvaluationError, "TimeoutError"):
-            evaluate(self.case, unavailable, legacy_replay=True)
-
-    def test_second_stage_cannot_reuse_a_local_id_for_a_different_finding(self):
-        # The real batch failed when the second stage reused local IDs for its own records.
-        self.review["observations"][0]["id"] = "L1"
-        with self.assertRaises(EvaluationError):
-            aggregate(self.case, self.local, self.review, legacy_replay=True)
-
-        def colliding_call(stage, _instructions, _payload, _schema):
-            return deepcopy(self.local if stage == "local_review" else self.review)
-
-        with self.assertRaisesRegex(EvaluationError, "mechanism_review response is invalid"):
-            evaluate(self.case, colliding_call, legacy_replay=True)
-        self.review["observations"][0]["id"] = "M1"
-        self.assertEqual(aggregate(self.case, self.local, self.review, legacy_replay=True)["overall"]["verdict"], "supported")
-        captured = []
-
-        def echoed_call(stage, _instructions, payload, _schema):
-            if stage == "local_review":
-                return deepcopy(self.local)
-            echoed = deepcopy(self.review)
-            echoed["observations"].insert(0, deepcopy(payload["local_review"]["observations"][0]))
-            captured.append((echoed, deepcopy(echoed)))
-            return echoed
-
-        result = evaluate(self.case, echoed_call, legacy_replay=True)
-        self.assertEqual(result["overall"]["verdict"], "supported")
-        self.assertEqual([item["id"] for item in result["mechanism_review"]["observations"]], ["M1"])
-        self.assertEqual(captured[0][0], captured[0][1])
-
-        def edited_echo_call(stage, _instructions, payload, _schema):
-            if stage == "local_review":
-                return deepcopy(self.local)
-            changed = deepcopy(self.review)
-            local_copy = deepcopy(payload["local_review"]["observations"][0])
-            local_copy["rationale"] += " One changed field."
-            changed["observations"].insert(0, local_copy)
-            return changed
-
-        with self.assertRaisesRegex(EvaluationError, "mechanism_review response is invalid"):
-            evaluate(self.case, edited_echo_call, legacy_replay=True)
-
-    def test_passage_selection_preserves_spans_and_hides_removed_text(self):
-        original = self.case["materials"][0]["text"]
-        for passage in prepare_passages(self.case):
-            self.assertEqual(passage["text"], original[passage["start"]:passage["end"]])
-        self.case["materials"][0]["allowed_passage_ids"] = ["m:P001"]
-        packet = prepare_materials(self.case)
-        self.assertEqual(len(packet[0]["passages"]), 1)
-        self.assertNotIn("Blocking M", str(packet))
-        self.assertNotIn("text", {key: value for key, value in packet[0].items() if key != "passages"})
-        with self.assertRaises(EvaluationError):
-            aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.case["materials"][0]["allowed_passage_ids"] = ["m:P999"]
-        with self.assertRaises(ValueError):
-            prepare_passages(self.case)
-
-    def test_duplicate_publication_does_not_increase_source_count(self):
-        duplicate = {**deepcopy(self.case["materials"][0]), "id": "copy"}
-        self.case["materials"].append(duplicate)
-        copy_observation = {**deepcopy(self.observation), "id": "L2", "passage_ids": ["copy:P001", "copy:P002"]}
-        self.local["observations"].append(copy_observation)
-        self.review["combinations"][0]["observation_ids"].append("L2")
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertEqual(result["independence"]["distinct_source_groups"], 1)
-        self.assertIsNone(result["independence"]["independent_cohorts"])
-        self.assertEqual(len(result["claims"][0]["distinct_supporting_source_groups"]), 1)
-        self.assertEqual(aggregate(self.case, self.local, self.review, deduplicate=False, legacy_replay=True)["independence"]["distinct_source_groups"], 2)
-        self.case["materials"].reverse()
-        self.assertEqual(aggregate(self.case, self.local, self.review, legacy_replay=True)["overall"], result["overall"])
-
-    def test_publication_identity_across_database_namespaces(self):
-        base = deepcopy(self.case["materials"][0])
-        base.update(source_group="", source_id="", record_id="", url=None)
-        equivalents = [
-            {"source_group": "PMID/32954360"},
-            {"source_id": "pubmed", "record_id": "32954360"},
-            {"source_id": "europe_pmc", "record_id": "MED:32954360"},
-            {"url": "https://europepmc.org/article/MED/32954360"},
-            {"url": "https://pubmed.ncbi.nlm.nih.gov/32954360/"},
-            {"source_id": "pubmed", "record_id": "32954360", "source_group": "DOI:10.1158/example"},
-            {"source_id": "europe_pmc", "record_id": "MED:32954360", "source_group": "DOI:10.1158/example"},
-        ]
-        for fields in equivalents:
-            with self.subTest(fields=fields):
-                self.assertEqual(source_identity(Material(**(base | fields))), "pmid:32954360")
-        self.assertEqual(source_identity(Material(**(base | {"source_id": "pubmed", "record_id": "123"}))), "pmid:123")
-        self.assertEqual(source_identity(Material(**(base | {"source_id": "europe_pmc", "record_id": "MED:123"}))), "pmid:123")
-        self.assertEqual(source_identity(Material(**(base | {"source_id": "chictr", "record_id": "32954360"}))),
-                         "record:chictr:32954360")
-        self.assertEqual(source_identity(Material(**(base | {"source_id": "clinicaltrials", "source_group": "32954360"}))),
-                         "group:32954360")
-        # An unlinked DOI is kept as a DOI; this function does not guess its PMID.
-        self.assertEqual(source_identity(Material(**(base | {"source_group": "DOI:10.1158/EXAMPLE"}))), "doi:10.1158/example")
-
-    def test_pubmed_and_europe_pmc_keep_original_versions_but_count_one_paper(self):
-        self.case["materials"][0].update(source_group="", source_id="pubmed", record_id="123", version="pubmed-v1")
-        duplicate = {**deepcopy(self.case["materials"][0]), "id": "copy", "source_id": "europe_pmc",
-                     "record_id": "MED:123", "version": "epmc-v2"}
-        self.case["materials"].append(duplicate)
-        self.local["observations"].append({**deepcopy(self.observation), "id": "L2",
-                                           "passage_ids": ["copy:P001", "copy:P002"]})
-        self.review["combinations"][0]["observation_ids"].append("L2")
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertEqual(result["independence"]["distinct_source_groups"], 1)
-        self.assertIsNone(result["independence"]["independent_cohorts"])
-        self.assertEqual(result["material_assessability"]["source_groups"], ["pmid:123"])
-        self.assertEqual({m["source_group"] for m in prepare_materials(self.case)}, {"pmid:123"})
-        self.assertEqual(result["claims"][0]["distinct_supporting_source_groups"], ["pmid:123"])
-        references = [ref for evidence in result["evidence"] for ref in evidence["references"]]
-        self.assertEqual({(r["source_id"], r["record_id"], r["version"]) for r in references},
-                         {("pubmed", "123", "pubmed-v1"), ("europe_pmc", "MED:123", "epmc-v2")})
-
-    def test_real_partial_handoff_preserves_complete_result_and_text_positions(self):
-        packet = json.loads((Path(__file__).resolve().parents[1] / "examples/partial_handoff.json").read_text())
-        case, saved = packet["case"], packet["evaluation"]
-        stages = []
-
-        def replay(stage, _instructions, _payload, _schema):
-            stages.append(stage)
-            return deepcopy(saved[stage])
-
-        result = evaluate(case, replay, legacy_replay=True)
-        self.assertEqual(stages, ["local_review", "mechanism_review"])
-        self.assertEqual(result, {**saved, "source_reporting": {"status": "legacy_unreviewed"}})
-        self.assertEqual(result["overall"]["verdict"], "partial")
-        self.assertTrue(all(row["verdict"] == "supported" for row in result["claims"]))
-        self.assertEqual({row["id"]: row["verdict"] for row in result["joins"]},
-                         {"J1": "unestablished", "J2": "supported"})
-        for field in packet["consumer_checks"]["required_result_fields"]:
-            self.assertIn(field, result)
-        materials = {m["id"]: m for m in case["materials"]}
-        for observation in result["evidence"]:
-            for ref in observation["references"]:
-                material = materials[ref["material_id"]]
-                self.assertEqual(material["text"][ref["start"]:ref["end"]], ref["text"])
-                self.assertEqual(ref["version"], material["version"])
-        self.assertNotEqual(packet["provenance"]["fabric_abstract"]["version_id"],
-                            packet["provenance"]["fulltext_supplement"]["version"])
-
-    def test_primary_and_species_checks_override_an_overclaimed_combination(self):
-        self.case["materials"][0]["source_kind"] = "review"
-        self.assertEqual(aggregate(self.case, self.local, self.review, legacy_replay=True)["overall"]["verdict"], "insufficient")
-        review_source = deepcopy(self.case["materials"][0])
-        review_source["id"] = "review"
-        self.case["materials"][0]["source_kind"] = "primary"
-        self.case["materials"].append(review_source)
-        self.review["observations"][0]["passage_ids"].append("review:P002")
-        self.assertNotEqual(aggregate(self.case, self.local, self.review, legacy_replay=True)["overall"]["verdict"], "supported")
-        self.review["observations"][0]["passage_ids"].remove("review:P002")
-        self.case["scope"] = {}
-        self.review["observations"][0]["context"] = {"species": "human", "system": "different tissue"}
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertNotEqual(result["overall"]["verdict"], "supported")
-        self.assertFalse(result["witnesses"][0]["known_species_consistent"])
-        self.review["observations"][0]["context"] = {"species": "mouse", "system": "S"}
-        negative = {**deepcopy(self.observation), "id": "M2", "relation": "opposes",
-                    "context": {"species": "human", "system": "different tissue"}}
-        self.review["observations"].append(negative)
-        self.review["comparisons"] = [{"observation_ids": ["L1", "M2"], "context_relation": "comparable",
-                                       "rationale": "Deliberately overclaimed comparison."}]
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertFalse(result["conflicts"])
-        self.assertEqual(result["claims"][0]["verdict"], "supported")
-        self.assertTrue(result["claims"][0]["applicability_gaps"])
-        self.review["observations"].pop()
-        self.review["comparisons"] = []
-        self.review["observations"][0]["context"]["species"] = "Mus musculus"
-        result = aggregate(self.case, self.local, self.review, legacy_replay=True)
-        self.assertEqual(result["overall"]["verdict"], "supported")
-        self.assertTrue(result["witnesses"][0]["known_species_consistent"])
+def by_id(rows):
+    return {row["id"]: row for row in rows}
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_overall_supported_partial_insufficient():
+    result = evaluate(case(), Stub())
+    assert result["overall"] == "supported"
+    assert [row["verdict"] for row in result["claims"]] == ["supported", "supported"]
+    assert result["joins"][0]["verdict"] == "supported"
+    assert result["joins"][0]["from"] == "C1" and result["joins"][0]["to"] == "C2"
+    assert result["gaps"] == []
+
+    # 两个原子命题都成立，也不能替代未检验的因果连接
+    atomic = [obs(["C1"], "E1.1", "A changed M"), obs(["C2"], "E1.2", "Blocking M prevented the E response")]
+    result = evaluate(case(), Stub([atomic]))
+    assert result["overall"] == "partial"
+    assert result["joins"][0]["verdict"] == "unestablished"
+    assert any(gap.startswith("J1：") and "没有适用证据" in gap for gap in result["gaps"])
+
+    result = evaluate(case(), Stub([[]]))
+    assert result["overall"] == "insufficient"
+    assert {gap.split("：")[0] for gap in result["gaps"]} == {"C1", "C2", "J1"}
+
+
+def test_scope_species_alias_and_known_conflict():
+    for target, observed in [("小鼠", "Mus musculus"), ("mice", "murine")]:
+        observations = good_observations()
+        for row in observations:
+            row["context"]["species"] = observed
+        assert evaluate(case(scope={"species": target, "system": "S"}), Stub([observations]))["overall"] == "supported"
+
+    # 模型标了 matched，但已知物种明确不同：程序覆盖，不计入目标范围的支持
+    result = evaluate(case(scope={"species": "human", "system": "S"}), Stub())
+    assert result["overall"] == "insufficient"
+    assert all(row["scope_status"] == "mismatched" for row in result["observations"])
+    assert all(not row["supporting"] and row["applicability_gaps"] for row in result["claims"])
+    assert [note["code"] for note in result["material_notes"]] == ["species_conflict", "species_conflict"]
+
+
+def test_unknown_context_is_not_matched():
+    observations = good_observations()
+    observations[0]["context"]["system"] = None
+    result = evaluate(case(), Stub([observations]))
+    assert result["observations"][0]["scope_status"] == "unknown"
+    assert by_id(result["claims"])["C1"]["verdict"] == "insufficient"
+    assert result["overall"] == "partial"
+    # 目标物种写成 unknown 不是“未限定”
+    assert evaluate(case(scope={"species": "unknown", "system": "S"}), Stub())["overall"] == "insufficient"
+    # 目标完全未限定时，只要观察报告了情境就算适用
+    assert evaluate(case(scope={}), Stub())["overall"] == "supported"
+
+
+def test_causal_claims_need_intervention_causal_test_and_original_result():
+    for change in [{"basis": "association"}, {"causal_test": False}]:
+        observations = [obs(**{**row, **change}) for row in good_observations()]
+        result = evaluate(case(), Stub([observations]))
+        assert result["overall"] == "insufficient"
+        assert by_id(result["claims"])["C1"]["compatible"] == ["O1"]
+    # 综述里的干预描述不是原始实验
+    review = material(source_kind="review", document_type="review")
+    assert evaluate(case(materials=[review]), Stub())["overall"] == "insufficient"
+    # reported 命题可以由原始研究的非干预观察支持，但登记/方案不行
+    reported = {"claims": [{"text": "M is expressed in S", "kind": "reported"}], "joins": []}
+    association = [obs(["C1"], "E1.1", "A changed M", basis="association", causal_test=False)]
+    assert evaluate(case(), Stub([association], reported))["overall"] == "supported"
+    protocol = material(document_type="study_protocol")
+    assert evaluate(case(materials=[protocol]), Stub([association], reported))["overall"] == "insufficient"
+
+
+def test_conflict_only_when_contexts_comparable():
+    refuting = obs(["C1"], "E1.1", "A changed M", relation="refutes")
+    result = evaluate(case(), Stub([good_observations() + [refuting]]))
+    assert [item["target"] for item in result["conflicts"]] == ["C1"]
+    assert by_id(result["claims"])["C1"]["verdict"] == "mixed"
+    assert result["overall"] == "partial"
+
+    # 系统描述不同：不能确定可比 → 未解决的反证，不是冲突，也不能忽略
+    refuting["context"]["system"] = "S in culture"
+    result = evaluate(case(), Stub([good_observations() + [refuting]]))
+    assert result["conflicts"] == [] and len(result["unresolved_counterevidence"]) == 1
+    assert by_id(result["claims"])["C1"]["verdict"] == "supported"
+    assert result["overall"] == "partial"
+    assert any("不能确定可比" in gap for gap in result["gaps"])
+
+    # 适用背景不明的反向结果同样保留为未解决
+    refuting["context"] = {"species": None, "system": None, "disease": None}
+    result = evaluate(case(), Stub([good_observations() + [refuting]]))
+    assert result["conflicts"] == [] and result["unresolved_counterevidence"][0]["supporting"] is None
+
+    # 物种不同的反向结果不反驳目标范围
+    refuting["context"] = {"species": "human", "system": "S", "disease": None}
+    result = evaluate(case(), Stub([good_observations() + [refuting]]))
+    assert result["overall"] == "supported" and not result["conflicts"] and not result["unresolved_counterevidence"]
+    assert by_id(result["claims"])["C1"]["applicability_gaps"][0]["status"] == "mismatched"
+
+
+def test_refutation_without_support_gives_refuted_and_correction_gap():
+    result = evaluate(case(), Stub([[obs(["C1"], "E1.1", "A changed M", relation="refutes")]]))
+    assert by_id(result["claims"])["C1"]["verdict"] == "refuted"
+    assert any(gap.startswith("C1：") and "修正主张" in gap for gap in result["gaps"])
+
+
+def test_invalid_observations_are_dropped_not_fatal():
+    bad = [obs(["C9"], "E1.1", "A changed M"),                    # 不存在的目标
+           obs(["C1"], "E7.1", "A changed M"),                    # 不存在的材料
+           obs(["C1"], "E1.99", "A changed M"),                   # 不存在的片段
+           {"targets": ["C1"], "passage": "E1.1", "quote": "A changed M"},  # 缺 relation/basis
+           obs(["C1"], "E1.1", "A changed M", relation="maybe"),  # 枚举错误
+           "not an object"]
+    result = evaluate(case(), Stub([bad + good_observations()]))
+    assert result["overall"] == "supported"
+    assert [row["id"] for row in result["observations"]] == ["O1", "O2"]
+    codes = [note["code"] for note in result["material_notes"]]
+    assert codes == ["target_unknown", "passage_unknown", "passage_unknown",
+                     "observation_invalid", "observation_invalid", "observation_invalid"]
+
+
+def test_quote_not_found_is_dropped():
+    paraphrase = [obs(["C1"], "E1.1", "A increased M"), obs(["C2", "J1"], "E1.1", "Blocking M prevented the E response")]
+    result = evaluate(case(), Stub([paraphrase]))
+    assert result["observations"] == [] and result["overall"] == "insufficient"
+    assert [note["code"] for note in result["material_notes"]] == ["quote_not_found", "quote_not_found"]
+    # 空白差异不算改写
+    spaced = [obs(["C1"], "E1.1", "A  changed\nM")]
+    assert evaluate(case(), Stub([spaced]))["observations"][0]["quote"] == "A  changed\nM"
+
+
+def test_abstract_only_material_can_support_but_is_limited():
+    result = evaluate(case(), Stub())
+    assert result["overall"] == "supported"
+    assert result["assessability"]["status"] == "limited"
+    assert any("摘要" in item for item in result["assessability"]["limitations"])
+    assert evaluate(case(materials=[material(text_level="full")]), Stub())["assessability"]["status"] == "assessable"
+
+
+def test_batches_of_three_budget_and_failed_batch():
+    materials = [material(id=f"E{i}") for i in range(1, 8)]
+    stub = Stub([None, [obs(["C1"], "E4.1", "A changed M")]])
+    result = evaluate(case(materials=materials, max_llm_calls=3), stub)
+    reviews = [payload for stage, payload in stub.calls if stage == "review"]
+    assert [[m["id"] for m in p["materials"]] for p in reviews] == [["E1", "E2", "E3"], ["E4", "E5", "E6"]]
+    assert [p["id"] for p in reviews[0]["materials"][0]["passages"]] == ["E1.1", "E1.2"]
+    assert len(result["llm_calls"]) == 3
+    notes = {note["material"]: note["code"] for note in result["material_notes"]}
+    assert notes == {"E1": "review_failed", "E2": "review_failed", "E3": "review_failed", "E7": "pending_budget"}
+    assert result["observations"][0]["material"] == "E4" and result["overall"] == "partial"
+    assert any("未完成审阅" in item for item in result["assessability"]["limitations"])
+
+
+def test_decomposition_numbering_and_failure():
+    decomposition = {"claims": [{"text": "A changes M"}, {"text": "M is necessary for E"}],
+                     "joins": [{"text": "bad", "from_claim": 1, "to_claim": 5}, {"text": "A→E via M", "from_claim": 1, "to_claim": 2}]}
+    stub = Stub([[obs(["C2", "J1"], "E1.2", "Blocking M prevented the E response")]], decomposition)
+    result = evaluate(case(), stub)
+    assert [row["id"] for row in result["joins"]] == ["J1"] and result["joins"][0]["text"] == "A→E via M"
+    assert result["material_notes"][0]["code"] == "join_invalid"
+    assert [t["id"] for t in stub.calls[1][1]["targets"]] == ["C1", "C2", "J1"]
+    with pytest.raises(EvaluationFailed) as error:
+        evaluate(case(), Stub(decomposition=None))
+    assert error.value.code == "decomposition_failed" and len(error.value.llm_calls) == 1
+
+
+def test_no_usable_material_makes_no_model_call():
+    stub = Stub()
+    result = evaluate(case(materials=[material(document_type="press_release")]), stub)
+    assert stub.calls == [] and result["overall"] == "insufficient"
+    assert result["material_notes"][0]["code"] == "material_type_not_evaluable"
+    assert result["assessability"]["status"] == "unassessable"
+    assert any("没有提供允许使用的原文段落" in gap for gap in result["gaps"])

@@ -1,5 +1,5 @@
 {
-  "description": "离线身份契约用例；不是医学证据或真实模型结果。由 tests/test_identity.py 执行。",
+  "description": "离线文献身份契约用例；不是医学证据或真实模型结果。由 tests/test_materials.py 执行。",
   "base_material": {
     "id": "m",
     "text": "The original material text remains unchanged.",

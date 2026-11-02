@@ -1,10 +1,9 @@
-"""Inputs and the two semantic reviews; source text is never model-generated."""
-
+"""请求和两次模型输出。编号（C/J/E1.3/O）全部由程序分配，模型只引用。"""
 from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StrictBool, StrictInt, model_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StrictInt, model_validator
 
 
 def _nonblank(value: str) -> str:
@@ -14,225 +13,93 @@ def _nonblank(value: str) -> str:
 
 
 Text = Annotated[str, AfterValidator(_nonblank)]
-Identifier = Annotated[str, Field(min_length=1, pattern=r"^\S+$")]
 Match = Literal["matched", "mismatched", "unknown", "not_required"]
 
 
-def unique_ids(items: list, name: str) -> None:
-    ids = [item.id if hasattr(item, "id") else item for item in items]
-    if len(ids) != len(set(ids)):
-        raise ValueError(f"duplicate {name} IDs")
-
-
-class Record(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-
-class Scope(Record):
+class Scope(BaseModel):
     species: str | None = None
     system: str | None = None
     disease: str | None = None
 
 
-class Claim(Record):
-    id: Identifier
-    text: Text
-    kind: Literal["causal", "association", "reported"] = "causal"
-
-
-class Join(Record):
-    id: Identifier
-    text: Text
-    claim_ids: list[Identifier] = Field(min_length=1)
-
-    @model_validator(mode="after")
-    def valid_members(self):
-        unique_ids(self.claim_ids, "join member")
-        return self
-
-
-class Material(Record):
-    id: Identifier
-    text: Text
-    source_id: str = ""
-    record_id: str = ""
-    version: str = ""
+class Material(BaseModel):
+    """雷达给定的一份材料；source_kind / document_type 必须来自原始记录，不由本服务推断。"""
+    model_config = ConfigDict(extra="ignore")
+    id: Annotated[str, Field(pattern=r"^[A-Za-z0-9_-]+$")]
     title: str = ""
-    source_group: str = ""
-    pmid: str | StrictInt | None = None
-    doi: str | None = None
+    text: Text
     source_kind: Literal["primary", "review", "graph"]
     document_type: Literal["research_article", "conference_abstract", "trial_results",
                            "trial_registration", "study_protocol", "review", "press_release",
                            "company_disclosure", "news", "social_post", "graph"] | None = None
-    is_demo: StrictBool | None = None
-    text_level: Literal["abstract", "full_text", "selected_passages"]
+    text_level: Literal["full", "abstract", "excerpt"]
+    # 以下仅用于把同一篇文献的多份记录合并为一个来源组
+    pmid: str | StrictInt | None = None
+    doi: str | None = None
     url: str | None = None
-    allowed_passage_ids: list[Identifier] | None = None
-
-    @model_validator(mode="after")
-    def valid_selection(self):
-        if self.allowed_passage_ids is not None:
-            unique_ids(self.allowed_passage_ids, "allowed passage")
-        return self
+    source_id: str = ""
+    record_id: str = ""
+    source_group: str = ""
 
 
-class Decomposition(Record):
-    claims: list[Claim] = Field(min_length=1)
-    joins: list[Join]
-
-    @model_validator(mode="after")
-    def valid_structure(self):
-        unique_ids(self.claims, "claim")
-        unique_ids(self.joins, "join")
-        claim_ids = {claim.id for claim in self.claims}
-        if claim_ids & {join.id for join in self.joins}:
-            raise ValueError("claim and join IDs must be distinct")
-        for join in self.joins:
-            if not set(join.claim_ids) <= claim_ids:
-                raise ValueError(f"join {join.id} references an unknown claim")
-        return self
+class ClaimIn(BaseModel):
+    text: Text = Field(description="一个原子命题")
+    kind: Literal["causal", "association", "reported"] = Field(
+        "causal", description="causal=断言 X 改变/导致 Y；association=只断言相关或共现；reported=断言某事被观察到（如表达）")
 
 
-class Case(Record):
-    id: str = ""
+class JoinIn(BaseModel):
+    text: Text = Field(description="机制要求的因果连接，例如“C1 的作用通过 C2 产生”")
+    from_claim: int = Field(description="上游命题在 claims 中的序号，从 1 开始")
+    to_claim: int = Field(description="下游命题在 claims 中的序号，从 1 开始")
+
+
+class Decomposition(BaseModel):
+    """模型输出 ①：只给文本和下标，程序编 C1..Cn / J1..Jm。"""
+    claims: list[ClaimIn] = Field(min_length=1, description="原子命题列表，每项 {text, kind: causal|association|reported}")
+    joins: list[JoinIn] = Field(default_factory=list, description="因果连接列表，每项 {text, from_claim, to_claim}")
+
+
+class EvaluateRequest(BaseModel):
     question: Text
     mechanism: Text
     scope: Scope = Field(default_factory=Scope)
-    claims: list[Claim] = Field(default_factory=list)
-    joins: list[Join] = Field(default_factory=list)
     materials: list[Material] = Field(default_factory=list)
+    # 已有拆解时可直接提供，省掉第一次模型调用
+    claims: list[ClaimIn] | None = None
+    joins: list[JoinIn] = Field(default_factory=list)
+    max_llm_calls: int = Field(20, ge=1, le=100)
 
     @model_validator(mode="after")
-    def valid_structure(self):
-        unique_ids(self.materials, "material")
-        if self.claims:
-            Decomposition(claims=self.claims, joins=self.joins)
-        elif self.joins:
-            raise ValueError("joins require nonempty structured claims")
+    def unique_materials(self):
+        ids = [item.id for item in self.materials]
+        if len(ids) != len(set(ids)):
+            raise ValueError("duplicate material ids")
         return self
 
 
-class ContextMatch(Record):
-    species: Match
-    system: Match
-    disease: Match
+class ContextMatch(BaseModel):
+    species: Match = "unknown"
+    system: Match = "unknown"
+    disease: Match = "unknown"
 
 
-class Observation(Record):
-    id: Identifier
-    claim_ids: list[Identifier]
-    join_ids: list[Identifier]
-    relation: Literal["supports", "opposes", "compatible"]
-    basis: Literal["intervention", "association", "statement"]
-    causal_test: Literal["established", "not_established", "not_applicable"]
-    passage_ids: list[Identifier] = Field(min_length=1)
-    context: Scope
-    applicability: ContextMatch
-    rationale: Text
-    limitations: list[Text]
-
-    @model_validator(mode="after")
-    def valid_references(self):
-        if not self.claim_ids and not self.join_ids:
-            raise ValueError("an observation must address a claim or causal join")
-        for name in ("claim_ids", "join_ids", "passage_ids"):
-            unique_ids(getattr(self, name), name)
-        return self
-
-
-class Gap(Record):
-    claim_ids: list[Identifier]
-    join_ids: list[Identifier]
-    reason: Text
-    missing_experiment: Text = Field(description=(
-        "Missing experimental observations or study evidence not seen in this supplied material package, "
-        "for upstream retrieval and expert review. Describe evidence needs, not operational protocols or "
-        "recommendations to initiate patient interventions. Endpoints must be measurable in the stated "
-        "study system; cell or animal evidence cannot substitute for patient endpoint evidence. "
-        "Do not claim that a study has never been performed anywhere."
-    ))
-
-
-class SourceAnchor(Record):
-    passage_id: Identifier
-    start: StrictInt = Field(ge=0)
-    end: StrictInt = Field(gt=0)
+class Observation(BaseModel):
+    """模型输出 ② 中的一条观察；逐条校验，坏的一条只丢这一条。"""
+    targets: list[str] = Field(min_length=1)
+    passage: str
     quote: Text
+    relation: Literal["supports", "refutes", "compatible"]
+    basis: Literal["intervention", "association", "review", "claim"]
+    causal_test: bool = False
+    context: Scope = Field(default_factory=Scope)
+    scope_match: ContextMatch = Field(default_factory=ContextMatch)
 
 
-class SourceNote(Record):
-    target: Identifier
-    original: str = ""
-    status: Literal["reported", "not_reported", "explicit_negative"]
-    statement: Text
-    anchors: list[SourceAnchor]
-    negative_kind: Literal["method_not_performed", "negative_result", "not_disclosed"] | None = None
-
-    @model_validator(mode="after")
-    def information_boundary(self):
-        if (self.status == "explicit_negative") != (self.negative_kind is not None):
-            raise ValueError("explicit_negative requires its kind; other states must not supply one")
-        if self.status == "not_reported" and self.anchors:
-            raise ValueError("absence of a report has no affirmative or negative source quote")
-        if self.status != "not_reported" and not self.anchors:
-            raise ValueError("reported facts and explicit negatives require original source anchors")
-        return self
-
-
-class LocalObservation(Observation):
-    id: Annotated[str, Field(pattern=r"^L[0-9]+$")]
-    claim_ids: list[Identifier] = Field(min_length=1)
-    join_ids: list[Identifier] = Field(default_factory=list, max_length=0)
-
-
-class LocalReview(Record):
-    observations: list[LocalObservation]
-    gaps: list[Gap]
-    source_notes: list[SourceNote] | None = Field(default=None, exclude_if=lambda value: value is None)
-
-
-class ReviewedLocalReview(LocalReview):
-    source_notes: list[SourceNote]
-
-
-class MechanismObservation(Observation):
-    id: Annotated[str, Field(pattern=r"^M[0-9]+$")]
-
-
-class Combination(Record):
-    id: Identifier
-    observation_ids: list[Identifier] = Field(min_length=1)
-    context_coherence: Literal["matched", "mismatched", "unknown"]
-    rationale: Text
-
-
-class Comparison(Record):
-    observation_ids: list[Identifier] = Field(min_length=2, max_length=2)
-    context_relation: Literal["comparable", "different", "unknown"]
-    rationale: Text
-
-
-class MechanismReview(Record):
-    additional_claims: list[Claim]
-    additional_joins: list[Join]
-    observations: list[MechanismObservation]
-    combinations: list[Combination]
-    comparisons: list[Comparison]
-    whole_assessment: Literal["supported", "compatible_only", "unestablished"]
-    rationale: Text
-    gaps: list[Gap]
-    source_notes: list[SourceNote] | None = Field(default=None, exclude_if=lambda value: value is None)
-
-
-class ReviewedMechanismReview(MechanismReview):
-    source_notes: list[SourceNote]
-
-
-class DirectReview(Record):
-    verdict: Literal["supported", "partial", "insufficient"]
-    rationale: Text
-    supporting_passage_ids: list[Identifier]
-    opposing_passage_ids: list[Identifier]
-    scope_limitations: list[Text]
-    missing_experiments: list[Text]
+class Review(BaseModel):
+    observations: list = Field(description=(
+        "观察列表；没有相关结果时为 []。每项字段："
+        "targets (list，目标编号如 C1/J1)、passage (片段编号如 E1.3)、quote (从该片段逐字复制的短引)、"
+        "relation (supports|refutes|compatible)、basis (intervention|association|review|claim)、"
+        "causal_test (bool，可省略=false)、context ({species, system, disease}，未报告填 null)、"
+        "scope_match ({species, system, disease}，各取 matched|mismatched|unknown|not_required)"))
