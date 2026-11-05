@@ -40,6 +40,9 @@ def chat_json(stage: str, system: str, payload: dict, model_cls: type[BaseModel]
                          {"role": "user", "content": user}]}
     if provider == "deepseek":
         body["thinking"] = {"type": "enabled" if thinking else "disabled"}
+    elif provider == "vllm":
+        # local vLLM serving Qwen: the same per-call switch, as its chat template reads it
+        body["chat_template_kwargs"] = {"enable_thinking": bool(thinking)}
     if not thinking:
         body["temperature"] = 0
     started = time.monotonic()

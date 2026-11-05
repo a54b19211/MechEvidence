@@ -35,6 +35,14 @@ def run(monkeypatch, *replies):
     return result, call, fake
 
 
+def test_local_vllm_gets_the_per_call_thinking_switch_its_template_reads(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "vllm")
+    good = json.dumps({"claims": [{"text": "A changes M"}], "joins": []})
+    _, _, fake = run(monkeypatch, (good, "stop"))
+    assert fake.bodies[0]["chat_template_kwargs"] == {"enable_thinking": False}
+    assert "thinking" not in fake.bodies[0]
+
+
 def test_thinking_disabled_and_short_field_summary(monkeypatch):
     good = json.dumps({"claims": [{"text": "A changes M"}], "joins": []})
     result, call, fake = run(monkeypatch, (good, "stop"))
