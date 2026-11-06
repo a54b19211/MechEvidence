@@ -26,7 +26,9 @@ def describe(model_cls: type[BaseModel]) -> str:
 def chat_json(stage: str, system: str, payload: dict, model_cls: type[BaseModel],
               *, max_tokens: int = 4096, thinking: bool = False) -> tuple[BaseModel | None, dict]:
     model = os.environ.get("LLM_MODEL", "deepseek-v4-pro")
-    call = {"stage": stage, "model": model, "finish_reason": None, "usage": {}, "seconds": 0.0, "error": None}
+    # requests: HTTP requests actually sent for this logical call (a format retry is a second one)
+    call = {"stage": stage, "model": model, "finish_reason": None, "usage": {}, "seconds": 0.0, "error": None,
+            "requests": 0}
     key = os.environ.get("LLM_API_KEY", "")
     if not key:
         call["error"] = "llm_not_configured"
@@ -48,6 +50,7 @@ def chat_json(stage: str, system: str, payload: dict, model_cls: type[BaseModel]
     started = time.monotonic()
     try:
         for attempt in range(2):
+            call["requests"] += 1
             try:
                 response = httpx.post(url, json=body, timeout=timeout, headers={"Authorization": "Bearer " + key})
             except httpx.TimeoutException:

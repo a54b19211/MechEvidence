@@ -3,8 +3,9 @@ import json
 
 import httpx
 import pytest
+from stub import DECOMPOSITION, case, good_observations
 
-from mechevidence import llm
+from mechevidence import evaluate, llm
 from mechevidence.models import Decomposition
 
 
@@ -66,3 +67,32 @@ def test_empty_after_length_and_timeout_are_not_retried(monkeypatch):
     assert result is None and call["error"] == "output_empty_after_limit" and len(fake.bodies) == 1
     result, call, fake = run(monkeypatch, httpx.ReadTimeout("slow"))
     assert result is None and call["error"] == "timeout" and len(fake.bodies) == 1
+
+
+def test_each_call_reports_the_http_requests_it_sent(monkeypatch):
+    good = json.dumps({"claims": [{"text": "A"}]})
+    _, call, fake = run(monkeypatch, (good, "stop"))
+    assert call["requests"] == len(fake.bodies) == 1
+    _, call, fake = run(monkeypatch, ("{\"claims\": []}", "stop"), (good, "stop"))
+    assert call["requests"] == len(fake.bodies) == 2 and call["error"] is None  # the format retry is a request too
+    _, call, fake = run(monkeypatch, ("{\"claims\": []}", "stop"), ("not json", "stop"))
+    assert call["requests"] == len(fake.bodies) == 2 and call["error"] == "output_invalid"
+    _, call, fake = run(monkeypatch, httpx.ReadTimeout("slow"))
+    assert call["requests"] == 1 and call["error"] == "timeout"  # sent and maybe billed, never resent
+
+
+def test_an_unconfigured_call_sends_no_request(monkeypatch):
+    monkeypatch.delenv("LLM_API_KEY")
+    fake = FakePost()
+    monkeypatch.setattr(llm.httpx, "post", fake)
+    result, call = llm.chat_json("decompose", "system", {"x": 1}, Decomposition)
+    assert result is None and call["error"] == "llm_not_configured" and call["requests"] == 0 and fake.bodies == []
+
+
+def test_an_evaluation_reports_every_request_of_its_calls(monkeypatch):
+    review = json.dumps({"observations": good_observations()})
+    fake = FakePost((json.dumps(DECOMPOSITION), "stop"), ("not json", "stop"), (review, "stop"))
+    monkeypatch.setattr(llm.httpx, "post", fake)
+    out = evaluate(case())
+    assert [(c["stage"], c["requests"]) for c in out["llm_calls"]] == [("decompose", 1), ("review", 2)]
+    assert sum(c["requests"] for c in out["llm_calls"]) == len(fake.bodies) == 3

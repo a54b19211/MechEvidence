@@ -42,6 +42,6 @@ class Stub:
         else:
             observations = self.reviews.pop(0) if self.reviews else []
             data = None if observations is None else {"observations": observations}
-        record = {"stage": stage, "model": "stub", "finish_reason": "stop", "usage": {}, "seconds": 0,
+        record = {"stage": stage, "model": "stub", "finish_reason": "stop", "usage": {}, "seconds": 0, "requests": 1,
                   "error": None if data is not None else "output_invalid"}
         return (model_cls.model_validate(deepcopy(data)) if data is not None else None), record

@@ -89,11 +89,13 @@ uvicorn mechevidence.service:app --host 127.0.0.1 --port 18561
   ],
   "assessability": {"status": "limited", "limitations": ["摘要报告的实验缺少完整方法和结果细节。"]},
   "llm_calls": [
-    {"stage": "decompose", "model": "deepseek-v4-pro", "finish_reason": "stop", "usage": {"total_tokens": 812}, "seconds": 3.1, "error": null},
-    {"stage": "review", "model": "deepseek-v4-pro", "finish_reason": "stop", "usage": {"total_tokens": 2950}, "seconds": 9.4, "error": null}
+    {"stage": "decompose", "model": "deepseek-v4-pro", "finish_reason": "stop", "usage": {"total_tokens": 812}, "seconds": 3.1, "error": null, "requests": 1},
+    {"stage": "review", "model": "deepseek-v4-pro", "finish_reason": "stop", "usage": {"total_tokens": 2950}, "seconds": 9.4, "error": null, "requests": 2}
   ]
 }
 ```
+
+`llm_calls` 每项是一次逻辑调用；`requests` 是这次调用实际发出的 HTTP 请求数（格式校验失败后的那次重试也算一次，未配置模型时为 0），调用方统计请求量时应按它累计，而不是按条数。
 
 ## 怎么评
 
