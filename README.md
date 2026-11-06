@@ -6,12 +6,11 @@
 
 ## 运行
 
-Python 3.10+。
+CPython 3.12，依赖只从锁文件装（见下文「开发环境与测试」）。
 
 ```sh
-python -m venv .venv
-. .venv/bin/activate            # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+make venv                       # .venv，只按 requirements.lock 安装，每个包都校验 sha256
+. .venv/bin/activate
 export SERVICE_TOKEN=换成私有令牌
 export LLM_API_KEY=...          # 放在私有 .env 或部署环境里，不进仓库
 uvicorn mechevidence.service:app --host 127.0.0.1 --port 18561
@@ -110,11 +109,19 @@ uvicorn mechevidence.service:app --host 127.0.0.1 --port 18561
    - `gaps` 为每个未确立的义务写明缺哪类原始观察；“没在本材料包里看到”从不等于“没人做过”。
 4. **材料可评性**：新闻、新闻稿、公司声明、社媒不进入评价（记为 `material_type_not_evaluable`，由雷达保留为线索）；`document_type` 与 `source_kind` 矛盾、PMID/DOI 无效或互相矛盾的材料也不进入评价并注明原因。摘要可以支持命题，但 `assessability` 记为 limited。
 
-## 测试
+## 开发环境与测试
+
+唯一的入口是 `Makefile`。需要 uv 0.13.0（在 PATH 上，例如 `~/.local/bin/uv`；或者 `make UV=<路径>`）。
 
 ```sh
-python -m pytest -q
+make venv            # .venv：只按 requirements.lock 安装，每个包都校验 sha256
+make test            # 全部测试（不联网）
+make check-install   # 一个用完即删的新环境：按锁文件安装、逐个导入模块、再跑一遍测试
+make check-lock      # requirements.lock 是否仍与 requirements.txt 一致（要访问包索引）
 ```
+
+- 直接依赖写在 `requirements.txt`（运行 + 测试，均为精确版本）；`requirements.lock` 是由它解析出的完整锁（运行 + 测试），每个包都带 sha256，解析目标是 CPython 3.12、x86_64-unknown-linux-gnu（锁文件头一行写着解析命令）。改了依赖后运行 `make lock`，再提交锁文件。
+- 已验证的组合：uv 0.13.0、CPython 3.12.15、81 个测试通过。
 
 测试不联网，模型由 `tests/stub.py` 的替身代替。`examples/identity_contract.json` 是文献身份的离线契约用例。
 
