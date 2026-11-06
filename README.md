@@ -13,7 +13,7 @@ make venv                       # .venv，只按 requirements.lock 安装，每�
 . .venv/bin/activate
 export SERVICE_TOKEN=换成私有令牌
 export LLM_API_KEY=...          # 放在私有 .env 或部署环境里，不进仓库
-uvicorn mechevidence.service:app --host 127.0.0.1 --port 18561
+uvicorn mechevidence.service:app --host 127.0.0.1 --port 18563
 ```
 
 | 环境变量 | 说明 |

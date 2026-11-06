@@ -43,3 +43,18 @@ def test_decomposition_failure_is_an_error_not_a_verdict(monkeypatch):
     body = response.json()
     assert response.status_code == 502 and body["error_code"] == "decomposition_failed"
     assert "overall" not in body and body["llm_calls"][0]["error"] == "output_invalid"
+
+
+def test_the_default_port_is_the_deployed_one_everywhere():
+    """18563 is MechEvidence; 18561 is the query planner and must not be started by mistake."""
+    import inspect
+    from pathlib import Path
+
+    import mechevidence.service as service
+
+    assert service.DEFAULT_PORT == 18563
+    assert "DEFAULT_PORT" in inspect.getsource(service).split("__main__")[1]  # the entry point uses it
+    root = Path(__file__).resolve().parents[1]
+    for name in ("README.md", "AGENTS.md"):
+        text = (root / name).read_text(encoding="utf-8")
+        assert "18563" in text and "18561" not in text.replace("18561 是查询规划服务的", "")

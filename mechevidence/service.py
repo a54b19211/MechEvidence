@@ -13,6 +13,9 @@ from .assess import EvaluationFailed, evaluate
 from .llm import chat_json
 from .models import EvaluateRequest
 
+# the port MechEvidence is deployed on (the query planner has its own); README and AGENTS name the same one
+DEFAULT_PORT = 18563
+
 
 def _error(status: int, code: str, message: str, **extra) -> JSONResponse:
     return JSONResponse(status_code=status, content={"error_code": code, "message": message, **extra})
@@ -66,4 +69,4 @@ app = create_app()
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host=os.environ.get("HOST", "127.0.0.1"), port=int(os.environ.get("PORT", "18561")))
+    uvicorn.run(app, host=os.environ.get("HOST", "127.0.0.1"), port=int(os.environ.get("PORT", DEFAULT_PORT)))
