@@ -1,8 +1,8 @@
 """评级规则：范围、因果要求、冲突、整体结论；以及坏观察只丢一条。"""
 import pytest
+from stub import Stub, case, good_observations, material, obs
 
 from mechevidence import EvaluationFailed, evaluate
-from stub import Stub, case, good_observations, material, obs
 
 
 def by_id(rows):

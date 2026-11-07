@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
+from stub import TEXT, Stub, case, good_observations, material
 
 from mechevidence import evaluate
 from mechevidence.materials import prepare, split_passages
 from mechevidence.models import Material
-from stub import TEXT, Stub, case, good_observations, material
 
 FIXTURE = json.loads((Path(__file__).resolve().parents[1] / "examples/identity_contract.json").read_text(encoding="utf-8"))
 

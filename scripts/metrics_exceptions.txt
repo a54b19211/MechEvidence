@@ -1,0 +1,7 @@
+# Functions allowed over 80 lines or complexity 20 (scripts/code_metrics.py --check). Format:
+#   <path>:<qualified name>  <lines>/<cc>  <reason>
+# <lines>/<cc> is the size when the entry was written: a listed function may not grow past it. The check fails
+# on a new violator, on an entry that is within the limits now, and on a listed function that got bigger, so the
+# list only shrinks.
+mechevidence/receipt.py:_references  31/21  receipt validation table walker: one branch per shape in the table; the receipt module is vendored byte for byte into Radar (sha256-pinned there), so it is split together with that copy
+mechevidence/receipt.py:_walk  35/21  receipt validation table walker: one branch per shape in the table; the receipt module is vendored byte for byte into Radar (sha256-pinned there), so it is split together with that copy

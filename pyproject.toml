@@ -1,0 +1,17 @@
+# Tool settings only: dependencies are pinned in requirements.txt and requirements-transport.txt (README).
+# Function size is gated separately by scripts/code_metrics.py (80 lines / complexity 20).
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+# pyflakes, the pycodestyle errors that are bugs or hide statements, whitespace, import order, McCabe. Line length
+# (E501) is not enforced: wide characters count double in ruff and most long lines are Chinese prompt or message text.
+select = ["E4", "E7", "E9", "F", "W", "I", "C90"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 20
+
+[tool.ruff.lint.per-file-ignores]
+# the shared case table binds a few lambdas by name; that file belongs to the contract fixtures
+"tests/contract_cases.py" = ["E731"]
