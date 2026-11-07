@@ -15,3 +15,7 @@ max-complexity = 20
 [tool.ruff.lint.per-file-ignores]
 # the shared case table binds a few lambdas by name; that file belongs to the contract fixtures
 "tests/contract_cases.py" = ["E731"]
+
+[tool.code-metrics]
+# what scripts/code_metrics.py measures (that script is the same file in every repository)
+paths = ["mechevidence"]
