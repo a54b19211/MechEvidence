@@ -123,18 +123,13 @@ make check-lock      # requirements.lock 是否仍与 requirements.txt 一致（
 `make check-lock`、`make lock` 要访问 PyPI（`make venv`、`make check-install` 在 uv 缓存里没有的包也要下载）。zktest 上直连 PyPI 有时超时，这时只给这几条命令临时加上本机已有的 HTTP 代理（mihomo，监听 127.0.0.1:7890），例如 `HTTPS_PROXY=http://127.0.0.1:7890 HTTP_PROXY=http://127.0.0.1:7890 make check-lock`；不要把代理写进全局配置。`check-lock` 的结果有两种失败：解析本身失败（包索引或网络不可用、依赖解不出来）时报 `check-lock did not run`，make 显示 `Error 2`，锁文件没有比较过，不能因此重做锁；只有解析成功而内容不同时才报 `requirements.lock is stale`（make 显示 `Error 1`）。两种情况 make 都以非零状态结束。
 
 - 直接依赖写在 `requirements.txt`（运行 + 测试，均为精确版本）；`requirements.lock` 是由它解析出的完整锁（运行 + 测试），每个包都带 sha256，解析目标是 CPython 3.12、x86_64-unknown-linux-gnu（锁文件头一行写着解析命令）。改了依赖后运行 `make lock`，再提交锁文件。
-- 已验证的组合：uv 0.13.0、CPython 3.12.15、81 个测试通过。
+- 已验证的组合：uv 0.13.0、CPython 3.12.15、82 个测试通过。
 
 测试不联网，模型由 `tests/stub.py` 的替身代替。`examples/identity_contract.json` 是文献身份的离线契约用例。
 
-## 这次重写改了什么（2026-11）
+## 设计来由
 
-上一轮验收在 local review 阶段报 `model_output_invalid`：旧 schema 要求模型自己维护 C/J/L/M 观察编号、`matL:P003` 片段编号、带绝对字符偏移的 source_notes，错一个整份作废；服务还把模型请求交回雷达代调、再回放回执。现在：
-
-- 服务自己调模型（`llm.py`），一次请求就是一次同步 HTTP 调用；删掉反向协议、回执、版本哈希和 capabilities。
-- 两次调用、两份小 schema；编号全部由程序分配，坏的一条只丢一条；思考关闭，`max_tokens` 4096，校验失败带错误重试一次。
-- 旧的 local review 与 mechanism review 合并为一次审阅；删掉 source_notes 偏移锚点层、组合（combinations）、两两比较（comparisons）、whole_assessment、direct_baseline 和消融开关、cohorts 独立性评审、Fabric 读取命令和 evaluation/ 脚本。
-- 原有的确定性评级规则保留，见上一节。
+服务为什么是现在这个形状（同步 HTTP、两次调用、程序编号），见 [docs/decisions/0001-synchronous-two-call-service.md](docs/decisions/0001-synchronous-two-call-service.md)。
 
 ## 已知局限
 
