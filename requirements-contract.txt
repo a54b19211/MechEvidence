@@ -1,5 +1,5 @@
 # The shared contract package (extraction_contract.mech_v2: the evaluate.v2 evaluator id, reuse key, receipt rules and
 # adopt, the same code the radar imports), pinned by the sha256 of its reproducible wheel. Built in the sibling
-# extraction-contract checkout (1.14.0); `make venv` installs it from requirements.lock with
+# extraction-contract checkout (1.14.1); `make venv` installs it from requirements.lock with
 #   --find-links $(EXTRACTION_CONTRACT_WHEELS)
-extraction-contract==1.14.0 --hash=sha256:acc63122128c188a9089b1789a663028d55fb9c80079b0fd7ee214d671d27db9
+extraction-contract==1.14.1 --hash=sha256:4dce53f60eafcbae649180e11824f33e1121e8098f2c066b8bcc8d7b98f156c0
