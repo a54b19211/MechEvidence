@@ -104,9 +104,12 @@
      "outputs": [
       {
        "attempt": 1,
+       "attempt_id": "00000000000000000000000000000001",
        "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+       "decision_id": "decision-1",
        "delivered": "yes",
        "error": null,
+       "index": 1,
        "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
        "status": 200,
        "truncated": false
@@ -206,9 +209,12 @@
      "outputs": [
       {
        "attempt": 1,
+       "attempt_id": "00000000000000000000000000000003",
        "content": "<262144 bytes elided from this fixture>",
+       "decision_id": "decision-1",
        "delivered": "yes",
        "error": null,
+       "index": 1,
        "sha256": "121cee67b8e0f1aae0855356a921083ca2488e382ef9a2693b01f20bc0a1d10c",
        "status": 200,
        "truncated": true

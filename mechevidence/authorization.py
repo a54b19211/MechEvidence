@@ -76,13 +76,20 @@ class TrustedEndpoint:
         return answer
 
     def settle(self, ref: str, decision: dict, entry: dict) -> None:
-        """Hand over what happened to the request just made; raises if the endpoint did not record it."""
+        """Hand over what happened to the request just made; raises unless the endpoint acknowledges it field by
+        field: outcome contract version, recorded:true, this attempt id, this decision id, this response hash."""
         url = os.environ.get("MECH_OUTCOME_URL", "").replace("{attempt_id}", decision["attempt_id"])
         response = _post(url, {
             "contract_version": OUTCOME_V1, "service": "mechevidence", "authorization_ref": ref,
-            "decision_id": decision["decision_id"], "attempt_id": decision["attempt_id"],
+            "decision_id": decision["decision_id"], "attempt_id": decision["attempt_id"], "index": entry["index"],
             "index_in_call": entry["attempt"], "delivered": entry["delivered"], "status": entry["status"],
             "error": entry["error"], "response_sha256": entry["sha256"], "truncated": entry["truncated"],
             "response_text": entry["content"]})
-        if response.status_code != 200 or response.json().get("recorded") is not True:
+        if response.status_code != 200:
             raise RuntimeError("outcome not recorded")
+        ack = response.json()
+        expected = {"contract_version": OUTCOME_V1, "recorded": True, "attempt_id": decision["attempt_id"],
+                    "decision_id": decision["decision_id"], "response_sha256": entry["sha256"]}
+        if not isinstance(ack, dict) or any(key not in ack or ack[key] != value or type(ack[key]) is not type(value)
+                                            for key, value in expected.items()):
+            raise RuntimeError("outcome acknowledgement does not match")

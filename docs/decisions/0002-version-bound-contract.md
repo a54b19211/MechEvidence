@@ -60,9 +60,16 @@ protocol. That stays true of v1; it is not rewritten. v2 adds a receipt and hash
   hash of a stored whole.
 - **Transport.** The HTTP side of the call (provider body, send, delivery outcome, request count, envelope) is the shared
   `zk-llm-transport` wheel, pinned by hash; prompts, format retry and error codes stay here.
-- **Receipt adoption is strict.** `contract.adopt()` also checks the receipt's structure, verdict domains, that every
-  counted request has its archived answer with contiguous numbers, each archived text against its hash, and the
-  consistency of `complete` with the material notes; any failure is `failed/receipt_invalid` with the raw receipt kept.
+- **Receipt adoption is strict and table-driven.** `contract.adopt()` never raises on a malformed receipt. `receipt.SHAPE`
+  is the one table of fields, JSON types (a bool is not an int), enums and hash forms; only a receipt of the right shape
+  goes on to the cross-field rules: each archived answer agrees with itself (delivered, status, text, hash, error), the
+  archive covers every counted request with global contiguous numbers and unique attempt ids, every referenced
+  observation, target and material exists, `complete` agrees with the notes, scope and material echo equal the request's.
+  Any failure is `failed/receipt_invalid` with the raw receipt kept. A new receipt field is covered by adding it to the
+  table; a generated type-mutation matrix over the committed receipt proves it.
+- **Outcome acknowledgement.** The endpoint's answer to an outcome must echo the outcome contract version, `recorded:true`,
+  the attempt id, the decision id and the response hash; and each archived request carries its global index, attempt id
+  and decision id, so a failed or late receipt maps to the endpoint's prepared rows.
 
 ## Consequences
 

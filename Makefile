@@ -5,8 +5,9 @@ UV ?= uv
 PYTHON ?= 3.12
 VENV ?= .venv
 PY = $(VENV)/bin/python
-# the shared model-transport wheel (built in the sibling llm-transport checkout; hash in requirements-transport.txt)
-LLM_TRANSPORT_WHEELS ?= ../../../llm-transport/dist
+# the shared model-transport wheel (built in the sibling llm-transport checkout: ../llm-transport/dist when this
+# checkout sits in zk_projects/; a worktree elsewhere passes make LLM_TRANSPORT_WHEELS=<dir>; hash in requirements-transport.txt)
+LLM_TRANSPORT_WHEELS ?= ../llm-transport/dist
 LOCK_INPUTS = requirements.txt requirements-transport.txt
 LOCK_FLAGS = --generate-hashes --python-version 3.12 --python-platform x86_64-unknown-linux-gnu --find-links $(LLM_TRANSPORT_WHEELS)
 

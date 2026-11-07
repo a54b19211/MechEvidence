@@ -13,6 +13,7 @@ from .contract import (
     INCOMPLETE_CODES,
     ContractError,
     Parsed,
+    material_echo,
     parse_request,
     reuse_key,
 )
@@ -21,22 +22,16 @@ from .llm import chat_json
 from .models import EvaluateRequest
 
 
-def _material_echo(parsed: Parsed) -> list[dict]:
-    rows = []
-    for material, value in zip(parsed.request.materials, parsed.binding_hashes):
-        locators = [{"segment": index, "locators": segment.locators}
-                    for index, segment in enumerate(material.binding.segments) if segment.locators]
-        rows.append({"id": material.id, "binding_sha256": value, "binding_checked": "self_consistent",
-                     "locators_returned": sum(len(item["locators"]) for item in locators), "locators": locators})
-    return rows
-
-
 def _internal_request(parsed: Parsed) -> EvaluateRequest:
     request = parsed.request
     return EvaluateRequest(question=request.question, mechanism=request.mechanism, scope=request.scope.to_scope().model_dump(),
                            materials=[item.to_material() for item in request.materials],
                            claims=[item.model_dump() for item in request.claims] if request.claims is not None else None,
                            joins=[item.model_dump() for item in request.joins], max_llm_calls=request.max_llm_calls)
+
+
+def new_attempt_id() -> str:
+    return uuid.uuid4().hex
 
 
 def evaluate_v2(raw, chat=chat_json, endpoint=None) -> dict:
@@ -57,13 +52,16 @@ def evaluate_v2(raw, chat=chat_json, endpoint=None) -> dict:
 
     def before_attempt(info: dict) -> None:
         sent["index"] += 1
-        attempt = {"id": uuid.uuid4().hex, "stage": info["stage"], "index": sent["index"],
+        attempt = {"id": new_attempt_id(), "stage": info["stage"], "index": sent["index"],
                    "request_body_sha256": info["request_body_sha256"], "model": info["model"],
                    "endpoint_id": info["endpoint_id"]}
         sent["decision"] = None
         sent["decision"] = endpoint.authorize(request.authorization_ref, key, evaluator["evaluator_id"], attempt)
 
     def after_attempt(entry: dict) -> None:
+        # the receipt maps every counted request to the endpoint's prepared row
+        entry.update(index=sent["index"], attempt_id=sent["decision"]["attempt_id"],
+                     decision_id=sent["decision"]["decision_id"])
         endpoint.settle(request.authorization_ref, sent["decision"], entry)
 
     def guarded(stage, system, payload, model_cls, **kwargs):
@@ -83,7 +81,7 @@ def evaluate_v2(raw, chat=chat_json, endpoint=None) -> dict:
     reasons = sorted({note["code"] for note in result["material_notes"] if note["code"] in INCOMPLETE_CODES})
     return {"contract_version": CONTRACT_V2, "evaluator": evaluator, "reuse_key": key,
             "complete": not reasons, "not_complete_because": reasons, "audit_complete": True,
-            "scope": request.scope.normal(), "materials": _material_echo(parsed), **result}
+            "scope": request.scope.normal(), "materials": material_echo(parsed), **result}
 
 
 def v1_receipt(result: dict) -> dict:

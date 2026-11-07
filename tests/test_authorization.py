@@ -110,22 +110,42 @@ def test_an_endpoint_that_is_not_fully_configured_never_authorizes(monkeypatch, 
     assert caught.value.reason == "authorization_not_configured" and wire.posts == []
 
 
-ENTRY = {"attempt": 1, "delivered": "yes", "status": 200, "error": None, "content": "{}", "sha256": "9" * 64,
+ENTRY = {"attempt": 1, "index": 1, "delivered": "yes", "status": 200, "error": None, "content": "{}", "sha256": "9" * 64,
          "truncated": False}
 
 
-def test_the_outcome_is_posted_to_the_attempt_s_own_url_and_must_be_recorded(monkeypatch):
-    wire = Wire({"recorded": True})
+def ack(**changes):
+    return {"contract_version": "model_attempt_outcome.v1", "recorded": True, "attempt_id": ATTEMPT["id"],
+            "decision_id": "dec-1", "response_sha256": ENTRY["sha256"], **changes}
+
+
+def test_the_outcome_is_posted_to_the_attempt_s_own_url_and_acknowledged_field_by_field(monkeypatch):
+    wire = Wire(ack())
     monkeypatch.setattr(authorization.httpx, "post", wire)
     authorization.TrustedEndpoint().settle("ref-1", good_answer(), ENTRY)
     url, sent, _, _ = wire.posts[0]
     assert url == f"https://radar.internal/internal/v1/model-attempts/{ATTEMPT['id']}/outcome"
     assert sent["contract_version"] == "model_attempt_outcome.v1" and sent["decision_id"] == "dec-1"
     assert sent["attempt_id"] == ATTEMPT["id"] and sent["response_sha256"] == "9" * 64 and sent["truncated"] is False
-    for reply in ({"recorded": False}, {}, httpx.Response(500), httpx.ReadTimeout("slow")):
-        monkeypatch.setattr(authorization.httpx, "post", Wire(reply))
-        with pytest.raises(Exception):  # noqa: B017 - any failure to record is a failure
-            authorization.TrustedEndpoint().settle("ref-1", good_answer(), ENTRY)
+    assert sent["index"] == 1
+
+
+@pytest.mark.parametrize("reply", [
+    ack(recorded=False), ack(recorded="true"), ack(recorded=1), ack(contract_version="model_attempt_outcome.v0"),
+    ack(attempt_id="e" * 32), ack(decision_id="other"), ack(response_sha256="8" * 64), ack(response_sha256=None),
+    {"recorded": True}, {}, [ack()], httpx.Response(500), httpx.Response(200, content=b"nope"),
+    httpx.ReadTimeout("slow"),
+])
+def test_an_acknowledgement_that_does_not_match_is_a_failure_to_record(monkeypatch, reply):
+    monkeypatch.setattr(authorization.httpx, "post", Wire(reply))
+    with pytest.raises(Exception):  # noqa: B017 - any failure to record is a failure
+        authorization.TrustedEndpoint().settle("ref-1", good_answer(), ENTRY)
+
+
+def test_an_unanswered_request_is_acknowledged_with_a_null_hash(monkeypatch):
+    entry = {**ENTRY, "delivered": "unknown", "status": None, "content": None, "sha256": None, "error": "timeout"}
+    monkeypatch.setattr(authorization.httpx, "post", Wire(ack(response_sha256=None)))
+    authorization.TrustedEndpoint().settle("ref-1", good_answer(), entry)
 
 
 # ---- whole evaluations ----
@@ -220,3 +240,19 @@ def test_the_same_through_the_v1_path_keeps_the_error_and_the_call(monkeypatch):
     assert response.status_code == 502 and body["error_code"] == "decomposition_failed"
     assert body["llm_calls"][0]["error"] == "response_malformed" and body["llm_calls"][0]["requests"] == 1
     assert "outputs" not in body["llm_calls"][0]
+
+
+def test_every_archived_request_carries_the_global_attempt_id_decision_id_and_index():
+    endpoint = FakeEndpoint()
+    result = evaluate_v2(request(), HookedStub(), endpoint)
+    outputs = [out for call in result["llm_calls"] for out in call["outputs"]]
+    assert [out["index"] for out in outputs] == [1, 2]
+    assert [out["attempt_id"] for out in outputs] == [check[3]["id"] for check in endpoint.checks]
+    assert [out["decision_id"] for out in outputs] == ["decision-1", "decision-2"]
+
+
+def test_a_failed_evaluation_maps_its_calls_to_the_prepared_rows_too():
+    endpoint = FakeEndpoint(settle_fails_at=1)
+    body = TestClient(create_app(HookedStub(), endpoint)).post("/v2/evaluate", json=request(), headers=AUTH).json()
+    out = body["llm_calls"][0]["outputs"][0]
+    assert out["attempt_id"] == endpoint.checks[0][3]["id"] and out["decision_id"] == "decision-1" and out["index"] == 1

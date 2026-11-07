@@ -93,9 +93,12 @@
    "outputs": [
     {
      "attempt": 1,
+     "attempt_id": "00000000000000000000000000000001",
      "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+     "decision_id": "decision-1",
      "delivered": "yes",
      "error": null,
+     "index": 1,
      "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
      "status": 200,
      "truncated": false
@@ -113,9 +116,12 @@
    "outputs": [
     {
      "attempt": 1,
+     "attempt_id": "00000000000000000000000000000002",
      "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+     "decision_id": "decision-2",
      "delivered": "yes",
      "error": null,
+     "index": 2,
      "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
      "status": 200,
      "truncated": false

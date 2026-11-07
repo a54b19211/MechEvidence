@@ -17,6 +17,8 @@ import llm_transport as lt
 from llm_transport import SendBlocked
 from pydantic import BaseModel, ValidationError
 
+from .receipt import OUTPUT_ARCHIVE_LIMIT
+
 __all__ = ["OutputNotRecorded", "SendBlocked", "archived", "chat_json", "describe", "make_client"]
 
 # What the two structured stages ask of the model; the evaluator identity (identity.py) states the same values.
@@ -25,9 +27,6 @@ STRUCTURED_TEMPERATURE = 0
 STRUCTURED_THINKING = False
 DEFAULT_MODEL = "deepseek-v4-pro"
 DEFAULT_PROVIDER = "deepseek"
-# A raw model answer is archived in the receipt up to this many bytes; a longer one is cut and marked truncated
-# (its sha256 stays that of the whole answer). A truncated answer is an incomplete audit, never a usable result.
-OUTPUT_ARCHIVE_LIMIT = 256 * 1024
 
 
 class OutputNotRecorded(Exception):

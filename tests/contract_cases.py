@@ -191,6 +191,11 @@ def negative_requests() -> list[dict]:
 
 
 def _fixture_env(monkeypatch):
+    import itertools
+
+    from mechevidence import v2
+    counter = itertools.count(1)
+    monkeypatch.setattr(v2, "new_attempt_id", lambda: f"{next(counter):032x}")   # unique, and the same on every run
     monkeypatch.setenv("LLM_PROVIDER", "deepseek")
     monkeypatch.setenv("LLM_MODEL", "deepseek-v4-pro")
     monkeypatch.setenv("LLM_ENDPOINT_ID", "deepseek-public")
@@ -249,6 +254,35 @@ def receipt_cases(monkeypatch):
     case("scope_echo_changed", lambda r: r["scope"].update(species={"state": "unknown"}))
     case("required_field_missing", drop("rationale"))
     case("assessability_status_invalid", lambda r: r["assessability"].update(status="great"))
+
+    # r228: wrong JSON types, contradictory records and dangling references are all receipt_invalid, never a crash
+    first = lambda r: r["llm_calls"][0]["outputs"][0]
+    case("stage_is_a_list", lambda r: r["llm_calls"][0].update(stage=[]))
+    case("delivered_is_a_list", lambda r: first(r).update(delivered=[]))
+    case("attempt_is_a_bool", lambda r: first(r).update(attempt=True))
+    case("attempt_is_a_float", lambda r: first(r).update(attempt=1.0))
+    case("claim_verdict_is_a_list", lambda r: r["claims"][0].update(verdict=[]))
+    case("observation_relation_is_an_object", lambda r: r["observations"][0].update(relation={}))
+    case("observation_cites_a_material_outside_the_request",
+         lambda r: r["observations"][0].update(material="E_NOT_IN_REQUEST"))
+    case("observation_passage_of_another_material", lambda r: r["observations"][0].update(passage="E2.1"))
+    case("observation_targets_a_missing_claim", lambda r: r["observations"][0].update(targets=["C99"]))
+    case("claim_cites_a_missing_observation", lambda r: r["claims"][0]["supporting"].append("O99"))
+    case("echo_has_an_extra_non_object_element", lambda r: r["materials"].append("not-an-object"))
+    case("echo_has_an_extra_object_element", lambda r: r["materials"].append(copy.deepcopy(r["materials"][0])))
+    case("echo_locators_changed", lambda r: r["materials"][0].update(locators_returned=7))
+    case("success_with_an_unanswered_output", lambda r: first(r).update(
+        delivered="unknown", status=200, content=None, sha256=None, error=None))
+    case("answered_200_but_error_set", lambda r: first(r).update(error="http_500"))
+    case("answered_without_text", lambda r: first(r).update(content=None))
+    case("global_index_not_contiguous", lambda r: r["llm_calls"][1]["outputs"][0].update(index=5))
+    case("attempt_id_reused", lambda r: r["llm_calls"][1]["outputs"][0].update(attempt_id=first(r)["attempt_id"]))
+    case("decision_id_empty", lambda r: first(r).update(decision_id=""))
+    case("attempt_id_missing", lambda r: first(r).pop("attempt_id"))
+    case("reuse_key_is_a_number", lambda r: r.update(reuse_key=7))
+    for name, value in (("receipt_is_a_list", []), ("receipt_is_a_string", "ok"), ("receipt_is_null", None)):
+        outcomes.append({"name": name, "receipt": value,
+                         "outcome": json.loads(json.dumps(adopt(raw, value, evaluator["evaluator_id"])))})
     return raw, receipt, evaluator, outcomes
 
 

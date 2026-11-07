@@ -7,12 +7,12 @@
 #
 # UV          the uv binary (default: uv on PATH)
 # PYTHON      interpreter for the virtualenv (default 3.12: the lock is resolved for it)
-# LLM_TRANSPORT_WHEELS  directory holding the zk-llm-transport wheel (default ../../../llm-transport/dist)
+# LLM_TRANSPORT_WHEELS  directory holding the zk-llm-transport wheel (default ../llm-transport/dist)
 # UV_OFFLINE=1  install from the local uv cache only
 set -eu
 cd "$(dirname "$0")/.."
 UV="${UV:-uv}"
-WHEELS="${LLM_TRANSPORT_WHEELS:-../../../llm-transport/dist}"
+WHEELS="${LLM_TRANSPORT_WHEELS:-../llm-transport/dist}"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 "$UV" venv --quiet --python "${PYTHON:-3.12}" "$work/venv"

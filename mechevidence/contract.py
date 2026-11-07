@@ -13,7 +13,7 @@ from pydantic import ValidationError
 
 from .materials import IdentityError, source_identity
 from .models_v2 import CONTRACT_V2, EvaluateRequestV2
-from .receipt import INCOMPLETE_CODES, receipt_problems  # noqa: F401 - complete=false: never adopt or reuse as a whole
+from .receipt import INCOMPLETE_CODES, consistency_problems, shape_problems  # noqa: F401 - INCOMPLETE_CODES: complete=false is never adopted or reused as a whole
 
 CONTRACT_V1 = "mechevidence.evaluate.v1"
 # The fields an evaluator id covers (code_version is audit only; a refactor must not void every cached result).
@@ -148,6 +148,17 @@ def reuse_key(parsed: Parsed, evaluator: dict) -> str:
         "evaluator_id": evaluator["evaluator_id"]})
 
 
+def material_echo(parsed: Parsed) -> list[dict]:
+    """What a receipt says about the materials it evaluated: id, binding hash, how it was checked, locators."""
+    rows = []
+    for material, value in zip(parsed.request.materials, parsed.binding_hashes):
+        locators = [{"segment": index, "locators": segment.locators}
+                    for index, segment in enumerate(material.binding.segments) if segment.locators]
+        rows.append({"id": material.id, "binding_sha256": value, "binding_checked": "self_consistent",
+                     "locators_returned": sum(len(item["locators"]) for item in locators), "locators": locators})
+    return rows
+
+
 # ---- what a caller does with a receipt ----
 
 def receipt_mismatches(parsed: Parsed, receipt: dict, expected_evaluator_id: str) -> list[dict]:
@@ -171,34 +182,34 @@ def receipt_mismatches(parsed: Parsed, receipt: dict, expected_evaluator_id: str
     except KeyError:
         expected_key = None
     check("reuse_key", expected_key, receipt.get("reuse_key"))
-    listed = receipt.get("materials") if isinstance(receipt.get("materials"), list) else []
-    echoed = [(item.get("id"), item.get("binding_sha256")) for item in listed if isinstance(item, dict)]
-    check("materials", [(item.id, value) for item, value in zip(parsed.request.materials, parsed.binding_hashes)],
-          echoed)
+    check("materials", material_echo(parsed), receipt.get("materials"))
     return found
 
 
-def adopt(request: dict, receipt: dict, expected_evaluator_id: str) -> dict:
+def _failed(receipt, reason: str, **detail) -> dict:
+    return {"result": {"status": "failed", "reason": reason, **detail},
+            "rejected": {"response": receipt, "mismatch": detail.get("mismatch", []), **(
+                {"invalid": detail["invalid"]} if "invalid" in detail else {})}}
+
+
+def adopt(request: dict, receipt, expected_evaluator_id: str) -> dict:
     """What the radar records for a 200 receipt: {"result": mechanism_result, "rejected": row or None}.
     Anything but a well-formed receipt for exactly this request with every raw model answer archived whole is
-    `failed` (receipt_mismatch, receipt_invalid, audit_incomplete); the raw receipt is kept as `rejected` (an audit
-    row) and the conclusion is not usable or cacheable anywhere."""
+    `failed`: receipt_invalid (shape, then cross-field rules: receipt.py), receipt_mismatch (not the answer to this
+    request), audit_incomplete. The raw receipt is kept as `rejected` (an audit row) and the conclusion is not
+    usable or cacheable anywhere. Never raises on a malformed receipt."""
     parsed = parse_request(request)
-    if not isinstance(receipt, dict):
-        problems = ["the receipt is not an object"]
-        return {"result": {"status": "failed", "reason": "receipt_invalid", "invalid": problems},
-                "rejected": {"response": receipt, "mismatch": [], "invalid": problems}}
+    invalid = shape_problems(receipt)
+    if invalid:
+        return _failed(receipt, "receipt_invalid", invalid=invalid)
     mismatch = receipt_mismatches(parsed, receipt, expected_evaluator_id)
     if mismatch:
-        return {"result": {"status": "failed", "reason": "receipt_mismatch", "mismatch": mismatch},
-                "rejected": {"response": receipt, "mismatch": mismatch}}
-    problems = receipt_problems(receipt, parsed.request.scope.normal())
-    if problems:
-        return {"result": {"status": "failed", "reason": "receipt_invalid", "invalid": problems},
-                "rejected": {"response": receipt, "mismatch": [], "invalid": problems}}
-    outputs = [out for call in receipt["llm_calls"] for out in call["outputs"]]
-    if receipt["audit_complete"] is not True or any(out["truncated"] for out in outputs):
-        return {"result": {"status": "failed", "reason": "audit_incomplete"},
-                "rejected": {"response": receipt, "mismatch": []}}
+        return _failed(receipt, "receipt_mismatch", mismatch=mismatch)
+    invalid = consistency_problems(receipt, parsed.request.scope.normal(), [item.id for item in parsed.request.materials])
+    if invalid:
+        return _failed(receipt, "receipt_invalid", invalid=invalid)
+    if receipt["audit_complete"] is not True or any(out["truncated"] for call in receipt["llm_calls"]
+                                                    for out in call["outputs"]):
+        return _failed(receipt, "audit_incomplete")
     return {"result": {"status": "completed", "cacheable": receipt["complete"], "response": receipt},
             "rejected": None}

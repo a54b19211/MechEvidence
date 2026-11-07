@@ -70,6 +70,17 @@ EXPECTED = {
     "scope_echo_changed": INVALID,
     "required_field_missing": INVALID,
     "assessability_status_invalid": INVALID,
+    "stage_is_a_list": INVALID, "delivered_is_a_list": INVALID, "attempt_is_a_bool": INVALID,
+    "attempt_is_a_float": INVALID, "claim_verdict_is_a_list": INVALID, "observation_relation_is_an_object": INVALID,
+    "observation_cites_a_material_outside_the_request": INVALID, "observation_passage_of_another_material": INVALID,
+    "observation_targets_a_missing_claim": INVALID, "claim_cites_a_missing_observation": INVALID,
+    "echo_has_an_extra_non_object_element": INVALID,
+    "echo_has_an_extra_object_element": ("failed", "receipt_mismatch"),
+    "echo_locators_changed": ("failed", "receipt_mismatch"),
+    "success_with_an_unanswered_output": INVALID, "answered_200_but_error_set": INVALID,
+    "answered_without_text": INVALID, "global_index_not_contiguous": INVALID, "attempt_id_reused": INVALID,
+    "decision_id_empty": INVALID, "attempt_id_missing": INVALID, "reuse_key_is_a_number": INVALID,
+    "receipt_is_a_list": INVALID, "receipt_is_a_string": INVALID, "receipt_is_null": INVALID,
 }
 
 
