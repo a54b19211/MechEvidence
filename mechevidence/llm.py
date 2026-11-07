@@ -14,8 +14,8 @@ from typing import get_args
 
 import httpx
 import llm_transport as lt
-from llm_transport import SendBlocked
 from extraction_contract.mech_v2.receipt import OUTPUT_ARCHIVE_LIMIT
+from llm_transport import SendBlocked
 from pydantic import BaseModel, ValidationError
 
 __all__ = ["OutputNotRecorded", "SendBlocked", "archived", "chat_json", "describe", "make_client"]

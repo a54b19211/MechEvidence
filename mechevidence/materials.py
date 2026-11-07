@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import re
 
-from extraction_contract.mech_v2 import IdentityError, source_identity as identity_of
+from extraction_contract.mech_v2 import IdentityError
+from extraction_contract.mech_v2 import source_identity as identity_of
 
 from .models import Material
 
