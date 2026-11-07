@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from typing import Callable
+from collections.abc import Callable
 
 from pydantic import ValidationError
 
@@ -13,6 +13,12 @@ from .models import Decomposition, EvaluateRequest, Observation, Review, Scope
 from .prompts import DECOMPOSE, REVIEW
 
 BATCH_SIZE = 3
+# Bump RULES_VERSION with any change to what this module (and materials.admissibility / source grouping) concludes
+# from the same observations - scope aliases, comparison, grading; docs/decisions/0002 says what counts.
+RULES_VERSION = "mechevidence.aggregate.v1"
+# Phase 1 reviews materials in the order the request lists them, in batches of BATCH_SIZE; a canonical order is a
+# later rules version, and only then may a reuse key treat the materials as a set.
+ORDERING_RULE = "request_order"
 _BUDGET = object()
 
 
@@ -234,7 +240,7 @@ def _squash(text: str) -> str:
 
 def _passage_id(value: str, single: str | None) -> str:
     value = value.strip()
-    match = re.fullmatch(r"([A-Za-z0-9_-]+)[.:]P?(\d+)", value, re.I)
+    match = re.fullmatch(r"([A-Za-z0-9_-]+)[.:]P?(\d+)", value, re.IGNORECASE)
     if match:
         return f"{match.group(1)}.{int(match.group(2))}"
     if value.isdigit() and single:

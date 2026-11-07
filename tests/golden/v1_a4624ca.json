@@ -1,0 +1,337 @@
+{
+ "radar_body": {
+  "request": {
+   "materials": [
+    {
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": "",
+    "species": "mouse",
+    "system": "S"
+   }
+  },
+  "response": {
+   "assessability": {
+    "limitations": [
+     "摘要报告的实验缺少完整方法和结果细节。"
+    ],
+    "status": "limited"
+   },
+   "claims": [
+    {
+     "applicability_gaps": [],
+     "compatible": [],
+     "id": "C1",
+     "kind": "causal",
+     "opposing": [],
+     "source_groups": [
+      "text:E1"
+     ],
+     "supporting": [
+      "O1"
+     ],
+     "text": "A changes M",
+     "verdict": "supported"
+    },
+    {
+     "applicability_gaps": [],
+     "compatible": [],
+     "id": "C2",
+     "kind": "causal",
+     "opposing": [],
+     "source_groups": [
+      "text:E1"
+     ],
+     "supporting": [
+      "O2"
+     ],
+     "text": "M is necessary for E",
+     "verdict": "supported"
+    }
+   ],
+   "conflicts": [],
+   "gaps": [],
+   "independence": {
+    "distinct_source_groups": 1,
+    "note": "来源去重不等于确认队列或实验相互独立。"
+   },
+   "joins": [
+    {
+     "applicability_gaps": [],
+     "compatible": [],
+     "from": "C1",
+     "id": "J1",
+     "opposing": [],
+     "source_groups": [
+      "text:E1"
+     ],
+     "supporting": [
+      "O2"
+     ],
+     "text": "A produces E through M",
+     "to": "C2",
+     "verdict": "supported"
+    }
+   ],
+   "llm_calls": [
+    {
+     "error": null,
+     "finish_reason": "stop",
+     "model": "stub",
+     "requests": 1,
+     "seconds": 0,
+     "stage": "decompose",
+     "usage": {}
+    },
+    {
+     "error": null,
+     "finish_reason": "stop",
+     "model": "stub",
+     "requests": 1,
+     "seconds": 0,
+     "stage": "review",
+     "usage": {}
+    }
+   ],
+   "material_notes": [],
+   "observations": [
+    {
+     "basis": "intervention",
+     "causal_evidence": true,
+     "causal_test": true,
+     "context": {
+      "disease": null,
+      "species": "mouse",
+      "system": "S"
+     },
+     "id": "O1",
+     "material": "E1",
+     "passage": "E1.1",
+     "quote": "A changed M",
+     "relation": "supports",
+     "scope_match": {
+      "disease": "not_required",
+      "species": "matched",
+      "system": "matched"
+     },
+     "scope_status": "matched",
+     "source_group": "text:E1",
+     "targets": [
+      "C1"
+     ]
+    },
+    {
+     "basis": "intervention",
+     "causal_evidence": true,
+     "causal_test": true,
+     "context": {
+      "disease": null,
+      "species": "mouse",
+      "system": "S"
+     },
+     "id": "O2",
+     "material": "E1",
+     "passage": "E1.2",
+     "quote": "Blocking M prevented the E response",
+     "relation": "supports",
+     "scope_match": {
+      "disease": "not_required",
+      "species": "matched",
+      "system": "matched"
+     },
+     "scope_status": "matched",
+     "source_group": "text:E1",
+     "targets": [
+      "C2",
+      "J1"
+     ]
+    }
+   ],
+   "overall": "supported",
+   "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+   "unresolved_counterevidence": []
+  }
+ },
+ "two_materials": {
+  "request": {
+   "materials": [
+    {
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    },
+    {
+     "document_type": "research_article",
+     "id": "E2",
+     "pmid": "123456",
+     "record_id": "123456",
+     "source_id": "pubmed",
+     "source_kind": "primary",
+     "text": "Other text without results.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "species": "mouse",
+    "system": "S"
+   }
+  },
+  "response": {
+   "assessability": {
+    "limitations": [
+     "摘要报告的实验缺少完整方法和结果细节。"
+    ],
+    "status": "limited"
+   },
+   "claims": [
+    {
+     "applicability_gaps": [],
+     "compatible": [],
+     "id": "C1",
+     "kind": "causal",
+     "opposing": [],
+     "source_groups": [
+      "text:E1"
+     ],
+     "supporting": [
+      "O1"
+     ],
+     "text": "A changes M",
+     "verdict": "supported"
+    },
+    {
+     "applicability_gaps": [],
+     "compatible": [],
+     "id": "C2",
+     "kind": "causal",
+     "opposing": [],
+     "source_groups": [
+      "text:E1"
+     ],
+     "supporting": [
+      "O2"
+     ],
+     "text": "M is necessary for E",
+     "verdict": "supported"
+    }
+   ],
+   "conflicts": [],
+   "gaps": [],
+   "independence": {
+    "distinct_source_groups": 1,
+    "note": "来源去重不等于确认队列或实验相互独立。"
+   },
+   "joins": [
+    {
+     "applicability_gaps": [],
+     "compatible": [],
+     "from": "C1",
+     "id": "J1",
+     "opposing": [],
+     "source_groups": [
+      "text:E1"
+     ],
+     "supporting": [
+      "O2"
+     ],
+     "text": "A produces E through M",
+     "to": "C2",
+     "verdict": "supported"
+    }
+   ],
+   "llm_calls": [
+    {
+     "error": null,
+     "finish_reason": "stop",
+     "model": "stub",
+     "requests": 1,
+     "seconds": 0,
+     "stage": "decompose",
+     "usage": {}
+    },
+    {
+     "error": null,
+     "finish_reason": "stop",
+     "model": "stub",
+     "requests": 1,
+     "seconds": 0,
+     "stage": "review",
+     "usage": {}
+    }
+   ],
+   "material_notes": [],
+   "observations": [
+    {
+     "basis": "intervention",
+     "causal_evidence": true,
+     "causal_test": true,
+     "context": {
+      "disease": null,
+      "species": "mouse",
+      "system": "S"
+     },
+     "id": "O1",
+     "material": "E1",
+     "passage": "E1.1",
+     "quote": "A changed M",
+     "relation": "supports",
+     "scope_match": {
+      "disease": "not_required",
+      "species": "matched",
+      "system": "matched"
+     },
+     "scope_status": "matched",
+     "source_group": "text:E1",
+     "targets": [
+      "C1"
+     ]
+    },
+    {
+     "basis": "intervention",
+     "causal_evidence": true,
+     "causal_test": true,
+     "context": {
+      "disease": null,
+      "species": "mouse",
+      "system": "S"
+     },
+     "id": "O2",
+     "material": "E1",
+     "passage": "E1.2",
+     "quote": "Blocking M prevented the E response",
+     "relation": "supports",
+     "scope_match": {
+      "disease": "not_required",
+      "species": "matched",
+      "system": "matched"
+     },
+     "scope_status": "matched",
+     "source_group": "text:E1",
+     "targets": [
+      "C2",
+      "J1"
+     ]
+    }
+   ],
+   "overall": "supported",
+   "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+   "unresolved_counterevidence": []
+  }
+ }
+}

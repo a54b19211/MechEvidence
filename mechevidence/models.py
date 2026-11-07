@@ -3,7 +3,14 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StrictInt, model_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictInt,
+    model_validator,
+)
 
 
 def _nonblank(value: str) -> str:
@@ -14,6 +21,14 @@ def _nonblank(value: str) -> str:
 
 Text = Annotated[str, AfterValidator(_nonblank)]
 Match = Literal["matched", "mismatched", "unknown", "not_required"]
+SourceKind = Literal["primary", "review", "graph"]
+DocumentType = Literal["research_article", "conference_abstract", "trial_results", "trial_registration",
+                       "study_protocol", "review", "press_release", "company_disclosure", "news", "social_post",
+                       "graph"]
+TextLevel = Literal["full", "abstract", "excerpt"]
+# A request model rejects a field the contract does not name: ignoring it would answer 200 as if it had been
+# checked. Model outputs (Scope as an observation context, ClaimIn in a decomposition) stay lenient.
+FORBID_EXTRA = ConfigDict(extra="forbid")
 
 
 class Scope(BaseModel):
@@ -22,17 +37,19 @@ class Scope(BaseModel):
     disease: str | None = None
 
 
+class ScopeIn(Scope):
+    model_config = FORBID_EXTRA
+
+
 class Material(BaseModel):
     """雷达给定的一份材料；source_kind / document_type 必须来自原始记录，不由本服务推断。"""
-    model_config = ConfigDict(extra="ignore")
+    model_config = FORBID_EXTRA
     id: Annotated[str, Field(pattern=r"^[A-Za-z0-9_-]+$")]
     title: str = ""
     text: Text
-    source_kind: Literal["primary", "review", "graph"]
-    document_type: Literal["research_article", "conference_abstract", "trial_results",
-                           "trial_registration", "study_protocol", "review", "press_release",
-                           "company_disclosure", "news", "social_post", "graph"] | None = None
-    text_level: Literal["full", "abstract", "excerpt"]
+    source_kind: SourceKind
+    document_type: DocumentType | None = None
+    text_level: TextLevel
     # 以下仅用于把同一篇文献的多份记录合并为一个来源组
     pmid: str | StrictInt | None = None
     doi: str | None = None
@@ -54,6 +71,14 @@ class JoinIn(BaseModel):
     to_claim: int = Field(description="下游命题在 claims 中的序号，从 1 开始")
 
 
+class ClaimReq(ClaimIn):
+    model_config = FORBID_EXTRA
+
+
+class JoinReq(JoinIn):
+    model_config = FORBID_EXTRA
+
+
 class Decomposition(BaseModel):
     """模型输出 ①：只给文本和下标，程序编 C1..Cn / J1..Jm。"""
     claims: list[ClaimIn] = Field(min_length=1, description="原子命题列表，每项 {text, kind: causal|association|reported}")
@@ -61,13 +86,14 @@ class Decomposition(BaseModel):
 
 
 class EvaluateRequest(BaseModel):
+    model_config = FORBID_EXTRA
     question: Text
     mechanism: Text
-    scope: Scope = Field(default_factory=Scope)
+    scope: ScopeIn = Field(default_factory=ScopeIn)
     materials: list[Material] = Field(default_factory=list)
     # 已有拆解时可直接提供，省掉第一次模型调用
-    claims: list[ClaimIn] | None = None
-    joins: list[JoinIn] = Field(default_factory=list)
+    claims: list[ClaimReq] | None = None
+    joins: list[JoinReq] = Field(default_factory=list)
     max_llm_calls: int = Field(20, ge=1, le=100)
 
     @model_validator(mode="after")

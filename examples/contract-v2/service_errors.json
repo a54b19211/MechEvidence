@@ -1,0 +1,311 @@
+[
+ {
+  "body": {
+   "error_code": "evaluator_changed",
+   "evaluator": {
+    "batch_size": 3,
+    "code_version": "fixture",
+    "contract_version": "mechevidence.evaluate.v2",
+    "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+    "model_config": {
+     "endpoint_id": "deepseek-public",
+     "max_tokens": 4096,
+     "model": "deepseek-v4-pro",
+     "provider": "deepseek",
+     "temperature": 0,
+     "thinking": false
+    },
+    "ordering_rule": "request_order",
+    "prompts": {
+     "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+     "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+    },
+    "rules_version": "mechevidence.aggregate.v1",
+    "service": "mechevidence"
+   },
+   "expected_evaluator_id": "3f7f0ca282d2484cb3c9a3995f1524024ab12c12b2667db12fe0cb121c3edce2",
+   "llm_calls": [],
+   "message": "the evaluator is not the one this request was prepared for; fetch GET /v2/evaluator, recompute the reuse key and send again"
+  },
+  "name": "evaluator_changed",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "expected_evaluator_id": "3f7f0ca282d2484cb3c9a3995f1524024ab12c12b2667db12fe0cb121c3edce2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 409
+ },
+ {
+  "body": {
+   "error_code": "authorization_blocked",
+   "llm_calls": [
+    {
+     "error": null,
+     "finish_reason": "stop",
+     "model": "stub",
+     "outputs": [
+      {
+       "attempt": 1,
+       "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+       "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+       "truncated": false
+      }
+     ],
+     "requests": 1,
+     "seconds": 0,
+     "stage": "decompose",
+     "usage": {}
+    },
+    {
+     "error": "authorization_refused",
+     "finish_reason": null,
+     "model": "stub",
+     "outputs": [],
+     "requests": 0,
+     "seconds": 0,
+     "stage": "review",
+     "usage": {}
+    }
+   ],
+   "message": "authorization_refused: no further model request was sent"
+  },
+  "name": "authorization_revoked_before_the_second_request",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 502
+ },
+ {
+  "body": {
+   "error_code": "output_oversize",
+   "llm_calls": [
+    {
+     "error": null,
+     "finish_reason": "stop",
+     "model": "stub",
+     "outputs": [
+      {
+       "attempt": 1,
+       "content": "<262144 bytes elided from this fixture>",
+       "sha256": "121cee67b8e0f1aae0855356a921083ca2488e382ef9a2693b01f20bc0a1d10c",
+       "truncated": true
+      }
+     ],
+     "requests": 1,
+     "seconds": 0,
+     "stage": "decompose",
+     "usage": {}
+    }
+   ],
+   "message": "a raw model answer exceeds the archive limit; the result is not usable (audit incomplete)"
+  },
+  "name": "raw_answer_over_256_KiB",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 502
+ },
+ {
+  "body": {
+   "evaluator": {
+    "batch_size": 3,
+    "code_version": "fixture",
+    "contract_version": "mechevidence.evaluate.v2",
+    "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+    "model_config": {
+     "endpoint_id": "deepseek-public",
+     "max_tokens": 4096,
+     "model": "deepseek-v4-pro",
+     "provider": "deepseek",
+     "temperature": 0,
+     "thinking": false
+    },
+    "ordering_rule": "request_order",
+    "prompts": {
+     "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+     "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+    },
+    "rules_version": "mechevidence.aggregate.v1",
+    "service": "mechevidence"
+   }
+  },
+  "name": "current_evaluator",
+  "status": 200
+ }
+]

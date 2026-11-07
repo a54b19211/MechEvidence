@@ -1,0 +1,108 @@
+{
+ "authorization_ref": "auth-0001-analysis-7-workspace-3",
+ "contract_version": "mechevidence.evaluate.v2",
+ "expected_evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+ "materials": [
+  {
+   "binding": {
+    "chars": 103,
+    "segments": [
+     {
+      "literal": "[Attachment text, version 3f9c] "
+     },
+     {
+      "end": 81,
+      "locators": [
+       {
+        "basis": "raw_json",
+        "end": 81,
+        "json_pointer": "/abstractText",
+        "start": 10
+       }
+      ],
+      "part": {
+       "is_demo": false,
+       "kind": "clean_text",
+       "processor_version": "datafabric.clean_text.v12",
+       "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+       "record_id": "PMCE1",
+       "source": "europe_pmc",
+       "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+       "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+      },
+      "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+      "start": 10
+     }
+    ],
+    "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+   },
+   "document_type": "research_article",
+   "id": "E1",
+   "source_kind": "primary",
+   "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+   "text_level": "abstract",
+   "title": "Controlled fixture"
+  },
+  {
+   "binding": {
+    "chars": 59,
+    "segments": [
+     {
+      "literal": "[Attachment text, version 3f9c] "
+     },
+     {
+      "end": 37,
+      "locators": [
+       {
+        "basis": "raw_json",
+        "end": 37,
+        "json_pointer": "/abstractText",
+        "start": 10
+       }
+      ],
+      "part": {
+       "is_demo": false,
+       "kind": "clean_text",
+       "processor_version": "datafabric.clean_text.v12",
+       "raw_sha256": "aa102a3680519da9caddf871b4292c76500bd0ad60d8b9920a723851392655ff",
+       "record_id": "PMCE2",
+       "source": "europe_pmc",
+       "text_sha256": "b768529d44a8ae20054ad051a818d7176317d0fd203ea8431a7a64cec1ee93d9",
+       "version_id": "e25ccb45daaf98cbd7116b295eaeaae756ce4ceb0f777aab2b9742078f80b6bd"
+      },
+      "sha256": "44348bcf035d4afb9a03de3a757f9a19394f5ab15990ad50da98f2f51f2ca2f4",
+      "start": 10
+     }
+    ],
+    "sha256": "ed613d6c40457f8a6f4eb71ef8e7333c41ff7a3cfb33d50b0e2e4b75ec48c327"
+   },
+   "document_type": "research_article",
+   "id": "E2",
+   "identifiers": {
+    "pmid": "123456",
+    "record_id": "123456",
+    "source_id": "pubmed"
+   },
+   "source_kind": "primary",
+   "text": "[Attachment text, version 3f9c] Other text without results.",
+   "text_level": "abstract",
+   "title": "Controlled fixture"
+  }
+ ],
+ "max_llm_calls": 20,
+ "mechanism": "A changes M; M is necessary for E.",
+ "question": "Does A cause E through M in mouse system S?",
+ "scope": {
+  "disease": {
+   "state": "not_required"
+  },
+  "species": {
+   "state": "stated",
+   "value": "mouse"
+  },
+  "system": {
+   "state": "stated",
+   "value": "S"
+  }
+ }
+}

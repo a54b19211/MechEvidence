@@ -1,0 +1,24 @@
+{
+ "contract_version": "mechevidence.evaluate.v2",
+ "evaluator": {
+  "batch_size": 3,
+  "code_version": "fixture",
+  "contract_version": "mechevidence.evaluate.v2",
+  "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+  "model_config": {
+   "endpoint_id": "deepseek-public",
+   "max_tokens": 4096,
+   "model": "deepseek-v4-pro",
+   "provider": "deepseek",
+   "temperature": 0,
+   "thinking": false
+  },
+  "ordering_rule": "request_order",
+  "prompts": {
+   "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+   "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+  },
+  "rules_version": "mechevidence.aggregate.v1",
+  "service": "mechevidence"
+ }
+}

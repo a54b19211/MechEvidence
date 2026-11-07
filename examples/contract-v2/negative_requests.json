@@ -1,0 +1,1198 @@
+[
+ {
+  "error_code": "material_binding_missing",
+  "name": "missing_binding",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "material_binding_missing",
+  "name": "binding_without_part",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A."
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "material_binding_mismatch",
+  "name": "same_version_different_text",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M blocked the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "material_binding_mismatch",
+  "name": "literal_differs_from_text",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "【另一个页眉】\n\n"
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "material_binding_mismatch",
+  "name": "segments_do_not_cover_text",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "material_binding_invalid",
+  "name": "version_id_not_64_hex",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "9a1e"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "material_binding_invalid",
+  "name": "part_without_processor",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "duplicate_material_binding",
+  "name": "duplicate_binding",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    },
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E2",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "field_not_in_contract",
+  "message_contains": "materials.0.version_id",
+  "name": "unknown_field_on_material",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture",
+     "version_id": "4c94485e0c21ae6c41ce1dfe7b6bfaceea5ab68e40a2476f50208e526f506080"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "field_not_in_contract",
+  "message_contains": "binding",
+  "name": "unknown_top_level_field",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "binding": {},
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "field_not_in_contract",
+  "message_contains": "part.cleaner",
+  "name": "unknown_field_in_part",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "cleaner": "x",
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "scope_state_invalid",
+  "name": "stated_without_value",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "scope_state_invalid",
+  "name": "unknown_with_value",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "unknown",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "scope_state_invalid",
+  "name": "scope_dimension_missing",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "contract_version_required",
+  "name": "contract_version_missing",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "contract_version_required",
+  "name": "contract_version_v1",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v1",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "authorization_required",
+  "name": "authorization_missing",
+  "request": {
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "material_binding_mismatch",
+  "name": "text_hash_differs",
+  "request": {
+   "authorization_ref": "auth-0001-analysis-7-workspace-3",
+   "contract_version": "mechevidence.evaluate.v2",
+   "materials": [
+    {
+     "binding": {
+      "chars": 103,
+      "segments": [
+       {
+        "literal": "[Attachment text, version 3f9c] "
+       },
+       {
+        "end": 81,
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "part": {
+         "is_demo": false,
+         "kind": "clean_text",
+         "processor_version": "datafabric.clean_text.v12",
+         "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+         "record_id": "PMCE1",
+         "source": "europe_pmc",
+         "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+         "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+        },
+        "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+        "start": 10
+       }
+      ],
+      "sha256": "d9298a10d1b0735837dc4bd85dac641b0f3cef27a47e5d53a54f2f3f5b2fcffa"
+     },
+     "document_type": "research_article",
+     "id": "E1",
+     "source_kind": "primary",
+     "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+     "text_level": "abstract",
+     "title": "Controlled fixture"
+    }
+   ],
+   "max_llm_calls": 20,
+   "mechanism": "A changes M; M is necessary for E.",
+   "question": "Does A cause E through M in mouse system S?",
+   "scope": {
+    "disease": {
+     "state": "not_required"
+    },
+    "species": {
+     "state": "stated",
+     "value": "mouse"
+    },
+    "system": {
+     "state": "stated",
+     "value": "S"
+    }
+   }
+  },
+  "status": 422
+ },
+ {
+  "error_code": "input_invalid",
+  "name": "body_is_not_an_object",
+  "request": [
+   1,
+   2
+  ],
+  "status": 422
+ }
+]

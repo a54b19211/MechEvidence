@@ -1,0 +1,4627 @@
+{
+ "cases": [
+  {
+   "name": "exact",
+   "outcome": {
+    "rejected": null,
+    "result": {
+     "cacheable": true,
+     "response": {
+      "assessability": {
+       "limitations": [
+        "摘要报告的实验缺少完整方法和结果细节。"
+       ],
+       "status": "limited"
+      },
+      "audit_complete": true,
+      "claims": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C1",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O1"
+        ],
+        "text": "A changes M",
+        "verdict": "supported"
+       },
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C2",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "M is necessary for E",
+        "verdict": "supported"
+       }
+      ],
+      "complete": true,
+      "conflicts": [],
+      "contract_version": "mechevidence.evaluate.v2",
+      "evaluator": {
+       "batch_size": 3,
+       "code_version": "fixture",
+       "contract_version": "mechevidence.evaluate.v2",
+       "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+       "model_config": {
+        "endpoint_id": "deepseek-public",
+        "max_tokens": 4096,
+        "model": "deepseek-v4-pro",
+        "provider": "deepseek",
+        "temperature": 0,
+        "thinking": false
+       },
+       "ordering_rule": "request_order",
+       "prompts": {
+        "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+        "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+       },
+       "rules_version": "mechevidence.aggregate.v1",
+       "service": "mechevidence"
+      },
+      "gaps": [],
+      "independence": {
+       "distinct_source_groups": 1,
+       "note": "来源去重不等于确认队列或实验相互独立。"
+      },
+      "joins": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "from": "C1",
+        "id": "J1",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "A produces E through M",
+        "to": "C2",
+        "verdict": "supported"
+       }
+      ],
+      "llm_calls": [
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+          "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "decompose",
+        "usage": {}
+       },
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+          "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "review",
+        "usage": {}
+       }
+      ],
+      "material_notes": [],
+      "materials": [
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+        "id": "E1",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 81,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       },
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+        "id": "E2",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 37,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       }
+      ],
+      "not_complete_because": [],
+      "observations": [
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O1",
+        "material": "E1",
+        "passage": "E1.1",
+        "quote": "A changed M",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C1"
+        ]
+       },
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O2",
+        "material": "E1",
+        "passage": "E1.2",
+        "quote": "Blocking M prevented the E response",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C2",
+         "J1"
+        ]
+       }
+      ],
+      "overall": "supported",
+      "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+      "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+      "scope": {
+       "disease": {
+        "state": "not_required"
+       },
+       "species": {
+        "state": "stated",
+        "value": "mouse"
+       },
+       "system": {
+        "state": "stated",
+        "value": "S"
+       }
+      },
+      "unresolved_counterevidence": []
+     },
+     "status": "completed"
+    }
+   },
+   "receipt": {
+    "assessability": {
+     "limitations": [
+      "摘要报告的实验缺少完整方法和结果细节。"
+     ],
+     "status": "limited"
+    },
+    "audit_complete": true,
+    "claims": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C1",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O1"
+      ],
+      "text": "A changes M",
+      "verdict": "supported"
+     },
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C2",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "M is necessary for E",
+      "verdict": "supported"
+     }
+    ],
+    "complete": true,
+    "conflicts": [],
+    "contract_version": "mechevidence.evaluate.v2",
+    "evaluator": {
+     "batch_size": 3,
+     "code_version": "fixture",
+     "contract_version": "mechevidence.evaluate.v2",
+     "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+     "model_config": {
+      "endpoint_id": "deepseek-public",
+      "max_tokens": 4096,
+      "model": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "temperature": 0,
+      "thinking": false
+     },
+     "ordering_rule": "request_order",
+     "prompts": {
+      "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+      "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+     },
+     "rules_version": "mechevidence.aggregate.v1",
+     "service": "mechevidence"
+    },
+    "gaps": [],
+    "independence": {
+     "distinct_source_groups": 1,
+     "note": "来源去重不等于确认队列或实验相互独立。"
+    },
+    "joins": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "from": "C1",
+      "id": "J1",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "A produces E through M",
+      "to": "C2",
+      "verdict": "supported"
+     }
+    ],
+    "llm_calls": [
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+        "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "decompose",
+      "usage": {}
+     },
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+        "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "review",
+      "usage": {}
+     }
+    ],
+    "material_notes": [],
+    "materials": [
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+      "id": "E1",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     },
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+      "id": "E2",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 37,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     }
+    ],
+    "not_complete_because": [],
+    "observations": [
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O1",
+      "material": "E1",
+      "passage": "E1.1",
+      "quote": "A changed M",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C1"
+      ]
+     },
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O2",
+      "material": "E1",
+      "passage": "E1.2",
+      "quote": "Blocking M prevented the E response",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C2",
+       "J1"
+      ]
+     }
+    ],
+    "overall": "supported",
+    "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+    "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+    "scope": {
+     "disease": {
+      "state": "not_required"
+     },
+     "species": {
+      "state": "stated",
+      "value": "mouse"
+     },
+     "system": {
+      "state": "stated",
+      "value": "S"
+     }
+    },
+    "unresolved_counterevidence": []
+   }
+  },
+  {
+   "name": "reuse_key_differs",
+   "outcome": {
+    "rejected": {
+     "mismatch": [
+      {
+       "expected": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+       "field": "reuse_key",
+       "received": "ae448ac86c4e8e4dec645729708ef41873ae79c6dff84eff73360989487f08e5"
+      }
+     ],
+     "response": {
+      "assessability": {
+       "limitations": [
+        "摘要报告的实验缺少完整方法和结果细节。"
+       ],
+       "status": "limited"
+      },
+      "audit_complete": true,
+      "claims": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C1",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O1"
+        ],
+        "text": "A changes M",
+        "verdict": "supported"
+       },
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C2",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "M is necessary for E",
+        "verdict": "supported"
+       }
+      ],
+      "complete": true,
+      "conflicts": [],
+      "contract_version": "mechevidence.evaluate.v2",
+      "evaluator": {
+       "batch_size": 3,
+       "code_version": "fixture",
+       "contract_version": "mechevidence.evaluate.v2",
+       "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+       "model_config": {
+        "endpoint_id": "deepseek-public",
+        "max_tokens": 4096,
+        "model": "deepseek-v4-pro",
+        "provider": "deepseek",
+        "temperature": 0,
+        "thinking": false
+       },
+       "ordering_rule": "request_order",
+       "prompts": {
+        "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+        "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+       },
+       "rules_version": "mechevidence.aggregate.v1",
+       "service": "mechevidence"
+      },
+      "gaps": [],
+      "independence": {
+       "distinct_source_groups": 1,
+       "note": "来源去重不等于确认队列或实验相互独立。"
+      },
+      "joins": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "from": "C1",
+        "id": "J1",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "A produces E through M",
+        "to": "C2",
+        "verdict": "supported"
+       }
+      ],
+      "llm_calls": [
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+          "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "decompose",
+        "usage": {}
+       },
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+          "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "review",
+        "usage": {}
+       }
+      ],
+      "material_notes": [],
+      "materials": [
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+        "id": "E1",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 81,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       },
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+        "id": "E2",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 37,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       }
+      ],
+      "not_complete_because": [],
+      "observations": [
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O1",
+        "material": "E1",
+        "passage": "E1.1",
+        "quote": "A changed M",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C1"
+        ]
+       },
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O2",
+        "material": "E1",
+        "passage": "E1.2",
+        "quote": "Blocking M prevented the E response",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C2",
+         "J1"
+        ]
+       }
+      ],
+      "overall": "supported",
+      "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+      "reuse_key": "ae448ac86c4e8e4dec645729708ef41873ae79c6dff84eff73360989487f08e5",
+      "scope": {
+       "disease": {
+        "state": "not_required"
+       },
+       "species": {
+        "state": "stated",
+        "value": "mouse"
+       },
+       "system": {
+        "state": "stated",
+        "value": "S"
+       }
+      },
+      "unresolved_counterevidence": []
+     }
+    },
+    "result": {
+     "mismatch": [
+      {
+       "expected": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+       "field": "reuse_key",
+       "received": "ae448ac86c4e8e4dec645729708ef41873ae79c6dff84eff73360989487f08e5"
+      }
+     ],
+     "reason": "receipt_mismatch",
+     "status": "failed"
+    }
+   },
+   "receipt": {
+    "assessability": {
+     "limitations": [
+      "摘要报告的实验缺少完整方法和结果细节。"
+     ],
+     "status": "limited"
+    },
+    "audit_complete": true,
+    "claims": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C1",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O1"
+      ],
+      "text": "A changes M",
+      "verdict": "supported"
+     },
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C2",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "M is necessary for E",
+      "verdict": "supported"
+     }
+    ],
+    "complete": true,
+    "conflicts": [],
+    "contract_version": "mechevidence.evaluate.v2",
+    "evaluator": {
+     "batch_size": 3,
+     "code_version": "fixture",
+     "contract_version": "mechevidence.evaluate.v2",
+     "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+     "model_config": {
+      "endpoint_id": "deepseek-public",
+      "max_tokens": 4096,
+      "model": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "temperature": 0,
+      "thinking": false
+     },
+     "ordering_rule": "request_order",
+     "prompts": {
+      "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+      "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+     },
+     "rules_version": "mechevidence.aggregate.v1",
+     "service": "mechevidence"
+    },
+    "gaps": [],
+    "independence": {
+     "distinct_source_groups": 1,
+     "note": "来源去重不等于确认队列或实验相互独立。"
+    },
+    "joins": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "from": "C1",
+      "id": "J1",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "A produces E through M",
+      "to": "C2",
+      "verdict": "supported"
+     }
+    ],
+    "llm_calls": [
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+        "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "decompose",
+      "usage": {}
+     },
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+        "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "review",
+      "usage": {}
+     }
+    ],
+    "material_notes": [],
+    "materials": [
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+      "id": "E1",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     },
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+      "id": "E2",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 37,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     }
+    ],
+    "not_complete_because": [],
+    "observations": [
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O1",
+      "material": "E1",
+      "passage": "E1.1",
+      "quote": "A changed M",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C1"
+      ]
+     },
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O2",
+      "material": "E1",
+      "passage": "E1.2",
+      "quote": "Blocking M prevented the E response",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C2",
+       "J1"
+      ]
+     }
+    ],
+    "overall": "supported",
+    "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+    "reuse_key": "ae448ac86c4e8e4dec645729708ef41873ae79c6dff84eff73360989487f08e5",
+    "scope": {
+     "disease": {
+      "state": "not_required"
+     },
+     "species": {
+      "state": "stated",
+      "value": "mouse"
+     },
+     "system": {
+      "state": "stated",
+      "value": "S"
+     }
+    },
+    "unresolved_counterevidence": []
+   }
+  },
+  {
+   "name": "binding_echo_swapped",
+   "outcome": {
+    "rejected": {
+     "mismatch": [
+      {
+       "expected": [
+        [
+         "E1",
+         "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2"
+        ],
+        [
+         "E2",
+         "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837"
+        ]
+       ],
+       "field": "materials",
+       "received": [
+        [
+         "E2",
+         "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837"
+        ],
+        [
+         "E1",
+         "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2"
+        ]
+       ]
+      }
+     ],
+     "response": {
+      "assessability": {
+       "limitations": [
+        "摘要报告的实验缺少完整方法和结果细节。"
+       ],
+       "status": "limited"
+      },
+      "audit_complete": true,
+      "claims": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C1",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O1"
+        ],
+        "text": "A changes M",
+        "verdict": "supported"
+       },
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C2",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "M is necessary for E",
+        "verdict": "supported"
+       }
+      ],
+      "complete": true,
+      "conflicts": [],
+      "contract_version": "mechevidence.evaluate.v2",
+      "evaluator": {
+       "batch_size": 3,
+       "code_version": "fixture",
+       "contract_version": "mechevidence.evaluate.v2",
+       "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+       "model_config": {
+        "endpoint_id": "deepseek-public",
+        "max_tokens": 4096,
+        "model": "deepseek-v4-pro",
+        "provider": "deepseek",
+        "temperature": 0,
+        "thinking": false
+       },
+       "ordering_rule": "request_order",
+       "prompts": {
+        "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+        "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+       },
+       "rules_version": "mechevidence.aggregate.v1",
+       "service": "mechevidence"
+      },
+      "gaps": [],
+      "independence": {
+       "distinct_source_groups": 1,
+       "note": "来源去重不等于确认队列或实验相互独立。"
+      },
+      "joins": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "from": "C1",
+        "id": "J1",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "A produces E through M",
+        "to": "C2",
+        "verdict": "supported"
+       }
+      ],
+      "llm_calls": [
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+          "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "decompose",
+        "usage": {}
+       },
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+          "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "review",
+        "usage": {}
+       }
+      ],
+      "material_notes": [],
+      "materials": [
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+        "id": "E2",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 37,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       },
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+        "id": "E1",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 81,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       }
+      ],
+      "not_complete_because": [],
+      "observations": [
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O1",
+        "material": "E1",
+        "passage": "E1.1",
+        "quote": "A changed M",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C1"
+        ]
+       },
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O2",
+        "material": "E1",
+        "passage": "E1.2",
+        "quote": "Blocking M prevented the E response",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C2",
+         "J1"
+        ]
+       }
+      ],
+      "overall": "supported",
+      "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+      "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+      "scope": {
+       "disease": {
+        "state": "not_required"
+       },
+       "species": {
+        "state": "stated",
+        "value": "mouse"
+       },
+       "system": {
+        "state": "stated",
+        "value": "S"
+       }
+      },
+      "unresolved_counterevidence": []
+     }
+    },
+    "result": {
+     "mismatch": [
+      {
+       "expected": [
+        [
+         "E1",
+         "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2"
+        ],
+        [
+         "E2",
+         "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837"
+        ]
+       ],
+       "field": "materials",
+       "received": [
+        [
+         "E2",
+         "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837"
+        ],
+        [
+         "E1",
+         "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2"
+        ]
+       ]
+      }
+     ],
+     "reason": "receipt_mismatch",
+     "status": "failed"
+    }
+   },
+   "receipt": {
+    "assessability": {
+     "limitations": [
+      "摘要报告的实验缺少完整方法和结果细节。"
+     ],
+     "status": "limited"
+    },
+    "audit_complete": true,
+    "claims": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C1",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O1"
+      ],
+      "text": "A changes M",
+      "verdict": "supported"
+     },
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C2",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "M is necessary for E",
+      "verdict": "supported"
+     }
+    ],
+    "complete": true,
+    "conflicts": [],
+    "contract_version": "mechevidence.evaluate.v2",
+    "evaluator": {
+     "batch_size": 3,
+     "code_version": "fixture",
+     "contract_version": "mechevidence.evaluate.v2",
+     "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+     "model_config": {
+      "endpoint_id": "deepseek-public",
+      "max_tokens": 4096,
+      "model": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "temperature": 0,
+      "thinking": false
+     },
+     "ordering_rule": "request_order",
+     "prompts": {
+      "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+      "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+     },
+     "rules_version": "mechevidence.aggregate.v1",
+     "service": "mechevidence"
+    },
+    "gaps": [],
+    "independence": {
+     "distinct_source_groups": 1,
+     "note": "来源去重不等于确认队列或实验相互独立。"
+    },
+    "joins": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "from": "C1",
+      "id": "J1",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "A produces E through M",
+      "to": "C2",
+      "verdict": "supported"
+     }
+    ],
+    "llm_calls": [
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+        "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "decompose",
+      "usage": {}
+     },
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+        "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "review",
+      "usage": {}
+     }
+    ],
+    "material_notes": [],
+    "materials": [
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+      "id": "E2",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 37,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     },
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+      "id": "E1",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     }
+    ],
+    "not_complete_because": [],
+    "observations": [
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O1",
+      "material": "E1",
+      "passage": "E1.1",
+      "quote": "A changed M",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C1"
+      ]
+     },
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O2",
+      "material": "E1",
+      "passage": "E1.2",
+      "quote": "Blocking M prevented the E response",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C2",
+       "J1"
+      ]
+     }
+    ],
+    "overall": "supported",
+    "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+    "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+    "scope": {
+     "disease": {
+      "state": "not_required"
+     },
+     "species": {
+      "state": "stated",
+      "value": "mouse"
+     },
+     "system": {
+      "state": "stated",
+      "value": "S"
+     }
+    },
+    "unresolved_counterevidence": []
+   }
+  },
+  {
+   "name": "binding_echo_other_text",
+   "outcome": {
+    "rejected": {
+     "mismatch": [
+      {
+       "expected": [
+        [
+         "E1",
+         "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2"
+        ],
+        [
+         "E2",
+         "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837"
+        ]
+       ],
+       "field": "materials",
+       "received": [
+        [
+         "E1",
+         "ed886d735b3ed7db324ddfcfa30187c3fac4182f623a79e2b8c54ebf92a38a3a"
+        ],
+        [
+         "E2",
+         "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837"
+        ]
+       ]
+      }
+     ],
+     "response": {
+      "assessability": {
+       "limitations": [
+        "摘要报告的实验缺少完整方法和结果细节。"
+       ],
+       "status": "limited"
+      },
+      "audit_complete": true,
+      "claims": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C1",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O1"
+        ],
+        "text": "A changes M",
+        "verdict": "supported"
+       },
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C2",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "M is necessary for E",
+        "verdict": "supported"
+       }
+      ],
+      "complete": true,
+      "conflicts": [],
+      "contract_version": "mechevidence.evaluate.v2",
+      "evaluator": {
+       "batch_size": 3,
+       "code_version": "fixture",
+       "contract_version": "mechevidence.evaluate.v2",
+       "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+       "model_config": {
+        "endpoint_id": "deepseek-public",
+        "max_tokens": 4096,
+        "model": "deepseek-v4-pro",
+        "provider": "deepseek",
+        "temperature": 0,
+        "thinking": false
+       },
+       "ordering_rule": "request_order",
+       "prompts": {
+        "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+        "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+       },
+       "rules_version": "mechevidence.aggregate.v1",
+       "service": "mechevidence"
+      },
+      "gaps": [],
+      "independence": {
+       "distinct_source_groups": 1,
+       "note": "来源去重不等于确认队列或实验相互独立。"
+      },
+      "joins": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "from": "C1",
+        "id": "J1",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "A produces E through M",
+        "to": "C2",
+        "verdict": "supported"
+       }
+      ],
+      "llm_calls": [
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+          "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "decompose",
+        "usage": {}
+       },
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+          "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "review",
+        "usage": {}
+       }
+      ],
+      "material_notes": [],
+      "materials": [
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "ed886d735b3ed7db324ddfcfa30187c3fac4182f623a79e2b8c54ebf92a38a3a",
+        "id": "E1",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 81,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       },
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+        "id": "E2",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 37,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       }
+      ],
+      "not_complete_because": [],
+      "observations": [
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O1",
+        "material": "E1",
+        "passage": "E1.1",
+        "quote": "A changed M",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C1"
+        ]
+       },
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O2",
+        "material": "E1",
+        "passage": "E1.2",
+        "quote": "Blocking M prevented the E response",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C2",
+         "J1"
+        ]
+       }
+      ],
+      "overall": "supported",
+      "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+      "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+      "scope": {
+       "disease": {
+        "state": "not_required"
+       },
+       "species": {
+        "state": "stated",
+        "value": "mouse"
+       },
+       "system": {
+        "state": "stated",
+        "value": "S"
+       }
+      },
+      "unresolved_counterevidence": []
+     }
+    },
+    "result": {
+     "mismatch": [
+      {
+       "expected": [
+        [
+         "E1",
+         "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2"
+        ],
+        [
+         "E2",
+         "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837"
+        ]
+       ],
+       "field": "materials",
+       "received": [
+        [
+         "E1",
+         "ed886d735b3ed7db324ddfcfa30187c3fac4182f623a79e2b8c54ebf92a38a3a"
+        ],
+        [
+         "E2",
+         "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837"
+        ]
+       ]
+      }
+     ],
+     "reason": "receipt_mismatch",
+     "status": "failed"
+    }
+   },
+   "receipt": {
+    "assessability": {
+     "limitations": [
+      "摘要报告的实验缺少完整方法和结果细节。"
+     ],
+     "status": "limited"
+    },
+    "audit_complete": true,
+    "claims": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C1",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O1"
+      ],
+      "text": "A changes M",
+      "verdict": "supported"
+     },
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C2",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "M is necessary for E",
+      "verdict": "supported"
+     }
+    ],
+    "complete": true,
+    "conflicts": [],
+    "contract_version": "mechevidence.evaluate.v2",
+    "evaluator": {
+     "batch_size": 3,
+     "code_version": "fixture",
+     "contract_version": "mechevidence.evaluate.v2",
+     "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+     "model_config": {
+      "endpoint_id": "deepseek-public",
+      "max_tokens": 4096,
+      "model": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "temperature": 0,
+      "thinking": false
+     },
+     "ordering_rule": "request_order",
+     "prompts": {
+      "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+      "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+     },
+     "rules_version": "mechevidence.aggregate.v1",
+     "service": "mechevidence"
+    },
+    "gaps": [],
+    "independence": {
+     "distinct_source_groups": 1,
+     "note": "来源去重不等于确认队列或实验相互独立。"
+    },
+    "joins": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "from": "C1",
+      "id": "J1",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "A produces E through M",
+      "to": "C2",
+      "verdict": "supported"
+     }
+    ],
+    "llm_calls": [
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+        "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "decompose",
+      "usage": {}
+     },
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+        "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "review",
+      "usage": {}
+     }
+    ],
+    "material_notes": [],
+    "materials": [
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "ed886d735b3ed7db324ddfcfa30187c3fac4182f623a79e2b8c54ebf92a38a3a",
+      "id": "E1",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     },
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+      "id": "E2",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 37,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     }
+    ],
+    "not_complete_because": [],
+    "observations": [
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O1",
+      "material": "E1",
+      "passage": "E1.1",
+      "quote": "A changed M",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C1"
+      ]
+     },
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O2",
+      "material": "E1",
+      "passage": "E1.2",
+      "quote": "Blocking M prevented the E response",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C2",
+       "J1"
+      ]
+     }
+    ],
+    "overall": "supported",
+    "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+    "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+    "scope": {
+     "disease": {
+      "state": "not_required"
+     },
+     "species": {
+      "state": "stated",
+      "value": "mouse"
+     },
+     "system": {
+      "state": "stated",
+      "value": "S"
+     }
+    },
+    "unresolved_counterevidence": []
+   }
+  },
+  {
+   "name": "evaluator_id_differs",
+   "outcome": {
+    "rejected": {
+     "mismatch": [
+      {
+       "expected": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+       "field": "evaluator.evaluator_id",
+       "received": "b403d507d6ceacbeebd25dfc4961635f711434865693e7af0ee4a2a18eee52ba"
+      },
+      {
+       "expected": "b403d507d6ceacbeebd25dfc4961635f711434865693e7af0ee4a2a18eee52ba",
+       "field": "evaluator.evaluator_id(recomputed from its fields)",
+       "received": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a"
+      },
+      {
+       "expected": "54440b95ab0e1c9d1c95a39227bd25d20b1241e005004ded19d3877c1cf3f4b5",
+       "field": "reuse_key",
+       "received": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf"
+      }
+     ],
+     "response": {
+      "assessability": {
+       "limitations": [
+        "摘要报告的实验缺少完整方法和结果细节。"
+       ],
+       "status": "limited"
+      },
+      "audit_complete": true,
+      "claims": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C1",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O1"
+        ],
+        "text": "A changes M",
+        "verdict": "supported"
+       },
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C2",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "M is necessary for E",
+        "verdict": "supported"
+       }
+      ],
+      "complete": true,
+      "conflicts": [],
+      "contract_version": "mechevidence.evaluate.v2",
+      "evaluator": {
+       "batch_size": 3,
+       "code_version": "fixture",
+       "contract_version": "mechevidence.evaluate.v2",
+       "evaluator_id": "b403d507d6ceacbeebd25dfc4961635f711434865693e7af0ee4a2a18eee52ba",
+       "model_config": {
+        "endpoint_id": "deepseek-public",
+        "max_tokens": 4096,
+        "model": "deepseek-v4-pro",
+        "provider": "deepseek",
+        "temperature": 0,
+        "thinking": false
+       },
+       "ordering_rule": "request_order",
+       "prompts": {
+        "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+        "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+       },
+       "rules_version": "mechevidence.aggregate.v1",
+       "service": "mechevidence"
+      },
+      "gaps": [],
+      "independence": {
+       "distinct_source_groups": 1,
+       "note": "来源去重不等于确认队列或实验相互独立。"
+      },
+      "joins": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "from": "C1",
+        "id": "J1",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "A produces E through M",
+        "to": "C2",
+        "verdict": "supported"
+       }
+      ],
+      "llm_calls": [
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+          "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "decompose",
+        "usage": {}
+       },
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+          "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "review",
+        "usage": {}
+       }
+      ],
+      "material_notes": [],
+      "materials": [
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+        "id": "E1",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 81,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       },
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+        "id": "E2",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 37,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       }
+      ],
+      "not_complete_because": [],
+      "observations": [
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O1",
+        "material": "E1",
+        "passage": "E1.1",
+        "quote": "A changed M",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C1"
+        ]
+       },
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O2",
+        "material": "E1",
+        "passage": "E1.2",
+        "quote": "Blocking M prevented the E response",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C2",
+         "J1"
+        ]
+       }
+      ],
+      "overall": "supported",
+      "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+      "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+      "scope": {
+       "disease": {
+        "state": "not_required"
+       },
+       "species": {
+        "state": "stated",
+        "value": "mouse"
+       },
+       "system": {
+        "state": "stated",
+        "value": "S"
+       }
+      },
+      "unresolved_counterevidence": []
+     }
+    },
+    "result": {
+     "mismatch": [
+      {
+       "expected": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+       "field": "evaluator.evaluator_id",
+       "received": "b403d507d6ceacbeebd25dfc4961635f711434865693e7af0ee4a2a18eee52ba"
+      },
+      {
+       "expected": "b403d507d6ceacbeebd25dfc4961635f711434865693e7af0ee4a2a18eee52ba",
+       "field": "evaluator.evaluator_id(recomputed from its fields)",
+       "received": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a"
+      },
+      {
+       "expected": "54440b95ab0e1c9d1c95a39227bd25d20b1241e005004ded19d3877c1cf3f4b5",
+       "field": "reuse_key",
+       "received": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf"
+      }
+     ],
+     "reason": "receipt_mismatch",
+     "status": "failed"
+    }
+   },
+   "receipt": {
+    "assessability": {
+     "limitations": [
+      "摘要报告的实验缺少完整方法和结果细节。"
+     ],
+     "status": "limited"
+    },
+    "audit_complete": true,
+    "claims": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C1",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O1"
+      ],
+      "text": "A changes M",
+      "verdict": "supported"
+     },
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C2",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "M is necessary for E",
+      "verdict": "supported"
+     }
+    ],
+    "complete": true,
+    "conflicts": [],
+    "contract_version": "mechevidence.evaluate.v2",
+    "evaluator": {
+     "batch_size": 3,
+     "code_version": "fixture",
+     "contract_version": "mechevidence.evaluate.v2",
+     "evaluator_id": "b403d507d6ceacbeebd25dfc4961635f711434865693e7af0ee4a2a18eee52ba",
+     "model_config": {
+      "endpoint_id": "deepseek-public",
+      "max_tokens": 4096,
+      "model": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "temperature": 0,
+      "thinking": false
+     },
+     "ordering_rule": "request_order",
+     "prompts": {
+      "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+      "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+     },
+     "rules_version": "mechevidence.aggregate.v1",
+     "service": "mechevidence"
+    },
+    "gaps": [],
+    "independence": {
+     "distinct_source_groups": 1,
+     "note": "来源去重不等于确认队列或实验相互独立。"
+    },
+    "joins": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "from": "C1",
+      "id": "J1",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "A produces E through M",
+      "to": "C2",
+      "verdict": "supported"
+     }
+    ],
+    "llm_calls": [
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+        "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "decompose",
+      "usage": {}
+     },
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+        "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "review",
+      "usage": {}
+     }
+    ],
+    "material_notes": [],
+    "materials": [
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+      "id": "E1",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     },
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+      "id": "E2",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 37,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     }
+    ],
+    "not_complete_because": [],
+    "observations": [
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O1",
+      "material": "E1",
+      "passage": "E1.1",
+      "quote": "A changed M",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C1"
+      ]
+     },
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O2",
+      "material": "E1",
+      "passage": "E1.2",
+      "quote": "Blocking M prevented the E response",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C2",
+       "J1"
+      ]
+     }
+    ],
+    "overall": "supported",
+    "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+    "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+    "scope": {
+     "disease": {
+      "state": "not_required"
+     },
+     "species": {
+      "state": "stated",
+      "value": "mouse"
+     },
+     "system": {
+      "state": "stated",
+      "value": "S"
+     }
+    },
+    "unresolved_counterevidence": []
+   }
+  },
+  {
+   "name": "evaluator_fields_edited_id_kept",
+   "outcome": {
+    "rejected": {
+     "mismatch": [
+      {
+       "expected": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+       "field": "evaluator.evaluator_id(recomputed from its fields)",
+       "received": "3c5da6c361500e8f933159627eceef0d97334bfb7aed103a0078f67396714178"
+      }
+     ],
+     "response": {
+      "assessability": {
+       "limitations": [
+        "摘要报告的实验缺少完整方法和结果细节。"
+       ],
+       "status": "limited"
+      },
+      "audit_complete": true,
+      "claims": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C1",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O1"
+        ],
+        "text": "A changes M",
+        "verdict": "supported"
+       },
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C2",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "M is necessary for E",
+        "verdict": "supported"
+       }
+      ],
+      "complete": true,
+      "conflicts": [],
+      "contract_version": "mechevidence.evaluate.v2",
+      "evaluator": {
+       "batch_size": 3,
+       "code_version": "fixture",
+       "contract_version": "mechevidence.evaluate.v2",
+       "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+       "model_config": {
+        "endpoint_id": "deepseek-public",
+        "max_tokens": 4096,
+        "model": "other-model",
+        "provider": "deepseek",
+        "temperature": 0,
+        "thinking": false
+       },
+       "ordering_rule": "request_order",
+       "prompts": {
+        "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+        "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+       },
+       "rules_version": "mechevidence.aggregate.v1",
+       "service": "mechevidence"
+      },
+      "gaps": [],
+      "independence": {
+       "distinct_source_groups": 1,
+       "note": "来源去重不等于确认队列或实验相互独立。"
+      },
+      "joins": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "from": "C1",
+        "id": "J1",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "A produces E through M",
+        "to": "C2",
+        "verdict": "supported"
+       }
+      ],
+      "llm_calls": [
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+          "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "decompose",
+        "usage": {}
+       },
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+          "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "review",
+        "usage": {}
+       }
+      ],
+      "material_notes": [],
+      "materials": [
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+        "id": "E1",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 81,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       },
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+        "id": "E2",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 37,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       }
+      ],
+      "not_complete_because": [],
+      "observations": [
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O1",
+        "material": "E1",
+        "passage": "E1.1",
+        "quote": "A changed M",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C1"
+        ]
+       },
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O2",
+        "material": "E1",
+        "passage": "E1.2",
+        "quote": "Blocking M prevented the E response",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C2",
+         "J1"
+        ]
+       }
+      ],
+      "overall": "supported",
+      "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+      "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+      "scope": {
+       "disease": {
+        "state": "not_required"
+       },
+       "species": {
+        "state": "stated",
+        "value": "mouse"
+       },
+       "system": {
+        "state": "stated",
+        "value": "S"
+       }
+      },
+      "unresolved_counterevidence": []
+     }
+    },
+    "result": {
+     "mismatch": [
+      {
+       "expected": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+       "field": "evaluator.evaluator_id(recomputed from its fields)",
+       "received": "3c5da6c361500e8f933159627eceef0d97334bfb7aed103a0078f67396714178"
+      }
+     ],
+     "reason": "receipt_mismatch",
+     "status": "failed"
+    }
+   },
+   "receipt": {
+    "assessability": {
+     "limitations": [
+      "摘要报告的实验缺少完整方法和结果细节。"
+     ],
+     "status": "limited"
+    },
+    "audit_complete": true,
+    "claims": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C1",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O1"
+      ],
+      "text": "A changes M",
+      "verdict": "supported"
+     },
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C2",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "M is necessary for E",
+      "verdict": "supported"
+     }
+    ],
+    "complete": true,
+    "conflicts": [],
+    "contract_version": "mechevidence.evaluate.v2",
+    "evaluator": {
+     "batch_size": 3,
+     "code_version": "fixture",
+     "contract_version": "mechevidence.evaluate.v2",
+     "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+     "model_config": {
+      "endpoint_id": "deepseek-public",
+      "max_tokens": 4096,
+      "model": "other-model",
+      "provider": "deepseek",
+      "temperature": 0,
+      "thinking": false
+     },
+     "ordering_rule": "request_order",
+     "prompts": {
+      "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+      "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+     },
+     "rules_version": "mechevidence.aggregate.v1",
+     "service": "mechevidence"
+    },
+    "gaps": [],
+    "independence": {
+     "distinct_source_groups": 1,
+     "note": "来源去重不等于确认队列或实验相互独立。"
+    },
+    "joins": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "from": "C1",
+      "id": "J1",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "A produces E through M",
+      "to": "C2",
+      "verdict": "supported"
+     }
+    ],
+    "llm_calls": [
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+        "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "decompose",
+      "usage": {}
+     },
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+        "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "review",
+      "usage": {}
+     }
+    ],
+    "material_notes": [],
+    "materials": [
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+      "id": "E1",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     },
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+      "id": "E2",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 37,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     }
+    ],
+    "not_complete_because": [],
+    "observations": [
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O1",
+      "material": "E1",
+      "passage": "E1.1",
+      "quote": "A changed M",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C1"
+      ]
+     },
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O2",
+      "material": "E1",
+      "passage": "E1.2",
+      "quote": "Blocking M prevented the E response",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C2",
+       "J1"
+      ]
+     }
+    ],
+    "overall": "supported",
+    "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+    "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+    "scope": {
+     "disease": {
+      "state": "not_required"
+     },
+     "species": {
+      "state": "stated",
+      "value": "mouse"
+     },
+     "system": {
+      "state": "stated",
+      "value": "S"
+     }
+    },
+    "unresolved_counterevidence": []
+   }
+  },
+  {
+   "name": "not_complete",
+   "outcome": {
+    "rejected": null,
+    "result": {
+     "cacheable": false,
+     "response": {
+      "assessability": {
+       "limitations": [
+        "摘要报告的实验缺少完整方法和结果细节。"
+       ],
+       "status": "limited"
+      },
+      "audit_complete": true,
+      "claims": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C1",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O1"
+        ],
+        "text": "A changes M",
+        "verdict": "supported"
+       },
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C2",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "M is necessary for E",
+        "verdict": "supported"
+       }
+      ],
+      "complete": false,
+      "conflicts": [],
+      "contract_version": "mechevidence.evaluate.v2",
+      "evaluator": {
+       "batch_size": 3,
+       "code_version": "fixture",
+       "contract_version": "mechevidence.evaluate.v2",
+       "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+       "model_config": {
+        "endpoint_id": "deepseek-public",
+        "max_tokens": 4096,
+        "model": "deepseek-v4-pro",
+        "provider": "deepseek",
+        "temperature": 0,
+        "thinking": false
+       },
+       "ordering_rule": "request_order",
+       "prompts": {
+        "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+        "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+       },
+       "rules_version": "mechevidence.aggregate.v1",
+       "service": "mechevidence"
+      },
+      "gaps": [],
+      "independence": {
+       "distinct_source_groups": 1,
+       "note": "来源去重不等于确认队列或实验相互独立。"
+      },
+      "joins": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "from": "C1",
+        "id": "J1",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "A produces E through M",
+        "to": "C2",
+        "verdict": "supported"
+       }
+      ],
+      "llm_calls": [
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+          "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "decompose",
+        "usage": {}
+       },
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+          "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "review",
+        "usage": {}
+       }
+      ],
+      "material_notes": [],
+      "materials": [
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+        "id": "E1",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 81,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       },
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+        "id": "E2",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 37,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       }
+      ],
+      "not_complete_because": [
+       "pending_budget"
+      ],
+      "observations": [
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O1",
+        "material": "E1",
+        "passage": "E1.1",
+        "quote": "A changed M",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C1"
+        ]
+       },
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O2",
+        "material": "E1",
+        "passage": "E1.2",
+        "quote": "Blocking M prevented the E response",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C2",
+         "J1"
+        ]
+       }
+      ],
+      "overall": "supported",
+      "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+      "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+      "scope": {
+       "disease": {
+        "state": "not_required"
+       },
+       "species": {
+        "state": "stated",
+        "value": "mouse"
+       },
+       "system": {
+        "state": "stated",
+        "value": "S"
+       }
+      },
+      "unresolved_counterevidence": []
+     },
+     "status": "completed"
+    }
+   },
+   "receipt": {
+    "assessability": {
+     "limitations": [
+      "摘要报告的实验缺少完整方法和结果细节。"
+     ],
+     "status": "limited"
+    },
+    "audit_complete": true,
+    "claims": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C1",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O1"
+      ],
+      "text": "A changes M",
+      "verdict": "supported"
+     },
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C2",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "M is necessary for E",
+      "verdict": "supported"
+     }
+    ],
+    "complete": false,
+    "conflicts": [],
+    "contract_version": "mechevidence.evaluate.v2",
+    "evaluator": {
+     "batch_size": 3,
+     "code_version": "fixture",
+     "contract_version": "mechevidence.evaluate.v2",
+     "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+     "model_config": {
+      "endpoint_id": "deepseek-public",
+      "max_tokens": 4096,
+      "model": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "temperature": 0,
+      "thinking": false
+     },
+     "ordering_rule": "request_order",
+     "prompts": {
+      "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+      "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+     },
+     "rules_version": "mechevidence.aggregate.v1",
+     "service": "mechevidence"
+    },
+    "gaps": [],
+    "independence": {
+     "distinct_source_groups": 1,
+     "note": "来源去重不等于确认队列或实验相互独立。"
+    },
+    "joins": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "from": "C1",
+      "id": "J1",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "A produces E through M",
+      "to": "C2",
+      "verdict": "supported"
+     }
+    ],
+    "llm_calls": [
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+        "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "decompose",
+      "usage": {}
+     },
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+        "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "review",
+      "usage": {}
+     }
+    ],
+    "material_notes": [],
+    "materials": [
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+      "id": "E1",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     },
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+      "id": "E2",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 37,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     }
+    ],
+    "not_complete_because": [
+     "pending_budget"
+    ],
+    "observations": [
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O1",
+      "material": "E1",
+      "passage": "E1.1",
+      "quote": "A changed M",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C1"
+      ]
+     },
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O2",
+      "material": "E1",
+      "passage": "E1.2",
+      "quote": "Blocking M prevented the E response",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C2",
+       "J1"
+      ]
+     }
+    ],
+    "overall": "supported",
+    "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+    "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+    "scope": {
+     "disease": {
+      "state": "not_required"
+     },
+     "species": {
+      "state": "stated",
+      "value": "mouse"
+     },
+     "system": {
+      "state": "stated",
+      "value": "S"
+     }
+    },
+    "unresolved_counterevidence": []
+   }
+  },
+  {
+   "name": "audit_incomplete",
+   "outcome": {
+    "rejected": {
+     "mismatch": [],
+     "response": {
+      "assessability": {
+       "limitations": [
+        "摘要报告的实验缺少完整方法和结果细节。"
+       ],
+       "status": "limited"
+      },
+      "audit_complete": false,
+      "claims": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C1",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O1"
+        ],
+        "text": "A changes M",
+        "verdict": "supported"
+       },
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C2",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "M is necessary for E",
+        "verdict": "supported"
+       }
+      ],
+      "complete": true,
+      "conflicts": [],
+      "contract_version": "mechevidence.evaluate.v2",
+      "evaluator": {
+       "batch_size": 3,
+       "code_version": "fixture",
+       "contract_version": "mechevidence.evaluate.v2",
+       "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+       "model_config": {
+        "endpoint_id": "deepseek-public",
+        "max_tokens": 4096,
+        "model": "deepseek-v4-pro",
+        "provider": "deepseek",
+        "temperature": 0,
+        "thinking": false
+       },
+       "ordering_rule": "request_order",
+       "prompts": {
+        "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+        "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+       },
+       "rules_version": "mechevidence.aggregate.v1",
+       "service": "mechevidence"
+      },
+      "gaps": [],
+      "independence": {
+       "distinct_source_groups": 1,
+       "note": "来源去重不等于确认队列或实验相互独立。"
+      },
+      "joins": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "from": "C1",
+        "id": "J1",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "A produces E through M",
+        "to": "C2",
+        "verdict": "supported"
+       }
+      ],
+      "llm_calls": [
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+          "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "decompose",
+        "usage": {}
+       },
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+          "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "review",
+        "usage": {}
+       }
+      ],
+      "material_notes": [],
+      "materials": [
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+        "id": "E1",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 81,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       },
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+        "id": "E2",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 37,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       }
+      ],
+      "not_complete_because": [],
+      "observations": [
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O1",
+        "material": "E1",
+        "passage": "E1.1",
+        "quote": "A changed M",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C1"
+        ]
+       },
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O2",
+        "material": "E1",
+        "passage": "E1.2",
+        "quote": "Blocking M prevented the E response",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C2",
+         "J1"
+        ]
+       }
+      ],
+      "overall": "supported",
+      "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+      "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+      "scope": {
+       "disease": {
+        "state": "not_required"
+       },
+       "species": {
+        "state": "stated",
+        "value": "mouse"
+       },
+       "system": {
+        "state": "stated",
+        "value": "S"
+       }
+      },
+      "unresolved_counterevidence": []
+     }
+    },
+    "result": {
+     "reason": "audit_incomplete",
+     "status": "failed"
+    }
+   },
+   "receipt": {
+    "assessability": {
+     "limitations": [
+      "摘要报告的实验缺少完整方法和结果细节。"
+     ],
+     "status": "limited"
+    },
+    "audit_complete": false,
+    "claims": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C1",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O1"
+      ],
+      "text": "A changes M",
+      "verdict": "supported"
+     },
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C2",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "M is necessary for E",
+      "verdict": "supported"
+     }
+    ],
+    "complete": true,
+    "conflicts": [],
+    "contract_version": "mechevidence.evaluate.v2",
+    "evaluator": {
+     "batch_size": 3,
+     "code_version": "fixture",
+     "contract_version": "mechevidence.evaluate.v2",
+     "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+     "model_config": {
+      "endpoint_id": "deepseek-public",
+      "max_tokens": 4096,
+      "model": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "temperature": 0,
+      "thinking": false
+     },
+     "ordering_rule": "request_order",
+     "prompts": {
+      "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+      "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+     },
+     "rules_version": "mechevidence.aggregate.v1",
+     "service": "mechevidence"
+    },
+    "gaps": [],
+    "independence": {
+     "distinct_source_groups": 1,
+     "note": "来源去重不等于确认队列或实验相互独立。"
+    },
+    "joins": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "from": "C1",
+      "id": "J1",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "A produces E through M",
+      "to": "C2",
+      "verdict": "supported"
+     }
+    ],
+    "llm_calls": [
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+        "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "decompose",
+      "usage": {}
+     },
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+        "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "review",
+      "usage": {}
+     }
+    ],
+    "material_notes": [],
+    "materials": [
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+      "id": "E1",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     },
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+      "id": "E2",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 37,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     }
+    ],
+    "not_complete_because": [],
+    "observations": [
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O1",
+      "material": "E1",
+      "passage": "E1.1",
+      "quote": "A changed M",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C1"
+      ]
+     },
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O2",
+      "material": "E1",
+      "passage": "E1.2",
+      "quote": "Blocking M prevented the E response",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C2",
+       "J1"
+      ]
+     }
+    ],
+    "overall": "supported",
+    "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+    "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+    "scope": {
+     "disease": {
+      "state": "not_required"
+     },
+     "species": {
+      "state": "stated",
+      "value": "mouse"
+     },
+     "system": {
+      "state": "stated",
+      "value": "S"
+     }
+    },
+    "unresolved_counterevidence": []
+   }
+  },
+  {
+   "name": "truncated_answer",
+   "outcome": {
+    "rejected": {
+     "mismatch": [],
+     "response": {
+      "assessability": {
+       "limitations": [
+        "摘要报告的实验缺少完整方法和结果细节。"
+       ],
+       "status": "limited"
+      },
+      "audit_complete": true,
+      "claims": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C1",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O1"
+        ],
+        "text": "A changes M",
+        "verdict": "supported"
+       },
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "id": "C2",
+        "kind": "causal",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "M is necessary for E",
+        "verdict": "supported"
+       }
+      ],
+      "complete": true,
+      "conflicts": [],
+      "contract_version": "mechevidence.evaluate.v2",
+      "evaluator": {
+       "batch_size": 3,
+       "code_version": "fixture",
+       "contract_version": "mechevidence.evaluate.v2",
+       "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+       "model_config": {
+        "endpoint_id": "deepseek-public",
+        "max_tokens": 4096,
+        "model": "deepseek-v4-pro",
+        "provider": "deepseek",
+        "temperature": 0,
+        "thinking": false
+       },
+       "ordering_rule": "request_order",
+       "prompts": {
+        "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+        "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+       },
+       "rules_version": "mechevidence.aggregate.v1",
+       "service": "mechevidence"
+      },
+      "gaps": [],
+      "independence": {
+       "distinct_source_groups": 1,
+       "note": "来源去重不等于确认队列或实验相互独立。"
+      },
+      "joins": [
+       {
+        "applicability_gaps": [],
+        "compatible": [],
+        "from": "C1",
+        "id": "J1",
+        "opposing": [],
+        "source_groups": [
+         "text:E1"
+        ],
+        "supporting": [
+         "O2"
+        ],
+        "text": "A produces E through M",
+        "to": "C2",
+        "verdict": "supported"
+       }
+      ],
+      "llm_calls": [
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+          "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+          "truncated": true
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "decompose",
+        "usage": {}
+       },
+       {
+        "error": null,
+        "finish_reason": "stop",
+        "model": "stub",
+        "outputs": [
+         {
+          "attempt": 1,
+          "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+          "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+          "truncated": false
+         }
+        ],
+        "requests": 1,
+        "seconds": 0,
+        "stage": "review",
+        "usage": {}
+       }
+      ],
+      "material_notes": [],
+      "materials": [
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+        "id": "E1",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 81,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       },
+       {
+        "binding_checked": "self_consistent",
+        "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+        "id": "E2",
+        "locators": [
+         {
+          "locators": [
+           {
+            "basis": "raw_json",
+            "end": 37,
+            "json_pointer": "/abstractText",
+            "start": 10
+           }
+          ],
+          "segment": 1
+         }
+        ],
+        "locators_returned": 1
+       }
+      ],
+      "not_complete_because": [],
+      "observations": [
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O1",
+        "material": "E1",
+        "passage": "E1.1",
+        "quote": "A changed M",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C1"
+        ]
+       },
+       {
+        "basis": "intervention",
+        "causal_evidence": true,
+        "causal_test": true,
+        "context": {
+         "disease": null,
+         "species": "mouse",
+         "system": "S"
+        },
+        "id": "O2",
+        "material": "E1",
+        "passage": "E1.2",
+        "quote": "Blocking M prevented the E response",
+        "relation": "supports",
+        "scope_match": {
+         "disease": "not_required",
+         "species": "matched",
+         "system": "matched"
+        },
+        "scope_status": "matched",
+        "source_group": "text:E1",
+        "targets": [
+         "C2",
+         "J1"
+        ]
+       }
+      ],
+      "overall": "supported",
+      "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+      "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+      "scope": {
+       "disease": {
+        "state": "not_required"
+       },
+       "species": {
+        "state": "stated",
+        "value": "mouse"
+       },
+       "system": {
+        "state": "stated",
+        "value": "S"
+       }
+      },
+      "unresolved_counterevidence": []
+     }
+    },
+    "result": {
+     "reason": "audit_incomplete",
+     "status": "failed"
+    }
+   },
+   "receipt": {
+    "assessability": {
+     "limitations": [
+      "摘要报告的实验缺少完整方法和结果细节。"
+     ],
+     "status": "limited"
+    },
+    "audit_complete": true,
+    "claims": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C1",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O1"
+      ],
+      "text": "A changes M",
+      "verdict": "supported"
+     },
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "id": "C2",
+      "kind": "causal",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "M is necessary for E",
+      "verdict": "supported"
+     }
+    ],
+    "complete": true,
+    "conflicts": [],
+    "contract_version": "mechevidence.evaluate.v2",
+    "evaluator": {
+     "batch_size": 3,
+     "code_version": "fixture",
+     "contract_version": "mechevidence.evaluate.v2",
+     "evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+     "model_config": {
+      "endpoint_id": "deepseek-public",
+      "max_tokens": 4096,
+      "model": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "temperature": 0,
+      "thinking": false
+     },
+     "ordering_rule": "request_order",
+     "prompts": {
+      "decompose_sha256": "b92ab54c9e40ec20e4beaf4edb6ee8b3d4f33a38916da42670c54dc288c97197",
+      "review_sha256": "4ca43f6c99be322cd88c269d166280e248c6cb7cdf102c8c6f9ee93d3e804044"
+     },
+     "rules_version": "mechevidence.aggregate.v1",
+     "service": "mechevidence"
+    },
+    "gaps": [],
+    "independence": {
+     "distinct_source_groups": 1,
+     "note": "来源去重不等于确认队列或实验相互独立。"
+    },
+    "joins": [
+     {
+      "applicability_gaps": [],
+      "compatible": [],
+      "from": "C1",
+      "id": "J1",
+      "opposing": [],
+      "source_groups": [
+       "text:E1"
+      ],
+      "supporting": [
+       "O2"
+      ],
+      "text": "A produces E through M",
+      "to": "C2",
+      "verdict": "supported"
+     }
+    ],
+    "llm_calls": [
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"claims\":[{\"text\":\"A changes M\",\"kind\":\"causal\"},{\"text\":\"M is necessary for E\",\"kind\":\"causal\"}],\"joins\":[{\"text\":\"A produces E through M\",\"from_claim\":1,\"to_claim\":2}]}",
+        "sha256": "57c7369ace1fbf62dbb5a393a54a236c479c5eb3bd4931f370047c5b8d8c29c8",
+        "truncated": true
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "decompose",
+      "usage": {}
+     },
+     {
+      "error": null,
+      "finish_reason": "stop",
+      "model": "stub",
+      "outputs": [
+       {
+        "attempt": 1,
+        "content": "{\"observations\":[{\"targets\":[\"C1\"],\"passage\":\"E1.1\",\"quote\":\"A changed M\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}},{\"targets\":[\"C2\",\"J1\"],\"passage\":\"E1.2\",\"quote\":\"Blocking M prevented the E response\",\"relation\":\"supports\",\"basis\":\"intervention\",\"causal_test\":true,\"context\":{\"species\":\"mouse\",\"system\":\"S\",\"disease\":null},\"scope_match\":{\"species\":\"matched\",\"system\":\"matched\",\"disease\":\"not_required\"}}]}",
+        "sha256": "877b4e1f787c931f1a6d87f1becf39908c895696ca295104026e4efb678fecd6",
+        "truncated": false
+       }
+      ],
+      "requests": 1,
+      "seconds": 0,
+      "stage": "review",
+      "usage": {}
+     }
+    ],
+    "material_notes": [],
+    "materials": [
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "f6d06c9e76fd3e5765bce9927122950109625be2376422b275ee7ca8f91aabe2",
+      "id": "E1",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 81,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     },
+     {
+      "binding_checked": "self_consistent",
+      "binding_sha256": "063d5c1e0e49189df6b163c96fec0df3c1586407f996a66faead552ea2cb2837",
+      "id": "E2",
+      "locators": [
+       {
+        "locators": [
+         {
+          "basis": "raw_json",
+          "end": 37,
+          "json_pointer": "/abstractText",
+          "start": 10
+         }
+        ],
+        "segment": 1
+       }
+      ],
+      "locators_returned": 1
+     }
+    ],
+    "not_complete_because": [],
+    "observations": [
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O1",
+      "material": "E1",
+      "passage": "E1.1",
+      "quote": "A changed M",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C1"
+      ]
+     },
+     {
+      "basis": "intervention",
+      "causal_evidence": true,
+      "causal_test": true,
+      "context": {
+       "disease": null,
+       "species": "mouse",
+       "system": "S"
+      },
+      "id": "O2",
+      "material": "E1",
+      "passage": "E1.2",
+      "quote": "Blocking M prevented the E response",
+      "relation": "supports",
+      "scope_match": {
+       "disease": "not_required",
+       "species": "matched",
+       "system": "matched"
+      },
+      "scope_status": "matched",
+      "source_group": "text:E1",
+      "targets": [
+       "C2",
+       "J1"
+      ]
+     }
+    ],
+    "overall": "supported",
+    "rationale": "存在覆盖全部义务且背景一致的有效见证。",
+    "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf",
+    "scope": {
+     "disease": {
+      "state": "not_required"
+     },
+     "species": {
+      "state": "stated",
+      "value": "mouse"
+     },
+     "system": {
+      "state": "stated",
+      "value": "S"
+     }
+    },
+    "unresolved_counterevidence": []
+   }
+  }
+ ],
+ "expected_evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+ "request": {
+  "authorization_ref": "auth-0001-analysis-7-workspace-3",
+  "contract_version": "mechevidence.evaluate.v2",
+  "expected_evaluator_id": "eec8a39c59dfa2dada7c8f8c9021e3e12031600df3272a1880aa8559e512226a",
+  "materials": [
+   {
+    "binding": {
+     "chars": 103,
+     "segments": [
+      {
+       "literal": "[Attachment text, version 3f9c] "
+      },
+      {
+       "end": 81,
+       "locators": [
+        {
+         "basis": "raw_json",
+         "end": 81,
+         "json_pointer": "/abstractText",
+         "start": 10
+        }
+       ],
+       "part": {
+        "is_demo": false,
+        "kind": "clean_text",
+        "processor_version": "datafabric.clean_text.v12",
+        "raw_sha256": "223b26b997e4d6240a25b1bb051ed8d69c31aa1fedd86824a10c08bf34fb5b1c",
+        "record_id": "PMCE1",
+        "source": "europe_pmc",
+        "text_sha256": "b687e8ab5bfe3cb8fc2382db409e1f491acba0a0b0da08990cac018ca477ed11",
+        "version_id": "12d98453e35bffbf4beeace057e0edb84f3ce92a65d6e84f870c56ef9f13f91b"
+       },
+       "sha256": "f0a3ffadb92f0f58b038089710280ae498a7a9ada729c7027dbea00cf89c4ff3",
+       "start": 10
+      }
+     ],
+     "sha256": "40c40a73b27a000fc20b71ebfaeae00a0ad7e3a0d4f363d789916ba6db52a3ac"
+    },
+    "document_type": "research_article",
+    "id": "E1",
+    "source_kind": "primary",
+    "text": "[Attachment text, version 3f9c] A changed M in mouse S cells. Blocking M prevented the E response to A.",
+    "text_level": "abstract",
+    "title": "Controlled fixture"
+   },
+   {
+    "binding": {
+     "chars": 59,
+     "segments": [
+      {
+       "literal": "[Attachment text, version 3f9c] "
+      },
+      {
+       "end": 37,
+       "locators": [
+        {
+         "basis": "raw_json",
+         "end": 37,
+         "json_pointer": "/abstractText",
+         "start": 10
+        }
+       ],
+       "part": {
+        "is_demo": false,
+        "kind": "clean_text",
+        "processor_version": "datafabric.clean_text.v12",
+        "raw_sha256": "aa102a3680519da9caddf871b4292c76500bd0ad60d8b9920a723851392655ff",
+        "record_id": "PMCE2",
+        "source": "europe_pmc",
+        "text_sha256": "b768529d44a8ae20054ad051a818d7176317d0fd203ea8431a7a64cec1ee93d9",
+        "version_id": "e25ccb45daaf98cbd7116b295eaeaae756ce4ceb0f777aab2b9742078f80b6bd"
+       },
+       "sha256": "44348bcf035d4afb9a03de3a757f9a19394f5ab15990ad50da98f2f51f2ca2f4",
+       "start": 10
+      }
+     ],
+     "sha256": "ed613d6c40457f8a6f4eb71ef8e7333c41ff7a3cfb33d50b0e2e4b75ec48c327"
+    },
+    "document_type": "research_article",
+    "id": "E2",
+    "identifiers": {
+     "pmid": "123456",
+     "record_id": "123456",
+     "source_id": "pubmed"
+    },
+    "source_kind": "primary",
+    "text": "[Attachment text, version 3f9c] Other text without results.",
+    "text_level": "abstract",
+    "title": "Controlled fixture"
+   }
+  ],
+  "max_llm_calls": 20,
+  "mechanism": "A changes M; M is necessary for E.",
+  "question": "Does A cause E through M in mouse system S?",
+  "scope": {
+   "disease": {
+    "state": "not_required"
+   },
+   "species": {
+    "state": "stated",
+    "value": "mouse"
+   },
+   "system": {
+    "state": "stated",
+    "value": "S"
+   }
+  }
+ },
+ "reuse_key": "2c3c86c0de61aa1dc6e8b69499044d06165147c72289c528c8f4c601cc558daf"
+}

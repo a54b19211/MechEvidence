@@ -1,8 +1,8 @@
 """HTTP 鉴权和统一错误格式；模型由替身代替，不联网。"""
 from fastapi.testclient import TestClient
+from stub import Stub, case
 
 from mechevidence.service import create_app
-from stub import Stub, case
 
 AUTH = {"Authorization": "Bearer test-token"}
 
@@ -17,7 +17,7 @@ def client(monkeypatch, stub=None, token="test-token"):
 
 def test_auth_and_uniform_errors(monkeypatch):
     http = client(monkeypatch)
-    assert http.get("/health").json() == {"status": "ok"}
+    assert http.get("/health").json()["status"] == "ok"
     for headers in ({}, {"Authorization": "Bearer wrong"}, {"Authorization": "test-token"}):
         response = http.post("/v1/evaluate", json=case(), headers=headers)
         assert response.status_code == 401 and response.json()["error_code"] == "unauthorized"
@@ -50,7 +50,7 @@ def test_the_default_port_is_the_deployed_one_everywhere():
     import inspect
     from pathlib import Path
 
-    import mechevidence.service as service
+    from mechevidence import service
 
     assert service.DEFAULT_PORT == 18563
     assert "DEFAULT_PORT" in inspect.getsource(service).split("__main__")[1]  # the entry point uses it
