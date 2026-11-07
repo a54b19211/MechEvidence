@@ -8,8 +8,10 @@ PY = $(VENV)/bin/python
 # the shared model-transport wheel (built in the sibling llm-transport checkout: ../llm-transport/dist when this
 # checkout sits in zk_projects/; a worktree elsewhere passes make LLM_TRANSPORT_WHEELS=<dir>; hash in requirements-transport.txt)
 LLM_TRANSPORT_WHEELS ?= ../llm-transport/dist
-LOCK_INPUTS = requirements.txt requirements-transport.txt
-LOCK_FLAGS = --generate-hashes --python-version 3.12 --python-platform x86_64-unknown-linux-gnu --find-links $(LLM_TRANSPORT_WHEELS)
+# the shared contract wheel (sibling extraction-contract checkout; hash in requirements-contract.txt)
+EXTRACTION_CONTRACT_WHEELS ?= ../extraction-contract/dist
+LOCK_INPUTS = requirements.txt requirements-transport.txt requirements-contract.txt
+LOCK_FLAGS = --generate-hashes --python-version 3.12 --python-platform x86_64-unknown-linux-gnu --find-links $(LLM_TRANSPORT_WHEELS) --find-links $(EXTRACTION_CONTRACT_WHEELS)
 
 .PHONY: help venv test lint metrics check check-install check-lock lock
 help:
@@ -23,7 +25,7 @@ help:
 	@echo 'make lock           re-resolve requirements.lock after a change of $(LOCK_INPUTS)'
 venv:
 	test -x $(PY) || $(UV) venv --quiet --python $(PYTHON) $(VENV)
-	$(UV) pip sync --quiet --python $(PY) --require-hashes --find-links $(LLM_TRANSPORT_WHEELS) requirements.lock
+	$(UV) pip sync --quiet --python $(PY) --require-hashes --find-links $(LLM_TRANSPORT_WHEELS) --find-links $(EXTRACTION_CONTRACT_WHEELS) requirements.lock
 test: venv
 	$(PY) -m pytest -q
 lint: venv
@@ -32,7 +34,7 @@ metrics: venv
 	$(PY) scripts/code_metrics.py --check
 check: test lint metrics check-lock
 check-install:
-	UV=$(UV) PYTHON=$(PYTHON) LLM_TRANSPORT_WHEELS=$(LLM_TRANSPORT_WHEELS) sh scripts/check_clean_install.sh
+	UV=$(UV) PYTHON=$(PYTHON) LLM_TRANSPORT_WHEELS=$(LLM_TRANSPORT_WHEELS) EXTRACTION_CONTRACT_WHEELS=$(EXTRACTION_CONTRACT_WHEELS) sh scripts/check_clean_install.sh
 # the lock is re-resolved with itself as the preference: unchanged inputs give the same pins.
 # make reports Error 1: resolved, and the lock differs (stale); Error 2: the resolution itself failed (no
 # index or network, or inputs that do not resolve), so nothing was compared - that is no reason to re-lock
