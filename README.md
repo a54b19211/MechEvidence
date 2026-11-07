@@ -137,6 +137,8 @@ uvicorn mechevidence.service:app --host 127.0.0.1 --port 18563
 ```sh
 make venv            # .venv：只按 requirements.lock 安装，每个包都校验 sha256
 make test            # 全部测试（不联网）
+make lint            # ruff（pyproject.toml）
+make metrics         # 函数长度 80 行 / 圈复杂度 20 的门槛（scripts/code_metrics.py；例外清单 scripts/metrics_exceptions.txt 只许变短）
 make check-install   # 一个用完即删的新环境：按锁文件安装、逐个导入模块、再跑一遍测试
 make check-lock      # requirements.lock 是否仍与 requirements.txt 一致（要访问包索引）
 ```
@@ -145,7 +147,7 @@ make check-lock      # requirements.lock 是否仍与 requirements.txt 一致（
 
 - 模型调用的 HTTP 一侧用共享包 `zk-llm-transport`（0.1.1，兄弟目录 `llm-transport` 构建的 wheel，哈希写在 `requirements-transport.txt` 和锁里；`make` 用 `LLM_TRANSPORT_WHEELS` 找 wheel，默认 `../llm-transport/dist`，即本仓库和 `llm-transport` 同在 `zk_projects/` 下的位置；放在别处的 worktree 用 `make LLM_TRANSPORT_WHEELS=/home/zk_test/zk_projects/llm-transport/dist …` 显式给出，不走 PyPI）。
 - 直接依赖写在 `requirements.txt`（运行 + 测试，均为精确版本）；`requirements.lock` 是由它解析出的完整锁（运行 + 测试），每个包都带 sha256，解析目标是 CPython 3.12、x86_64-unknown-linux-gnu（锁文件头一行写着解析命令）。改了依赖后运行 `make lock`，再提交锁文件。
-- 已验证的组合：uv 0.13.0、CPython 3.12.15、1511 个测试通过。
+- 已验证的组合：uv 0.13.0、CPython 3.12.15；通过数量以 `make check` 的输出为准，这里不写数字。
 
 测试不联网，模型由 `tests/stub.py` 的替身代替。`examples/identity_contract.json` 是文献身份的离线契约用例；`examples/contract-v2/` 是 v2 契约夹具，由 `tests/contract_cases.py` 生成，改了契约、提示词或规则后用 `MECH_REGEN_FIXTURES=1 python -m pytest tests/test_contract_fixtures.py` 重生。
 
