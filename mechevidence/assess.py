@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 from collections.abc import Callable
+from typing import NamedTuple
 
 from pydantic import ValidationError
 
@@ -95,10 +96,16 @@ def _comparison(left: dict, right: dict) -> str:
 
 # ---- 确定性评级 ----
 
-def aggregate(scope: Scope, claims: list[dict], joins: list[dict], observations: list[dict],
-              materials: dict, groups: dict, has_material: bool = True) -> dict:
-    claim_by_id = {item["id"]: item for item in claims}
-    by_id = {item["id"]: item for item in observations}
+class _Buckets(NamedTuple):
+    """Observation ids per target obligation, by how the observation bears on it (matched scope only)."""
+    positive: defaultdict
+    negative: defaultdict
+    compatible: defaultdict
+    unknown_opposition: defaultdict
+
+
+def _annotate(scope: Scope, observations: list[dict], materials: dict, groups: dict) -> list[dict]:
+    """Stamp each observation with scope status, causal-evidence flag and source group; return the species notes."""
     notes = []
     for item in observations:
         material = materials[item["material"]]
@@ -111,8 +118,13 @@ def aggregate(scope: Scope, claims: list[dict], joins: list[dict], observations:
             notes.append({"material": item["material"], "code": "species_conflict", "message": (
                 f"{item['id']} 记录的物种 {item['context']['species']} 与目标 {scope.species} 明确不同，已覆盖模型的适用性标记；"
                 "保留原观察，不计为目标范围的支持或反驳。")})
+    return notes
 
-    positive, negative, compatible, unknown_opposition = (defaultdict(list) for _ in range(4))
+
+def _bucket(claims: list[dict], observations: list[dict], materials: dict) -> _Buckets:
+    """Sort every observation into supporting / refuting / compatible / unknown-context opposition per target."""
+    claim_by_id = {item["id"]: item for item in claims}
+    buckets = _Buckets(*(defaultdict(list) for _ in range(4)))
     for item in observations:
         material = materials[item["material"]]
         for target in item["targets"]:
@@ -122,21 +134,24 @@ def aggregate(scope: Scope, claims: list[dict], joins: list[dict], observations:
             # reported 命题也可以断言结果；登记/方案不能借此绕过可评性
             eligible = eligible and material.document_type not in DESIGNS
             if item["scope_status"] == "unknown" and item["relation"] == "refutes" and eligible:
-                unknown_opposition[target].append(item["id"])
+                buckets.unknown_opposition[target].append(item["id"])
             if item["scope_status"] != "matched":
                 continue
             if item["relation"] == "supports" and eligible:
-                positive[target].append(item["id"])
+                buckets.positive[target].append(item["id"])
             elif item["relation"] == "refutes" and eligible:
-                negative[target].append(item["id"])
+                buckets.negative[target].append(item["id"])
             elif item["relation"] != "refutes":
-                compatible[target].append(item["id"])
+                buckets.compatible[target].append(item["id"])
+    return buckets
 
-    required = claims + joins
+
+def _pair_opposition(required: list[dict], buckets: _Buckets, by_id: dict):
+    """Compare every supporting with every opposing observation of a target: conflicts, unresolved, contexts."""
     conflicts, unresolved, conflicted, differing = [], [], set(), defaultdict(list)
     for target in [item["id"] for item in required]:
-        for support in positive[target]:
-            for opposition in negative[target]:
+        for support in buckets.positive[target]:
+            for opposition in buckets.negative[target]:
                 relation = _comparison(by_id[support], by_id[opposition])
                 pair = {"target": target, "supporting": support, "opposing": opposition}
                 if relation == "comparable":
@@ -147,25 +162,33 @@ def aggregate(scope: Scope, claims: list[dict], joins: list[dict], observations:
                 else:
                     differing[target].append({"observation": opposition, "status": "different_evidence_context",
                                               "compared_with": support, "context": by_id[opposition]["context"]})
-        if positive[target]:
-            for opposition in unknown_opposition[target]:
+        if buckets.positive[target]:
+            for opposition in buckets.unknown_opposition[target]:
                 unresolved.append({"target": target, "supporting": None, "opposing": opposition,
                                    "reason": "潜在相反结果的适用背景不明；不能判为反驳，也不能忽略。"})
+    return conflicts, unresolved, conflicted, differing
 
-    def row(item: dict) -> dict:
-        key, supporting, opposing = item["id"], positive[item["id"]], negative[item["id"]]
-        if key in claim_by_id:
-            verdict = ("mixed" if key in conflicted else "supported" if supporting
-                       else "refuted" if opposing else "insufficient")
-        else:
-            verdict = ("supported" if supporting and key not in conflicted
-                       else "compatible_only" if compatible[key] and not opposing else "unestablished")
-        relevant = [obs for obs in observations if key in obs["targets"]]
-        return {**item, "verdict": verdict, "supporting": supporting, "opposing": opposing,
-                "compatible": compatible[key],
-                "applicability_gaps": [{"observation": obs["id"], "status": obs["scope_status"], "context": obs["context"]}
-                                       for obs in relevant if obs["scope_status"] != "matched"] + differing[key],
-                "source_groups": sorted({by_id[oid]["source_group"] for oid in supporting})}
+
+def _obligation_row(item: dict, is_claim: bool, observations: list[dict], by_id: dict, buckets: _Buckets,
+                    conflicted: set, differing: dict) -> dict:
+    key, supporting, opposing = item["id"], buckets.positive[item["id"]], buckets.negative[item["id"]]
+    if is_claim:
+        verdict = ("mixed" if key in conflicted else "supported" if supporting
+                   else "refuted" if opposing else "insufficient")
+    else:
+        verdict = ("supported" if supporting and key not in conflicted
+                   else "compatible_only" if buckets.compatible[key] and not opposing else "unestablished")
+    relevant = [obs for obs in observations if key in obs["targets"]]
+    return {**item, "verdict": verdict, "supporting": supporting, "opposing": opposing,
+            "compatible": buckets.compatible[key],
+            "applicability_gaps": [{"observation": obs["id"], "status": obs["scope_status"], "context": obs["context"]}
+                                   for obs in relevant if obs["scope_status"] != "matched"] + differing[key],
+            "source_groups": sorted({by_id[oid]["source_group"] for oid in supporting})}
+
+
+def _overall(required: list[dict], buckets: _Buckets, by_id: dict, conflicts: list, unresolved: list):
+    """Overall grade and whether one species-consistent witness covers every obligation."""
+    positive = buckets.positive
 
     # 整体见证：每项义务都有适用支持；不同物种的结果不拼成一条因果链
     def observed_species(oid):
@@ -183,7 +206,13 @@ def aggregate(scope: Scope, claims: list[dict], joins: list[dict], observations:
         overall = "partial"
     else:
         overall = "insufficient"
+    return witness, overall
 
+
+def _gaps(scope: Scope, required: list[dict], buckets: _Buckets, unresolved: list, witness: bool,
+          has_material: bool) -> list[str]:
+    """What an expert should look up next, one sentence per obligation or global shortfall."""
+    positive, negative = buckets.positive, buckets.negative
     scope_text = "，".join(f"{key}={value}" for key, value in scope.model_dump().items() if _known(value)) or "未限定"
     gaps = []
     for item in required:
@@ -203,14 +232,33 @@ def aggregate(scope: Scope, claims: list[dict], joins: list[dict], observations:
     for counter in unresolved:
         gaps.append(f"{counter['target']}：{counter['reason']}补查相反结果的物种、系统、剂量、时间及终点的原始记录，"
                     f"供专家判断该义务的证据是否可比：{texts[counter['target']]}")
+    return gaps
 
-    rationale = {"supported": "存在覆盖全部义务且背景一致的有效见证。",
-                 "partial": "部分义务获得适用支持；整体机制仍有覆盖、衔接或相反结果问题。",
-                 "insufficient": "现有适用证据不足以确立所需义务。"}[overall]
+
+_RATIONALE = {"supported": "存在覆盖全部义务且背景一致的有效见证。",
+              "partial": "部分义务获得适用支持；整体机制仍有覆盖、衔接或相反结果问题。",
+              "insufficient": "现有适用证据不足以确立所需义务。"}
+
+
+def aggregate(scope: Scope, claims: list[dict], joins: list[dict], observations: list[dict],
+              materials: dict, groups: dict, has_material: bool = True) -> dict:
+    by_id = {item["id"]: item for item in observations}
+    notes = _annotate(scope, observations, materials, groups)
+    buckets = _bucket(claims, observations, materials)
+    required = claims + joins
+    conflicts, unresolved, conflicted, differing = _pair_opposition(required, buckets, by_id)
+    witness, overall = _overall(required, buckets, by_id, conflicts, unresolved)
+    gaps = _gaps(scope, required, buckets, unresolved, witness, has_material)
+
+    rationale = _RATIONALE[overall]
     if notes:
         rationale += "部分观察记录的物种与目标明确不符，已从目标范围的支持和反驳中排除。"
+
+    def rows(items: list[dict], is_claim: bool) -> list[dict]:
+        return [_obligation_row(item, is_claim, observations, by_id, buckets, conflicted, differing) for item in items]
+
     return {"overall": overall, "rationale": rationale,
-            "claims": [row(item) for item in claims], "joins": [row(item) for item in joins],
+            "claims": rows(claims, True), "joins": rows(joins, False),
             "observations": observations, "conflicts": conflicts, "unresolved_counterevidence": unresolved,
             "gaps": list(dict.fromkeys(gaps)),
             "independence": {"distinct_source_groups": len({obs["source_group"] for obs in observations}),
@@ -276,6 +324,37 @@ def _accept(raw, passages: dict, target_ids: set, single: str | None):
 Chat = Callable[..., tuple]
 
 
+def _review_batches(req: EvaluateRequest, usable: list[dict], targets: list[dict], call, calls: list[dict],
+                    notes: list[dict]) -> tuple[list[dict], set]:
+    """Phase 1: review the usable materials batch by batch; returns the accepted observations and the ids of
+    materials that were not reviewed (notes gets one entry per failure or rejected observation)."""
+    target_ids = {item["id"] for item in targets}
+    observations, failed = [], set()
+    for start in range(0, len(usable) if targets else 0, BATCH_SIZE):
+        batch = usable[start:start + BATCH_SIZE]
+        ids = [item["material"].id for item in batch]
+        passages = {p["id"]: {**p, "material": item["material"].id} for item in batch for p in item["passages"]}
+        payload = {"question": req.question, "mechanism": req.mechanism, "scope": req.scope.model_dump(),
+                   "targets": targets,
+                   "materials": [{**item["material"].model_dump(include={"id", "title", "source_kind", "document_type", "text_level"}),
+                                  "passages": item["passages"]} for item in batch]}
+        review = call("review", REVIEW, payload, Review)
+        if review is None or review is _BUDGET:
+            failed.update(ids)
+            code, message = (("pending_budget", f"已达 max_llm_calls={req.max_llm_calls}，未审阅，待核。")
+                             if review is _BUDGET else
+                             ("review_failed", f"材料审阅失败（{calls[-1].get('error')}），未审阅，待核。"))
+            notes += [{"material": mid, "code": code, "message": message} for mid in ids]
+            continue
+        for raw in review.observations:
+            observation, problem = _accept(raw, passages, target_ids, ids[0] if len(ids) == 1 else None)
+            if problem:
+                notes.append({"material": problem[0], "code": problem[1], "message": problem[2]})
+            else:
+                observations.append({"id": f"O{len(observations) + 1}", **observation})
+    return observations, failed
+
+
 def evaluate(request: EvaluateRequest | dict, chat: Chat = chat_json) -> dict:
     req = EvaluateRequest.model_validate(request)
     usable, notes = prepare(req.materials)
@@ -301,30 +380,7 @@ def evaluate(request: EvaluateRequest | dict, chat: Chat = chat_json) -> dict:
         claims, joins = [], []  # 没有可评材料时不调模型
 
     targets = claims + joins
-    target_ids = {item["id"] for item in targets}
-    observations, failed = [], set()
-    for start in range(0, len(usable) if targets else 0, BATCH_SIZE):
-        batch = usable[start:start + BATCH_SIZE]
-        ids = [item["material"].id for item in batch]
-        passages = {p["id"]: {**p, "material": item["material"].id} for item in batch for p in item["passages"]}
-        payload = {"question": req.question, "mechanism": req.mechanism, "scope": req.scope.model_dump(),
-                   "targets": targets,
-                   "materials": [{**item["material"].model_dump(include={"id", "title", "source_kind", "document_type", "text_level"}),
-                                  "passages": item["passages"]} for item in batch]}
-        review = call("review", REVIEW, payload, Review)
-        if review is None or review is _BUDGET:
-            failed.update(ids)
-            code, message = (("pending_budget", f"已达 max_llm_calls={req.max_llm_calls}，未审阅，待核。")
-                             if review is _BUDGET else
-                             ("review_failed", f"材料审阅失败（{calls[-1].get('error')}），未审阅，待核。"))
-            notes += [{"material": mid, "code": code, "message": message} for mid in ids]
-            continue
-        for raw in review.observations:
-            observation, problem = _accept(raw, passages, target_ids, ids[0] if len(ids) == 1 else None)
-            if problem:
-                notes.append({"material": problem[0], "code": problem[1], "message": problem[2]})
-            else:
-                observations.append({"id": f"O{len(observations) + 1}", **observation})
+    observations, failed = _review_batches(req, usable, targets, call, calls, notes)
 
     result = aggregate(req.scope, claims, joins, observations,
                        {item["material"].id: item["material"] for item in usable},
