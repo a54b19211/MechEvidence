@@ -5,7 +5,7 @@
 ## 代码
 
 1. 普通函数和直接调用；一个文件一类职责。不建插件框架、注册中心、通用 Agent 或队列。
-2. 模型调用只走 `llm.chat_json`。结构化阶段关闭思考，`max_tokens` 4096；校验失败带错误重试一次，再失败只让这一项失败。
+2. 模型调用只走 `llm.chat_json`（HTTP 一侧由共享包 `llm_transport` 完成）；先存档原始 HTTP 回答再解析，已发出的请求不得因解析失败而丢失。结构化阶段关闭思考，`max_tokens` 4096；校验失败带错误重试一次，再失败只让这一项失败。
 3. 编号由程序分配（C/J、E1.3、O），模型只引用。无效编号、找不到的短引：丢弃该条并记进 `material_notes`，不让整份输出失败。
 4. schema 要小：每次输出不超过两层、必填字段不超过 5 个、枚举用小写英文。
 5. 哈希、评价器身份和回执只属于版本绑定契约 `/v2/evaluate`（`docs/decisions/0002-version-bound-contract.md`）；兼容路径 `/v1/evaluate` 不加。调用记录存 stage、model、usage、finish_reason、耗时、错误码和实际发出的请求数（requests）；v2 回执另带每次尝试的模型原始回答（`outputs`，单条 ≤256 KiB，超出即失败，不当结果）。
@@ -31,5 +31,5 @@
 16. 请求模型一律拒绝契约未写的字段（422 `field_not_in_contract`），不静默丢弃；模型输出的模型保持宽松。
 17. 评价器身份 `evaluator_id` 由 `identity.current_evaluator()` 一处给出，覆盖规则版本、提示词哈希、批大小、顺序规则和模型配置。任何会让同一输入得出不同结论的改动（提示词、范围别名表、比较与评级规则、批大小、默认模型）都要升 `assess.RULES_VERSION` 或改变上述字段，并在 ADR 记一笔。
 18. 复用键必须覆盖评价实际用到的每个输入；给材料加字段，先在 `tests/test_contract_v2.py` 里加扰动用例。第一期键是有序的，包含调用方别名，不声称顺序无关。
-19. v2 每次真实模型 HTTP 请求之前都要经 `authorization.py` 向预配置的可信端点现查授权，查不了就不发；v1 不查，这是兼容缺口，不得说成新系统的保证。
+19. v2 每次真实模型 HTTP 请求之前都要经 `authorization.py` 向预配置的可信端点现查授权（回显 attempt、评价键、评价器并未过期才发），每次请求后交回结果，查不了、记不下就不发；v1 不查，这是兼容缺口，不得说成新系统的保证。
 20. 契约夹具在 `examples/contract-v2/`，由 `tests/contract_cases.py` 生成并有测试比对；改了契约、提示词或规则后用 `MECH_REGEN_FIXTURES=1` 重生并在提交里说明。

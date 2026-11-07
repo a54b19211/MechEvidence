@@ -44,14 +44,25 @@ protocol. That stays true of v1; it is not rewritten. v2 adds a receipt and hash
   key, material binding echo or evaluator id does not match its request is `failed/receipt_mismatch`, the raw
   receipt is kept as an audit row and the conclusion is not usable; a receipt with an incomplete audit is failed
   too; `complete=false` is never cacheable.
-- **Permission before every model request (option A).** The caller sends an opaque `authorization_ref`; before each
-  actual HTTP request (the format retry included) the service asks a pre-configured trusted endpoint whether it is
-  still valid. Unreachable, refusing, malformed or unconfigured means nothing is sent. The endpoint is never taken from
-  the request. v1 keeps not re-checking inside a request; that is a documented compatibility gap.
-- **Raw answers.** `llm_calls[].outputs` returns each attempt's raw model answer (at most 256 KiB, with the sha256 of
-  the whole). An answer that does not fit is not archived completely, so the evaluation fails closed (502
-  `output_oversize`, no verdict) and no format retry is made. A truncated answer's hash is never presented as the
+- **Permission before every model request (option A).** The caller sends an opaque `authorization_ref`; before
+  each actual HTTP request (the format retry included) the service asks a pre-configured trusted endpoint
+  (`model_attempt_authorization.v1`) with the ref, the evaluation key (the reuse key), the evaluator id and the attempt (unique
+  id, global index, request body hash, model, endpoint id). It sends only on a 200 that says `valid`, names a decision,
+  echoes that attempt, key and evaluator, and has not expired. After each counted request it hands the endpoint the
+  outcome (`model_attempt_outcome.v1`: delivery, status, raw body and hash, truncation); if that is not recorded, nothing more
+  is sent. Unreachable, refusing, bare `valid:true`, wrong echo, expired or unconfigured means nothing is sent. The endpoint
+  is never taken from the request. v1 keeps not re-checking inside a request; that is a documented compatibility gap.
+- **Raw answers.** `llm_calls[].outputs` has one entry per counted HTTP request: the raw HTTP answer (at most
+  256 KiB) with the sha256 of the whole, written down before it is parsed. A request that was sent is never lost: an
+  envelope that cannot be read (`choices` not an object) ends the call as `response_malformed` with its output kept, and
+  the evaluation is a handleable 502. An answer that does not fit is not archived completely, so the evaluation fails
+  closed (502 `output_oversize`, no verdict) with no format retry. A truncated answer's hash is never presented as the
   hash of a stored whole.
+- **Transport.** The HTTP side of the call (provider body, send, delivery outcome, request count, envelope) is the shared
+  `zk-llm-transport` wheel, pinned by hash; prompts, format retry and error codes stay here.
+- **Receipt adoption is strict.** `contract.adopt()` also checks the receipt's structure, verdict domains, that every
+  counted request has its archived answer with contiguous numbers, each archived text against its hash, and the
+  consistency of `complete` with the material notes; any failure is `failed/receipt_invalid` with the raw receipt kept.
 
 ## Consequences
 

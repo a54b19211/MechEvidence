@@ -25,7 +25,7 @@ uvicorn mechevidence.service:app --host 127.0.0.1 --port 18563
 | `LLM_PROVIDER` | `deepseek`（发送 `thinking: disabled`）、`vllm` 或 `openai` |
 | `LLM_ENDPOINT_ID` | 运维给模型端点起的名字（不是 URL、不含密钥），进评价器身份；默认 `unnamed` |
 | `MECHEVIDENCE_CODE_VERSION` | 构建/部署时写入的提交号，只用于审计，不进评价器身份 |
-| `MECH_AUTHORIZATION_URL`、`MECH_AUTHORIZATION_TOKEN` | v2 每次模型请求前现查授权的可信端点和令牌；未配置则 v2 不发任何模型请求 |
+| `MECH_AUTHORIZATION_URL`、`MECH_AUTHORIZATION_TOKEN`、`MECH_OUTCOME_URL` | v2 每次模型请求前现查授权、每次请求后交回结果的可信端点、令牌和结果地址（含 `{attempt_id}`）；缺任何一项，v2 就不发模型请求 |
 | `MECH_AUTHORIZATION_TIMEOUT_SECONDS` | 默认 5 |
 | `LLM_TIMEOUT_SECONDS` | 默认 180；超时不自动重发 |
 
@@ -108,11 +108,13 @@ uvicorn mechevidence.service:app --host 127.0.0.1 --port 18563
 
 - 请求：`contract_version: "mechevidence.evaluate.v2"`；`scope` 每个维度明确是 `{"state": "stated", "value": …}`、`{"state": "unknown"}`（没提供）或 `{"state": "not_required"}`（明确不限定），空字符串一律按 `unknown`；每份材料带 `binding`（与雷达的 `material.binding()` 同形：整串 sha256、字符数、literal 段和 part 段，part 段有来源/记录/版本/原件哈希/处理器版本和段哈希）；文献身份字段放在 `identifiers` 里；`authorization_ref`（必填，不透明字符串）；`expected_evaluator_id`（可选）。任何层出现契约未写的字段都是 422。
 - 服务只能核“文字和绑定自洽”（回执写 `binding_checked: "self_consistent"`）；“这串文字确实是那个固定版本的那一段”由雷达发出前向 Fabric 重读核对。
-- 回执：`contract_version`、完整 `evaluator`（含 `evaluator_id`）、`reuse_key`、`complete`（预算不够或审阅失败时为 false，不得复用）、`audit_complete`、规范化后的 `scope`、每份材料的 `binding_sha256` 和定位、评价结果，以及每次逻辑调用的 `llm_calls[].outputs`（每次尝试的模型原始回答、sha256、是否截断）。
+- 回执：`contract_version`、完整 `evaluator`（含 `evaluator_id`）、`reuse_key`、`complete`（预算不够或审阅失败时为 false，不得复用）、`audit_complete`、规范化后的 `scope`、每份材料的 `binding_sha256` 和定位、评价结果，以及每次逻辑调用的 `llm_calls[].outputs`：每个实际发出的 HTTP 请求一条 `{attempt, delivered, status, error, content, sha256, truncated}`，`content` 是供应方返回的原始 HTTP 正文（先存档，再解析），`sha256` 是整份正文字节的哈希；没有回答（超时、连不上）时 `content` 为 null。
 - 复用键（第一期，保守）：命题、范围、**有序**的材料列表（含调用方别名、标题、类型、层级、身份字段和合组结果）、批大小、评价器 id。同样的材料换顺序、换别名就是另一个键；`max_llm_calls`、`authorization_ref` 不进键。
 - `expected_evaluator_id` 与当前评价器不同 → 409 `evaluator_changed`，附当前身份，不评价、不调模型。
-- 授权：每次真实模型 HTTP 请求之前，服务带 `authorization_ref` 和这次请求的摘要去问预配置的可信端点（`MECH_AUTHORIZATION_URL`），只有 200 且 `{"valid": true}` 才发；端点不可达、拒绝、格式不对或未配置都不发，返回 502 `authorization_blocked`。端点只来自环境，不接受请求里的地址。
-- 原始回答超过 256 KiB（不能完整存入回执）→ 502 `output_oversize`，没有结论、不可采用。
+- 授权（`model_attempt_authorization.v1`，协议见 `authorization.py`）：每次真实模型 HTTP 请求（拆解、审阅、格式重试各算一次，`attempt.index` 在整次评价内单调递增，`attempt.id` 每次唯一）之前，服务向预配置的可信端点 POST `{authorization_ref, evaluation_key（即 reuse_key）, evaluator_id, attempt{id, stage, index, request_body_sha256, model, endpoint_id}}`；只有 200、`valid:true`、带 `decision_id`、并回显本次 attempt id、evaluation_key、evaluator_id 且未过期（`expires_at` 带时区）才发。裸 `{valid:true}`、回显不符、过期、非 200、非 JSON、端点不可达、未配置都不发，返回 502 `authorization_blocked`。每个请求结束后、下一次请求之前，服务把结果（送达状态、HTTP 状态、原始正文及哈希、是否截断）POST 到 `MECH_OUTCOME_URL`；记录不成功就不再发任何请求。端点只来自环境，不接受请求里的地址。已登记而没有结果的尝试，对账时按“可能已发出”处理。
+- 原始回答超过 256 KiB（不能完整存入回执）→ 502 `output_oversize`，没有结论、不可采用，且不再做格式重试。
+- 供应方回了 HTTP 200 但响应信封读不出来（例如 `choices` 里不是对象）→ 记 `response_malformed`，已发出的请求和它的原始正文照常进 `llm_calls`，整体是可处理的 502（`decomposition_failed` 等），不是 500。
+- 收到 200 回执后，调用方用 `contract.adopt()`：回执与请求不符 → `failed/receipt_mismatch`；回执结构不全、结论不在取值域、`requests` 与存档的原始回答条数不符或序号不连续、存档文本与 sha256 对不上、`complete` 与材料备注不一致、范围回显被改 → `failed/receipt_invalid`；审计不完整或有截断 → `failed/audit_incomplete`。三种都保留原始回执做审计，结论不可采用、不可缓存。
 - 422 码：`field_not_in_contract`、`contract_version_required`、`material_binding_missing`、`material_binding_mismatch`、`material_binding_invalid`、`duplicate_material_binding`、`scope_state_invalid`、`authorization_required`、`input_invalid`。
 
 ## 怎么评
@@ -141,8 +143,9 @@ make check-lock      # requirements.lock 是否仍与 requirements.txt 一致（
 
 `make check-lock`、`make lock` 要访问 PyPI（`make venv`、`make check-install` 在 uv 缓存里没有的包也要下载）。zktest 上直连 PyPI 有时超时，这时只给这几条命令临时加上本机已有的 HTTP 代理（mihomo，监听 127.0.0.1:7890），例如 `HTTPS_PROXY=http://127.0.0.1:7890 HTTP_PROXY=http://127.0.0.1:7890 make check-lock`；不要把代理写进全局配置。`check-lock` 的结果有两种失败：解析本身失败（包索引或网络不可用、依赖解不出来）时报 `check-lock did not run`，make 显示 `Error 2`，锁文件没有比较过，不能因此重做锁；只有解析成功而内容不同时才报 `requirements.lock is stale`（make 显示 `Error 1`）。两种情况 make 都以非零状态结束。
 
+- 模型调用的 HTTP 一侧用共享包 `zk-llm-transport`（0.1.1，兄弟目录 `llm-transport` 构建的 wheel，哈希写在 `requirements-transport.txt` 和锁里；`make` 用 `LLM_TRANSPORT_WHEELS`（默认 `../../../llm-transport/dist`）找 wheel，不走 PyPI）。
 - 直接依赖写在 `requirements.txt`（运行 + 测试，均为精确版本）；`requirements.lock` 是由它解析出的完整锁（运行 + 测试），每个包都带 sha256，解析目标是 CPython 3.12、x86_64-unknown-linux-gnu（锁文件头一行写着解析命令）。改了依赖后运行 `make lock`，再提交锁文件。
-- 已验证的组合：uv 0.13.0、CPython 3.12.15、176 个测试通过。
+- 已验证的组合：uv 0.13.0、CPython 3.12.15、224 个测试通过。
 
 测试不联网，模型由 `tests/stub.py` 的替身代替。`examples/identity_contract.json` 是文献身份的离线契约用例；`examples/contract-v2/` 是 v2 契约夹具，由 `tests/contract_cases.py` 生成，改了契约、提示词或规则后用 `MECH_REGEN_FIXTURES=1 python -m pytest tests/test_contract_fixtures.py` 重生。
 
@@ -154,6 +157,8 @@ make check-lock      # requirements.lock 是否仍与 requirements.txt 一致（
 
 - v2 第一期的复用键是有序的：材料顺序、调用方别名不同就不复用；规范化排序和别名重映射是单独的下一版评价器（`ordering_rule` 与 `rules_version` 同时升级）。
 - v1 兼容路径在一次请求内部不复查授权，也不回传模型原始回答；这是已知的兼容缺口。
+- 逐次结算（`MECH_OUTCOME_URL`）的持久语义在可信端点一侧；服务进程在两次请求之间被杀死时，回执（只在整份响应里回传原文）不会产生，已登记而没有结果的尝试就是“结果未知”，这个崩溃审计缺口仍在，直到 Radar 一侧落存接通。
+- 授权协议的服务端已实现并有替身端点的测试，但没有与 Radar 一侧联调。
 - 评价器身份在每个请求开始时按当前环境算出；同一请求执行期间若进程环境被改，回执里的身份可能与后几次模型调用不一致（部署应通过重启切换）。
 - 模型响应由 httpx 整体读入内存后才判断 256 KiB 上限；`max_tokens` 限制了正常输出，但没有流式截断。
 - 服务不访问 Fabric：绑定只核到自洽，是否对应固定版本由调用方重读保证。
