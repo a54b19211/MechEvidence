@@ -60,39 +60,62 @@ def key_of(raw: dict, evaluator: dict) -> str:
 
 
 class HookedStub(Stub):
-    """Stub that behaves like chat_json towards before_attempt: one HTTP attempt per call, checked first."""
+    """Stub that behaves like chat_json towards the hooks: one HTTP attempt per call, checked first, its outcome
+    handed over right after."""
 
     def __init__(self, *args, outputs=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.attempts, self.outputs = [], outputs
 
-    def __call__(self, stage, system, payload, model_cls, before_attempt=None, **kwargs):
+    def __call__(self, stage, system, payload, model_cls, before_attempt=None, after_attempt=None, **kwargs):
+        blocked = {"stage": stage, "model": "stub", "finish_reason": None, "usage": {}, "seconds": 0, "requests": 0,
+                   "outputs": []}
         if before_attempt is not None:
             try:
-                before_attempt({"stage": stage, "attempt_in_call": 1, "requests_before": 0,
+                before_attempt({"stage": stage, "index_in_call": 1, "requests_before": 0,
                                 "request_body_sha256": sha(stage + json.dumps(payload, sort_keys=True)),
                                 "model": "stub", "endpoint_id": "stub"})
             except Exception as error:  # noqa: BLE001 - the same rule as llm.chat_json
-                record = {"stage": stage, "model": "stub", "finish_reason": None, "usage": {}, "seconds": 0,
-                          "requests": 0, "outputs": [], "error": getattr(error, "code", "authorization_error")}
-                return None, record
+                return None, {**blocked, "error": getattr(error, "reason", None) or getattr(error, "code", None)
+                              or "authorization_error"}
         self.attempts.append(stage)
         result, record = super().__call__(stage, system, payload, model_cls, **kwargs)
         record["outputs"] = (self.outputs if self.outputs is not None
                              else [archived(1, result.model_dump_json() if result is not None else "")])
+        if after_attempt is not None:
+            try:
+                after_attempt(record["outputs"][0])
+            except Exception:  # noqa: BLE001
+                return None, {**record, "error": "authorization_outcome_failed"}
         return result, record
 
 
-class Authorizer:
-    """Records every check; refuses from the n-th check on when refuse_from is set."""
+class FakeEndpoint:
+    """The caller's trusted endpoint: records every authorization and outcome; refuses from the n-th
+    authorization on (refuse_from) or fails to record the n-th outcome (settle_fails_at)."""
 
-    def __init__(self, refuse_from=None, code="authorization_refused"):
-        self.checks, self.refuse_from, self.code = [], refuse_from, code
+    def __init__(self, refuse_from=None, code="authorization_refused", settle_fails_at=None):
+        self.checks, self.settled = [], []
+        self.refuse_from, self.code, self.settle_fails_at = refuse_from, code, settle_fails_at
 
-    def __call__(self, ref, attempt):
-        self.checks.append((ref, attempt))
+    def configured(self):
+        return True
+
+    def authorize(self, ref, evaluation_key, evaluator_id, attempt):
+        self.checks.append((ref, evaluation_key, evaluator_id, attempt))
         if self.refuse_from is not None and len(self.checks) >= self.refuse_from:
-            raise SendBlocked(self.code, "revoked")
+            raise SendBlocked(self.code)
+        return {"contract_version": "model_attempt_authorization.v1", "valid": True,
+                "decision_id": f"decision-{len(self.checks)}", "attempt_id": attempt["id"],
+                "evaluation_key": evaluation_key, "evaluator_id": evaluator_id, "expires_at": "2999-01-01T00:00:00Z"}
+
+    def settle(self, ref, decision, entry):
+        self.settled.append((ref, decision, entry))
+        if self.settle_fails_at is not None and len(self.settled) >= self.settle_fails_at:
+            raise RuntimeError("not recorded")
+
+
+Authorizer = FakeEndpoint
 
 
 def oversize_outputs():
@@ -197,9 +220,35 @@ def receipt_cases(monkeypatch):
     case("binding_echo_other_text", lambda r: r["materials"][0].update(binding_sha256=sha("other text")))
     case("evaluator_id_differs", lambda r: r["evaluator"].update(evaluator_id=sha("another evaluator")))
     case("evaluator_fields_edited_id_kept", lambda r: r["evaluator"]["model_config"].update(model="other-model"))
-    case("not_complete", lambda r: r.update(complete=False, not_complete_because=["pending_budget"]))
+    budget_cut = json.loads(json.dumps(evaluate_v2({**raw, "max_llm_calls": 1}, HookedStub(), Authorizer())))
+    case("not_complete_budget_cut", lambda r: r.clear() or r.update(copy.deepcopy(budget_cut)))
     case("audit_incomplete", lambda r: r.update(audit_complete=False))
     case("truncated_answer", lambda r: r["llm_calls"][0]["outputs"][0].update(truncated=True))
+
+    def drop(key):
+        return lambda r: r.pop(key)
+
+    # a receipt whose audit does not add up is not adoptable, whatever audit_complete says
+    case("outputs_missing", lambda r: [call.update(outputs=[]) for call in r["llm_calls"]])
+    case("output_text_edited_hash_kept", lambda r: r["llm_calls"][0]["outputs"][0].update(
+        content=r["llm_calls"][0]["outputs"][0]["content"] + " "))
+    case("output_hash_not_hex", lambda r: r["llm_calls"][0]["outputs"][0].update(sha256="abc"))
+    case("requests_more_than_outputs", lambda r: r["llm_calls"][1].update(requests=2))
+    case("outputs_more_than_requests", lambda r: r["llm_calls"][1].update(requests=0))
+    case("attempt_numbers_not_contiguous", lambda r: r["llm_calls"][0]["outputs"][0].update(attempt=3))
+    case("unanswered_attempt_carries_an_answer", lambda r: r["llm_calls"][0]["outputs"][0].update(delivered="no"))
+    case("successful_call_not_answered_200", lambda r: r["llm_calls"][0]["outputs"][0].update(status=500))
+    case("llm_calls_not_a_list", lambda r: r.update(llm_calls={}))
+    case("invalid_overall_verdict", lambda r: r.update(overall="synthetic_invalid_verdict"))
+    case("invalid_claim_verdict", lambda r: r["claims"][0].update(verdict="great"))
+    case("invalid_join_verdict", lambda r: r["joins"][0].update(verdict="supported_ish"))
+    case("invalid_observation_relation", lambda r: r["observations"][0].update(relation="proves"))
+    case("complete_false_without_a_reason", lambda r: r.update(complete=False))
+    case("complete_true_with_a_budget_note", lambda r: r["material_notes"].append(
+        {"material": "E1", "code": "pending_budget", "message": "m"}))
+    case("scope_echo_changed", lambda r: r["scope"].update(species={"state": "unknown"}))
+    case("required_field_missing", drop("rationale"))
+    case("assessability_status_invalid", lambda r: r["assessability"].update(status="great"))
     return raw, receipt, evaluator, outcomes
 
 

@@ -4,7 +4,6 @@ import copy
 
 import pytest
 from contract_cases import (
-    AUTH_REF,
     Authorizer,
     HookedStub,
     bound,
@@ -31,7 +30,8 @@ AUTH = {"Authorization": "Bearer test-token"}
 @pytest.fixture(autouse=True)
 def env(monkeypatch):
     monkeypatch.setenv("SERVICE_TOKEN", "test-token")
-    for name in ("LLM_PROVIDER", "LLM_MODEL", "LLM_ENDPOINT_ID", "MECH_AUTHORIZATION_URL", "MECH_AUTHORIZATION_TOKEN"):
+    for name in ("LLM_PROVIDER", "LLM_MODEL", "LLM_ENDPOINT_ID", "MECH_AUTHORIZATION_URL", "MECH_AUTHORIZATION_TOKEN",
+                 "MECH_OUTCOME_URL"):
         monkeypatch.delenv(name, raising=False)
 
 
@@ -76,7 +76,9 @@ def test_get_evaluator_and_health_agree_and_health_needs_no_token():
     http = client()
     body = http.get("/v2/evaluator", headers=AUTH).json()
     assert body["evaluator"]["evaluator_id"] == current_evaluator()["evaluator_id"]
-    assert body["authorization"] == {"mode": "per_attempt_trusted_endpoint", "configured": False}
+    assert body["authorization"] == {"mode": "per_attempt_trusted_endpoint", "configured": True}
+    unconfigured = TestClient(create_app(HookedStub())).get("/v2/evaluator", headers=AUTH).json()
+    assert unconfigured["authorization"]["configured"] is False
     health = http.get("/health").json()
     assert health == {"status": "ok", "contracts": ["mechevidence.evaluate.v1", "mechevidence.evaluate.v2"],
                       "evaluator_id": body["evaluator"]["evaluator_id"]}
@@ -237,96 +239,6 @@ def test_the_service_refuses_what_the_contract_forbids(case):
 def test_a_json_syntax_error_is_input_invalid():
     response = client().post("/v2/evaluate", content=b"{not json", headers=AUTH | {"Content-Type": "application/json"})
     assert response.status_code == 422 and response.json()["error_code"] == "input_invalid"
-
-
-# ---- the check before every model request (option A) ----
-
-def test_every_model_request_is_checked_first_with_the_ref_and_the_request_body_hash():
-    stub, authorizer = HookedStub(), Authorizer()
-    evaluate_v2(request(), stub, authorizer)
-    assert [check[1]["stage"] for check in authorizer.checks] == ["decompose", "review"] == stub.attempts
-    assert {check[0] for check in authorizer.checks} == {AUTH_REF}
-    for _, attempt in authorizer.checks:
-        assert attempt["evaluator_id"] == current_evaluator()["evaluator_id"] and len(attempt["request_body_sha256"]) == 64
-
-
-def test_a_refusal_before_the_second_request_stops_it_and_returns_no_verdict():
-    stub, authorizer = HookedStub(), Authorizer(refuse_from=2)
-    response = client(stub, authorizer).post("/v2/evaluate", json=request(), headers=AUTH)
-    body = response.json()
-    assert response.status_code == 502 and body["error_code"] == "authorization_blocked" and "overall" not in body
-    assert stub.attempts == ["decompose"]                  # the review was never sent
-    assert [call["error"] for call in body["llm_calls"]] == [None, "authorization_refused"]
-    assert body["llm_calls"][1]["requests"] == 0
-
-
-def test_without_a_configured_endpoint_nothing_is_sent(monkeypatch):
-    stub = HookedStub()
-    http = TestClient(create_app(stub))                    # the real check, not configured
-    response = http.post("/v2/evaluate", json=request(), headers=AUTH)
-    assert response.status_code == 502 and response.json()["error_code"] == "authorization_blocked"
-    assert stub.attempts == [] and response.json()["llm_calls"][0]["error"] == "authorization_not_configured"
-
-
-class FakeEndpoint:
-    def __init__(self, reply):
-        self.reply, self.posts = reply, []
-
-    def __call__(self, url, json, headers, **kwargs):
-        import httpx
-        self.posts.append((url, json, headers, kwargs))
-        if isinstance(self.reply, Exception):
-            raise self.reply
-        return self.reply if isinstance(self.reply, httpx.Response) else httpx.Response(200, json=self.reply)
-
-
-@pytest.mark.parametrize("reply,code", [
-    ({"valid": True}, None),
-    ({"valid": False}, "authorization_refused"),
-    ({"valid": "yes"}, "authorization_refused"),
-    ({}, "authorization_refused"),
-    ([1], "authorization_malformed"),
-    ("httpx500", "authorization_refused"),
-    ("garbage", "authorization_malformed"),
-    ("timeout", "authorization_unreachable"),
-])
-def test_the_trusted_endpoint_must_say_valid_true(monkeypatch, reply, code):
-    import httpx
-
-    from mechevidence import authorization
-    from mechevidence.llm import SendBlocked
-
-    monkeypatch.setenv("MECH_AUTHORIZATION_URL", "https://auth.internal/check")
-    monkeypatch.setenv("MECH_AUTHORIZATION_TOKEN", "t")
-    reply = {"httpx500": httpx.Response(500), "garbage": httpx.Response(200, content=b"nope"),
-             "timeout": httpx.ReadTimeout("slow")}.get(reply if isinstance(reply, str) else None, reply)
-    fake = FakeEndpoint(reply)
-    monkeypatch.setattr(authorization.httpx, "post", fake)
-    attempt = {"stage": "review"}
-    if code is None:
-        authorization.check_with_trusted_endpoint("ref-1", attempt)
-    else:
-        with pytest.raises(SendBlocked) as caught:
-            authorization.check_with_trusted_endpoint("ref-1", attempt)
-        assert caught.value.code == code
-    url, sent, headers, kwargs = fake.posts[0]
-    assert url == "https://auth.internal/check" and sent["authorization_ref"] == "ref-1" and sent["attempt"] == attempt
-    assert headers == {"Authorization": "Bearer t"} and kwargs["follow_redirects"] is False
-
-
-def test_the_endpoint_comes_from_the_environment_never_from_the_request(monkeypatch):
-    from mechevidence import authorization
-
-    monkeypatch.setenv("MECH_AUTHORIZATION_URL", "https://auth.internal/check")
-    monkeypatch.setenv("MECH_AUTHORIZATION_TOKEN", "t")
-    fake = FakeEndpoint({"valid": True})
-    monkeypatch.setattr(authorization.httpx, "post", fake)
-    raw = request(authorization_callback="https://evil.example/")
-    response = TestClient(create_app(HookedStub())).post("/v2/evaluate", json=raw, headers=AUTH)
-    assert response.status_code == 422 and response.json()["error_code"] == "field_not_in_contract"
-    assert fake.posts == []
-    assert TestClient(create_app(HookedStub())).post("/v2/evaluate", json=request(), headers=AUTH).status_code == 200
-    assert {post[0] for post in fake.posts} == {"https://auth.internal/check"} and len(fake.posts) == 2
 
 
 # ---- raw answers that cannot be archived whole ----

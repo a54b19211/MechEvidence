@@ -1,4 +1,8 @@
-"""唯一的模型调用入口：OpenAI 兼容 /chat/completions，返回 (对象或 None, 调用记录)。"""
+"""唯一的模型调用入口：OpenAI 兼容 /chat/completions，返回 (对象或 None, 调用记录)。
+
+HTTP 一侧（请求体、发送、送达结果、请求计数、响应信封）由共享的 llm_transport 完成；提示词说明、格式重试、
+错误码和默认值留在这里。
+"""
 from __future__ import annotations
 
 import hashlib
@@ -9,7 +13,11 @@ from collections.abc import Callable
 from typing import get_args
 
 import httpx
+import llm_transport as lt
+from llm_transport import SendBlocked
 from pydantic import BaseModel, ValidationError
+
+__all__ = ["OutputNotRecorded", "SendBlocked", "archived", "chat_json", "describe", "make_client"]
 
 # What the two structured stages ask of the model; the evaluator identity (identity.py) states the same values.
 STRUCTURED_MAX_TOKENS = 4096
@@ -22,18 +30,26 @@ DEFAULT_PROVIDER = "deepseek"
 OUTPUT_ARCHIVE_LIMIT = 256 * 1024
 
 
-class SendBlocked(Exception):
-    """Raised by a before_attempt hook: this HTTP request must not be sent. `code` becomes the call's error."""
-
-    def __init__(self, code: str, message: str = ""):
-        self.code = code
-        super().__init__(message or code)
+class OutputNotRecorded(Exception):
+    """Raised by an after_attempt hook that could not keep an attempt's outcome: nothing further is sent."""
 
 
-def archived(attempt: int, content: str) -> dict:
-    raw = content.encode("utf-8")
-    return {"attempt": attempt, "content": raw[:OUTPUT_ARCHIVE_LIMIT].decode("utf-8", errors="ignore"),
-            "sha256": hashlib.sha256(raw).hexdigest(), "truncated": len(raw) > OUTPUT_ARCHIVE_LIMIT}
+def make_client() -> httpx.Client:
+    return httpx.Client()
+
+
+def _entry(index, raw: bytes | None, delivered: str, status, error) -> dict:
+    """One counted request as the receipt archives it. `content` is the raw HTTP answer (cut at the limit),
+    `sha256` the sha256 of the whole answer's bytes; no answer (timeout, refused connection) is content None."""
+    return {"attempt": index, "delivered": delivered, "status": status, "error": error,
+            "content": None if raw is None else raw[:OUTPUT_ARCHIVE_LIMIT].decode("utf-8", errors="ignore"),
+            "sha256": None if raw is None else hashlib.sha256(raw).hexdigest(),
+            "truncated": raw is not None and len(raw) > OUTPUT_ARCHIVE_LIMIT}
+
+
+def archived(index: int, text: str) -> dict:
+    """The entry of an answered request whose body is `text` (fixtures and tests)."""
+    return _entry(index, text.encode("utf-8"), "yes", 200, None)
 
 
 def describe(model_cls: type[BaseModel]) -> str:
@@ -49,86 +65,114 @@ def describe(model_cls: type[BaseModel]) -> str:
     return "\n".join(lines)
 
 
+def _provider(model: str) -> lt.Provider:
+    name = os.environ.get("LLM_PROVIDER", DEFAULT_PROVIDER)
+    return lt.Provider(
+        kind=name if name in ("deepseek", "vllm") else "openai_compatible",
+        base_url=os.environ.get("LLM_BASE_URL", "https://api.deepseek.com"), model=model,
+        api_key=os.environ.get("LLM_API_KEY", ""), timeout_seconds=float(os.environ.get("LLM_TIMEOUT_SECONDS", "180")),
+        endpoint_id=os.environ.get("LLM_ENDPOINT_ID", "unnamed"))
+
+
 def chat_json(stage: str, system: str, payload: dict, model_cls: type[BaseModel],
               *, max_tokens: int = STRUCTURED_MAX_TOKENS, thinking: bool = STRUCTURED_THINKING,
-              before_attempt: Callable[[dict], None] | None = None) -> tuple[BaseModel | None, dict]:
-    """before_attempt(info) runs before every actual HTTP request of this call, the format retry included. Any
+              before_attempt: Callable[[dict], None] | None = None,
+              after_attempt: Callable[[dict], None] | None = None) -> tuple[BaseModel | None, dict]:
+    """before_attempt(info) runs before every actual HTTP request of this call, the format retry included; any
     exception it raises means that request is not sent (requests is not incremented, error is the exception's
-    `code` or "authorization_error") and nothing further is sent for this call."""
+    `reason`/`code` or "authorization_error") and nothing further is sent for the call.
+    after_attempt(entry) runs after every counted request, once its raw answer is archived and before anything
+    is parsed or resent; if it raises, error is "authorization_outcome_failed" and nothing further is sent.
+
+    A request that was sent is never lost: the raw HTTP answer is archived first, the envelope is read afterwards,
+    and a malformed one ends the call with error "response_malformed" (outputs and requests intact)."""
     model = os.environ.get("LLM_MODEL", DEFAULT_MODEL)
     # requests: HTTP requests actually sent for this logical call (a format retry is a second one)
-    # outputs: the raw model answer of every attempt that returned one (archived(); v2 receipts carry them)
+    # outputs: one entry per counted request (_entry), in order
     call = {"stage": stage, "model": model, "finish_reason": None, "usage": {}, "seconds": 0.0, "error": None,
             "requests": 0, "outputs": []}
-    key = os.environ.get("LLM_API_KEY", "")
-    if not key:
+    if not os.environ.get("LLM_API_KEY", ""):
         call["error"] = "llm_not_configured"
         return None, call
-    url = os.environ.get("LLM_BASE_URL", "https://api.deepseek.com").rstrip("/") + "/chat/completions"
-    provider = os.environ.get("LLM_PROVIDER", DEFAULT_PROVIDER)
-    timeout = float(os.environ.get("LLM_TIMEOUT_SECONDS", "180"))
+    try:
+        provider = _provider(model)
+    except ValueError:
+        call["error"] = "llm_base_url_invalid"
+        return None, call
+    record = lt.CallRecord(stage=stage, endpoint_id=provider.endpoint_id, model=model)
     user = json.dumps(payload, ensure_ascii=False)
-    body = {"model": model, "max_tokens": max_tokens, "response_format": {"type": "json_object"},
-            "messages": [{"role": "system", "content": system + "\n\n只输出一个 JSON 对象，字段：\n" + describe(model_cls)},
-                         {"role": "user", "content": user}]}
-    if provider == "deepseek":
-        body["thinking"] = {"type": "enabled" if thinking else "disabled"}
-    elif provider == "vllm":
-        # local vLLM serving Qwen: the same per-call switch, as its chat template reads it
-        body["chat_template_kwargs"] = {"enable_thinking": bool(thinking)}
-    if not thinking:
-        body["temperature"] = STRUCTURED_TEMPERATURE
+    messages = [{"role": "system", "content": system + "\n\n只输出一个 JSON 对象，字段：\n" + describe(model_cls)},
+                {"role": "user", "content": user}]
+
+    def before(start: lt.AttemptStart) -> None:
+        if before_attempt is None:
+            return
+        try:
+            before_attempt({"stage": stage, "index_in_call": start.index, "requests_before": start.sent_before,
+                            "request_body_sha256": start.body_sha256, "model": model,
+                            "endpoint_id": provider.endpoint_id})
+        except lt.SendBlocked:
+            raise
+        except Exception as error:  # noqa: BLE001 - whatever stops the check also stops the request
+            raise lt.SendBlocked(getattr(error, "code", None) or "authorization_error") from None
+
+    def after(attempt: lt.Attempt) -> None:
+        call["outputs"].append(_entry(attempt.index, attempt.response_bytes, attempt.delivered, attempt.status,
+                                      attempt.error))
+        if after_attempt is not None:
+            try:
+                after_attempt(call["outputs"][-1])
+            except Exception:  # noqa: BLE001 - an outcome that is not kept stops the call
+                raise OutputNotRecorded from None
+
     started = time.monotonic()
     try:
-        for attempt in range(2):
-            if before_attempt is not None:
+        with make_client() as client:
+            for _ in range(2):
+                body = lt.build_body(provider, messages, max_tokens=max_tokens, thinking=thinking)
                 try:
-                    before_attempt({
-                        "stage": stage, "attempt_in_call": attempt + 1, "requests_before": call["requests"],
-                        "request_body_sha256": hashlib.sha256(
-                            json.dumps(body, sort_keys=True, ensure_ascii=False).encode()).hexdigest(),
-                        "model": model, "endpoint_id": os.environ.get("LLM_ENDPOINT_ID", "unnamed")})
-                except Exception as error:  # noqa: BLE001 - whatever stops the check also stops the request
-                    call["error"] = getattr(error, "code", "authorization_error")
+                    sent = lt.send(provider, body, record, client=client, before_attempt=before, after_attempt=after)
+                except lt.SendBlocked as blocked:
+                    call["error"] = blocked.reason
                     return None, call
-            call["requests"] += 1
-            try:
-                response = httpx.post(url, json=body, timeout=timeout, headers={"Authorization": "Bearer " + key})
-            except httpx.TimeoutException:
-                call["error"] = "timeout"  # 不自动重发：对方可能已经计费
-                return None, call
-            except httpx.HTTPError:
-                call["error"] = "network_error"
-                return None, call
-            if response.status_code != 200:
-                call["error"] = f"http_{response.status_code}"
-                return None, call
-            try:
-                data = response.json()
-                choice = data["choices"][0]
-            except (ValueError, KeyError, IndexError, TypeError):
-                call["outputs"].append(archived(attempt + 1, response.text))
-                call["error"] = "response_malformed"
-                return None, call
-            for name, value in (data.get("usage") or {}).items():
-                if isinstance(value, (int, float)):
+                except OutputNotRecorded:
+                    call["error"] = "authorization_outcome_failed"
+                    return None, call
+                except lt.RequestNotBuilt:
+                    call["error"] = "request_not_built"
+                    return None, call
+                except Exception:  # noqa: BLE001 - settled by the transport as unknown; the call keeps its record
+                    call["error"] = "unexpected_error"
+                    return None, call
+                if sent.exception is not None:
+                    call["error"] = "timeout" if sent.timed_out else "network_error"  # 不自动重发：对方可能已经计费
+                    return None, call
+                if sent.status != 200:
+                    call["error"] = f"http_{sent.status}"
+                    return None, call
+                if call["outputs"][-1]["truncated"]:
+                    call["error"] = "output_oversize"  # cannot be archived whole: no format retry, no result
+                    return None, call
+                found = sent.envelope()
+                if found.problem is not None or not (found.content is None or isinstance(found.content, str)):
+                    call["error"] = "response_malformed"
+                    return None, call
+                for name, value in found.usage.items():
                     call["usage"][name] = call["usage"].get(name, 0) + value
-            call["finish_reason"] = choice.get("finish_reason")
-            content = (choice.get("message") or {}).get("content") or ""
-            call["outputs"].append(archived(attempt + 1, content))
-            if call["outputs"][-1]["truncated"]:
-                call["error"] = "output_oversize"  # cannot be archived whole: no format retry, no result
-                return None, call
-            if call["finish_reason"] == "length" and not content.strip():
-                call["error"] = "output_empty_after_limit"  # 思考或长输入吃掉了额度
-                return None, call
-            try:
-                result = model_cls.model_validate(json.loads(content))
-                call["error"] = None
-                return result, call
-            except (ValueError, ValidationError) as error:
-                call["error"] = "output_invalid"
-                body["messages"][1]["content"] = user + "\n\n上一次输出未通过校验，请修正后重新输出完整 JSON：\n" + str(error)[:2000]
-        return None, call
+                call["finish_reason"] = found.finish_reason
+                content = found.content or ""
+                if call["finish_reason"] == "length" and not content.strip():
+                    call["error"] = "output_empty_after_limit"  # 思考或长输入吃掉了额度
+                    return None, call
+                try:
+                    result = model_cls.model_validate(json.loads(content))
+                    call["error"] = None
+                    return result, call
+                except (ValueError, ValidationError) as error:
+                    call["error"] = "output_invalid"
+                    messages[1] = {"role": "user", "content": user + "\n\n上一次输出未通过校验，请修正后重新输出完整 JSON：\n"
+                                   + str(error)[:2000]}
+            return None, call
     finally:
+        call["requests"] = record.requests
         call["seconds"] = round(time.monotonic() - started, 2)

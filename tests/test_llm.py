@@ -10,17 +10,25 @@ from mechevidence.models import Decomposition
 
 
 class FakePost:
+    """The model endpoint as an httpx transport: replies are (content, finish_reason), an exception or a response."""
+
     def __init__(self, *replies):
         self.replies, self.bodies = list(replies), []
 
-    def __call__(self, url, json, **_):
-        self.bodies.append(json)
+    def __call__(self, request):
+        self.bodies.append(json.loads(request.content))
         reply = self.replies.pop(0)
         if isinstance(reply, Exception):
             raise reply
+        if isinstance(reply, httpx.Response):
+            return reply
         content, finish = reply
         return httpx.Response(200, json={"choices": [{"message": {"content": content}, "finish_reason": finish}],
                                          "usage": {"total_tokens": 10}})
+
+
+def use(monkeypatch, fake):
+    monkeypatch.setattr(llm, "make_client", lambda: httpx.Client(transport=httpx.MockTransport(fake)))
 
 
 @pytest.fixture(autouse=True)
@@ -31,7 +39,7 @@ def env(monkeypatch):
 
 def run(monkeypatch, *replies):
     fake = FakePost(*replies)
-    monkeypatch.setattr(llm.httpx, "post", fake)
+    use(monkeypatch, fake)
     result, call = llm.chat_json("decompose", "system", {"x": 1}, Decomposition)
     return result, call, fake
 
@@ -84,7 +92,7 @@ def test_each_call_reports_the_http_requests_it_sent(monkeypatch):
 def test_an_unconfigured_call_sends_no_request(monkeypatch):
     monkeypatch.delenv("LLM_API_KEY")
     fake = FakePost()
-    monkeypatch.setattr(llm.httpx, "post", fake)
+    use(monkeypatch, fake)
     result, call = llm.chat_json("decompose", "system", {"x": 1}, Decomposition)
     assert result is None and call["error"] == "llm_not_configured" and call["requests"] == 0 and fake.bodies == []
 
@@ -92,7 +100,7 @@ def test_an_unconfigured_call_sends_no_request(monkeypatch):
 def test_an_evaluation_reports_every_request_of_its_calls(monkeypatch):
     review = json.dumps({"observations": good_observations()})
     fake = FakePost((json.dumps(DECOMPOSITION), "stop"), ("not json", "stop"), (review, "stop"))
-    monkeypatch.setattr(llm.httpx, "post", fake)
+    use(monkeypatch, fake)
     out = evaluate(case())
     assert [(c["stage"], c["requests"]) for c in out["llm_calls"]] == [("decompose", 1), ("review", 2)]
     assert sum(c["requests"] for c in out["llm_calls"]) == len(fake.bodies) == 3

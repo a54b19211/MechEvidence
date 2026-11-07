@@ -1,10 +1,12 @@
-"""POST /v2/evaluate: validate the binding, refuse another evaluator, check authorization before every model
-request, evaluate, and answer with a receipt that names evaluator, reuse key and bound materials."""
+"""POST /v2/evaluate: validate the binding, refuse another evaluator, authorize every model request with the trusted
+endpoint (and hand it each outcome), evaluate, and answer with a receipt that names evaluator, reuse key and bound
+materials."""
 from __future__ import annotations
 
-from collections.abc import Callable
+import uuid
 
 from .assess import EvaluationFailed, evaluate
+from .authorization import TrustedEndpoint
 from .contract import (
     CONTRACT_V1,
     CONTRACT_V2,
@@ -15,10 +17,8 @@ from .contract import (
     reuse_key,
 )
 from .identity import current_evaluator
-from .llm import SendBlocked, chat_json
+from .llm import chat_json
 from .models import EvaluateRequest
-
-Authorize = Callable[[str, dict], None]
 
 
 def _material_echo(parsed: Parsed) -> list[dict]:
@@ -39,9 +39,10 @@ def _internal_request(parsed: Parsed) -> EvaluateRequest:
                            joins=[item.model_dump() for item in request.joins], max_llm_calls=request.max_llm_calls)
 
 
-def evaluate_v2(raw, chat=chat_json, authorize: Authorize | None = None) -> dict:
+def evaluate_v2(raw, chat=chat_json, endpoint=None) -> dict:
     """Raises ContractError (422 invalid, 409 evaluator_changed) or EvaluationFailed (502: model failure, the
-    authorization refused a request, or a raw model answer too large to archive in full)."""
+    endpoint refused a request or did not record an outcome, or a raw model answer too large to archive)."""
+    endpoint = endpoint if endpoint is not None else TrustedEndpoint()
     parsed = parse_request(raw)
     request, evaluator = parsed.request, current_evaluator()
     if request.expected_evaluator_id is not None and request.expected_evaluator_id != evaluator["evaluator_id"]:
@@ -50,18 +51,28 @@ def evaluate_v2(raw, chat=chat_json, authorize: Authorize | None = None) -> dict
                             "the evaluator is not the one this request was prepared for; fetch GET /v2/evaluator, "
                             "recompute the reuse key and send again", evaluator=evaluator,
                             expected_evaluator_id=request.expected_evaluator_id, llm_calls=[])
+    key = reuse_key(parsed, evaluator)
     seen: list[dict] = []
+    sent = {"index": 0, "decision": None}   # index: request number over the whole evaluation, never reset
+
+    def before_attempt(info: dict) -> None:
+        sent["index"] += 1
+        attempt = {"id": uuid.uuid4().hex, "stage": info["stage"], "index": sent["index"],
+                   "request_body_sha256": info["request_body_sha256"], "model": info["model"],
+                   "endpoint_id": info["endpoint_id"]}
+        sent["decision"] = None
+        sent["decision"] = endpoint.authorize(request.authorization_ref, key, evaluator["evaluator_id"], attempt)
+
+    def after_attempt(entry: dict) -> None:
+        endpoint.settle(request.authorization_ref, sent["decision"], entry)
 
     def guarded(stage, system, payload, model_cls, **kwargs):
-        def before_attempt(attempt: dict) -> None:
-            if authorize is None:
-                raise SendBlocked("authorization_not_configured", "no authorization check is wired")
-            authorize(request.authorization_ref, {**attempt, "evaluator_id": evaluator["evaluator_id"]})
-
-        result, record = chat(stage, system, payload, model_cls, before_attempt=before_attempt, **kwargs)
+        result, record = chat(stage, system, payload, model_cls, before_attempt=before_attempt,
+                              after_attempt=after_attempt, **kwargs)
         seen.append(record)
-        if str(record.get("error") or "").startswith("authorization_"):
-            raise EvaluationFailed("authorization_blocked", f"{record['error']}: no further model request was sent", seen)
+        error = str(record.get("error") or "")
+        if error.startswith("authorization_"):
+            raise EvaluationFailed("authorization_blocked", f"{error}: no further model request was sent", seen)
         if any(out.get("truncated") for out in record.get("outputs") or []):
             # fail closed: an answer that cannot be archived whole is not a result anybody can audit or adopt
             raise EvaluationFailed("output_oversize", "a raw model answer exceeds the archive limit; the result is "
@@ -70,7 +81,7 @@ def evaluate_v2(raw, chat=chat_json, authorize: Authorize | None = None) -> dict
 
     result = evaluate(_internal_request(parsed), guarded)
     reasons = sorted({note["code"] for note in result["material_notes"] if note["code"] in INCOMPLETE_CODES})
-    return {"contract_version": CONTRACT_V2, "evaluator": evaluator, "reuse_key": reuse_key(parsed, evaluator),
+    return {"contract_version": CONTRACT_V2, "evaluator": evaluator, "reuse_key": key,
             "complete": not reasons, "not_complete_because": reasons, "audit_complete": True,
             "scope": request.scope.normal(), "materials": _material_echo(parsed), **result}
 

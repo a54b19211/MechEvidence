@@ -41,6 +41,7 @@ def outcome_cases():
     return load("receipt_outcomes.json")["cases"]
 
 
+INVALID = ("failed", "receipt_invalid")
 EXPECTED = {
     "exact": ("completed", None),
     "reuse_key_differs": ("failed", "receipt_mismatch"),
@@ -48,9 +49,27 @@ EXPECTED = {
     "binding_echo_other_text": ("failed", "receipt_mismatch"),
     "evaluator_id_differs": ("failed", "receipt_mismatch"),
     "evaluator_fields_edited_id_kept": ("failed", "receipt_mismatch"),
-    "not_complete": ("completed", None),
+    "not_complete_budget_cut": ("completed", None),
     "audit_incomplete": ("failed", "audit_incomplete"),
     "truncated_answer": ("failed", "audit_incomplete"),
+    "outputs_missing": INVALID,
+    "output_text_edited_hash_kept": INVALID,
+    "output_hash_not_hex": INVALID,
+    "requests_more_than_outputs": INVALID,
+    "outputs_more_than_requests": INVALID,
+    "attempt_numbers_not_contiguous": INVALID,
+    "unanswered_attempt_carries_an_answer": INVALID,
+    "successful_call_not_answered_200": INVALID,
+    "llm_calls_not_a_list": INVALID,
+    "invalid_overall_verdict": INVALID,
+    "invalid_claim_verdict": INVALID,
+    "invalid_join_verdict": INVALID,
+    "invalid_observation_relation": INVALID,
+    "complete_false_without_a_reason": INVALID,
+    "complete_true_with_a_budget_note": INVALID,
+    "scope_echo_changed": INVALID,
+    "required_field_missing": INVALID,
+    "assessability_status_invalid": INVALID,
 }
 
 
@@ -69,6 +88,8 @@ def test_what_the_radar_does_with_each_receipt(name):
         assert outcome["rejected"]["response"] == case["receipt"] and "response" not in outcome["result"]
         if reason == "receipt_mismatch":
             assert outcome["rejected"]["mismatch"] == outcome["result"]["mismatch"] != []
+        if reason == "receipt_invalid":
+            assert outcome["rejected"]["invalid"] == outcome["result"]["invalid"] != []
     else:
         assert outcome["rejected"] is None
         assert outcome["result"]["cacheable"] is (name == "exact")

@@ -11,8 +11,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from . import authorization
 from .assess import EvaluationFailed, evaluate
+from .authorization import TrustedEndpoint
 from .contract import CONTRACT_V1, CONTRACT_V2, ContractError
 from .identity import current_evaluator
 from .llm import chat_json
@@ -31,7 +31,8 @@ def _without_outputs(calls: list[dict]) -> list[dict]:
     return [{key: value for key, value in call.items() if key != "outputs"} for call in calls]
 
 
-def create_app(chat=chat_json, authorize=authorization.check_with_trusted_endpoint) -> FastAPI:
+def create_app(chat=chat_json, endpoint=None) -> FastAPI:
+    endpoint = endpoint if endpoint is not None else TrustedEndpoint()
     app = FastAPI(title="MechEvidence")
 
     @app.middleware("http")
@@ -73,7 +74,7 @@ def create_app(chat=chat_json, authorize=authorization.check_with_trusted_endpoi
     @app.get("/v2/evaluator")
     def evaluator():
         return {"contract_version": CONTRACT_V2, "evaluator": current_evaluator(),
-                "authorization": {"mode": "per_attempt_trusted_endpoint", "configured": authorization.configured()}}
+                "authorization": {"mode": "per_attempt_trusted_endpoint", "configured": endpoint.configured()}}
 
     @app.post("/v1/evaluate")
     def evaluate_route(body: EvaluateRequest):
@@ -85,7 +86,7 @@ def create_app(chat=chat_json, authorize=authorization.check_with_trusted_endpoi
     @app.post("/v2/evaluate")
     def evaluate_v2_route(body: Annotated[Any, Body()]):
         try:
-            return evaluate_v2(body, chat, authorize)
+            return evaluate_v2(body, chat, endpoint)
         except ContractError as error:
             return _error(error.status, error.code, str(error), **error.extra)
         except EvaluationFailed as error:

@@ -5,8 +5,10 @@ UV ?= uv
 PYTHON ?= 3.12
 VENV ?= .venv
 PY = $(VENV)/bin/python
-LOCK_INPUTS = requirements.txt
-LOCK_FLAGS = --generate-hashes --python-version 3.12 --python-platform x86_64-unknown-linux-gnu
+# the shared model-transport wheel (built in the sibling llm-transport checkout; hash in requirements-transport.txt)
+LLM_TRANSPORT_WHEELS ?= ../../../llm-transport/dist
+LOCK_INPUTS = requirements.txt requirements-transport.txt
+LOCK_FLAGS = --generate-hashes --python-version 3.12 --python-platform x86_64-unknown-linux-gnu --find-links $(LLM_TRANSPORT_WHEELS)
 
 .PHONY: help venv test check check-install check-lock lock
 help:
@@ -18,12 +20,12 @@ help:
 	@echo 'make lock           re-resolve requirements.lock after a change of $(LOCK_INPUTS)'
 venv:
 	test -x $(PY) || $(UV) venv --quiet --python $(PYTHON) $(VENV)
-	$(UV) pip sync --quiet --python $(PY) --require-hashes requirements.lock
+	$(UV) pip sync --quiet --python $(PY) --require-hashes --find-links $(LLM_TRANSPORT_WHEELS) requirements.lock
 test: venv
 	$(PY) -m pytest -q
 check: test check-lock
 check-install:
-	UV=$(UV) PYTHON=$(PYTHON) sh scripts/check_clean_install.sh
+	UV=$(UV) PYTHON=$(PYTHON) LLM_TRANSPORT_WHEELS=$(LLM_TRANSPORT_WHEELS) sh scripts/check_clean_install.sh
 # the lock is re-resolved with itself as the preference: unchanged inputs give the same pins.
 # make reports Error 1: resolved, and the lock differs (stale); Error 2: the resolution itself failed (no
 # index or network, or inputs that do not resolve), so nothing was compared - that is no reason to re-lock
