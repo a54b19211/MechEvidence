@@ -73,6 +73,74 @@ def _provider(model: str) -> lt.Provider:
         endpoint_id=os.environ.get("LLM_ENDPOINT_ID", "unnamed"))
 
 
+def _hooks(call: dict, provider: lt.Provider, model: str, before_attempt, after_attempt):
+    """The transport's before/after callbacks for one logical call: authorization hook in front, record behind."""
+    stage = call["stage"]
+
+    def before(start: lt.AttemptStart) -> None:
+        if before_attempt is None:
+            return
+        try:
+            before_attempt({"stage": stage, "index_in_call": start.index, "requests_before": start.sent_before,
+                            "request_body_sha256": start.body_sha256, "model": model,
+                            "endpoint_id": provider.endpoint_id})
+        except lt.SendBlocked:
+            raise
+        except Exception as error:  # noqa: BLE001 - whatever stops the check also stops the request
+            raise lt.SendBlocked(getattr(error, "code", None) or "authorization_error") from None
+
+    def after(attempt: lt.Attempt) -> None:
+        call["outputs"].append(_entry(attempt.index, attempt.response_bytes, attempt.delivered, attempt.status,
+                                      attempt.error))
+        if after_attempt is not None:
+            try:
+                after_attempt(call["outputs"][-1])
+            except Exception:  # noqa: BLE001 - an outcome that is not kept stops the call
+                raise OutputNotRecorded from None
+
+    return before, after
+
+
+def _send(call: dict, provider: lt.Provider, body, record: lt.CallRecord, client, before, after):
+    """One transport send; None (with call["error"] set) when the call has to stop."""
+    try:
+        return lt.send(provider, body, record, client=client, before_attempt=before, after_attempt=after)
+    except lt.SendBlocked as blocked:
+        call["error"] = blocked.reason
+    except OutputNotRecorded:
+        call["error"] = "authorization_outcome_failed"
+    except lt.RequestNotBuilt:
+        call["error"] = "request_not_built"
+    except Exception:  # noqa: BLE001 - settled by the transport as unknown; the call keeps its record
+        call["error"] = "unexpected_error"
+    return None
+
+
+def _content(call: dict, sent) -> str | None:
+    """The model's text of a sent request; None (with call["error"] set) when the call has to stop."""
+    if sent.exception is not None:
+        call["error"] = "timeout" if sent.timed_out else "network_error"  # 不自动重发：对方可能已经计费
+        return None
+    if sent.status != 200:
+        call["error"] = f"http_{sent.status}"
+        return None
+    if call["outputs"][-1]["truncated"]:
+        call["error"] = "output_oversize"  # cannot be archived whole: no format retry, no result
+        return None
+    found = sent.envelope()
+    if found.problem is not None or not (found.content is None or isinstance(found.content, str)):
+        call["error"] = "response_malformed"
+        return None
+    for name, value in found.usage.items():
+        call["usage"][name] = call["usage"].get(name, 0) + value
+    call["finish_reason"] = found.finish_reason
+    content = found.content or ""
+    if call["finish_reason"] == "length" and not content.strip():
+        call["error"] = "output_empty_after_limit"  # 思考或长输入吃掉了额度
+        return None
+    return content
+
+
 def chat_json(stage: str, system: str, payload: dict, model_cls: type[BaseModel],
               *, max_tokens: int = STRUCTURED_MAX_TOKENS, thinking: bool = STRUCTURED_THINKING,
               before_attempt: Callable[[dict], None] | None = None,
@@ -102,66 +170,16 @@ def chat_json(stage: str, system: str, payload: dict, model_cls: type[BaseModel]
     user = json.dumps(payload, ensure_ascii=False)
     messages = [{"role": "system", "content": system + "\n\n只输出一个 JSON 对象，字段：\n" + describe(model_cls)},
                 {"role": "user", "content": user}]
-
-    def before(start: lt.AttemptStart) -> None:
-        if before_attempt is None:
-            return
-        try:
-            before_attempt({"stage": stage, "index_in_call": start.index, "requests_before": start.sent_before,
-                            "request_body_sha256": start.body_sha256, "model": model,
-                            "endpoint_id": provider.endpoint_id})
-        except lt.SendBlocked:
-            raise
-        except Exception as error:  # noqa: BLE001 - whatever stops the check also stops the request
-            raise lt.SendBlocked(getattr(error, "code", None) or "authorization_error") from None
-
-    def after(attempt: lt.Attempt) -> None:
-        call["outputs"].append(_entry(attempt.index, attempt.response_bytes, attempt.delivered, attempt.status,
-                                      attempt.error))
-        if after_attempt is not None:
-            try:
-                after_attempt(call["outputs"][-1])
-            except Exception:  # noqa: BLE001 - an outcome that is not kept stops the call
-                raise OutputNotRecorded from None
+    before, after = _hooks(call, provider, model, before_attempt, after_attempt)
 
     started = time.monotonic()
     try:
         with make_client() as client:
             for _ in range(2):
                 body = lt.build_body(provider, messages, max_tokens=max_tokens, thinking=thinking)
-                try:
-                    sent = lt.send(provider, body, record, client=client, before_attempt=before, after_attempt=after)
-                except lt.SendBlocked as blocked:
-                    call["error"] = blocked.reason
-                    return None, call
-                except OutputNotRecorded:
-                    call["error"] = "authorization_outcome_failed"
-                    return None, call
-                except lt.RequestNotBuilt:
-                    call["error"] = "request_not_built"
-                    return None, call
-                except Exception:  # noqa: BLE001 - settled by the transport as unknown; the call keeps its record
-                    call["error"] = "unexpected_error"
-                    return None, call
-                if sent.exception is not None:
-                    call["error"] = "timeout" if sent.timed_out else "network_error"  # 不自动重发：对方可能已经计费
-                    return None, call
-                if sent.status != 200:
-                    call["error"] = f"http_{sent.status}"
-                    return None, call
-                if call["outputs"][-1]["truncated"]:
-                    call["error"] = "output_oversize"  # cannot be archived whole: no format retry, no result
-                    return None, call
-                found = sent.envelope()
-                if found.problem is not None or not (found.content is None or isinstance(found.content, str)):
-                    call["error"] = "response_malformed"
-                    return None, call
-                for name, value in found.usage.items():
-                    call["usage"][name] = call["usage"].get(name, 0) + value
-                call["finish_reason"] = found.finish_reason
-                content = found.content or ""
-                if call["finish_reason"] == "length" and not content.strip():
-                    call["error"] = "output_empty_after_limit"  # 思考或长输入吃掉了额度
+                sent = _send(call, provider, body, record, client, before, after)
+                content = _content(call, sent) if sent is not None else None
+                if content is None:
                     return None, call
                 try:
                     result = model_cls.model_validate(json.loads(content))
