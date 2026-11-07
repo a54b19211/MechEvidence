@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from mechevidence.contract import adopt
-from mechevidence.receipt import SHAPE, shape_problems
+from extraction_contract.mech_v2.receipt import SHAPE, shape_problems
 
 DIRECTORY = Path(__file__).resolve().parents[1] / "examples" / "contract-v2"
 REQUEST = json.loads((DIRECTORY / "request.json").read_text(encoding="utf-8"))

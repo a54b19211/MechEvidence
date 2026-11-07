@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import re
-from urllib.parse import unquote, urlsplit
+
+from extraction_contract.mech_v2 import IdentityError, source_identity as identity_of
 
 from .models import Material
 
@@ -29,99 +30,15 @@ def original_results(material: Material) -> bool:
     return material.source_kind == "primary" and material.document_type not in DESIGNS | DECLARATIONS
 
 
-# ---- 文献身份：只认整字段标签、裸 DOI 或官方 URL，不从任意子串猜测 ----
-
-class IdentityError(ValueError):
-    def __init__(self, code: str, kind: str, fields: dict):
-        self.code, self.kind, self.fields = code, kind, fields
-        super().__init__(f"{code}: {kind} {fields}")
-
-
-_PMID = r"[1-9][0-9]*"
-_DOI = r'10\.[0-9]{4,9}/[^\s\x00-\x1f\x7f<>"\\]+'
-
-
-def _identifier_value(value, kind: str, field: str) -> str:
-    text = str(value).strip()
-    if isinstance(value, bool) or not re.fullmatch(_PMID if kind == "pmid" else _DOI, text):
-        raise IdentityError("material_identifier_invalid", kind, {field: value})
-    # DOI 末尾的 ')' 或 '.' 属于标识符本身，不能剥掉
-    return text if kind == "pmid" else text.casefold()
-
-
-def _url_identifier(value: str) -> tuple[str, str] | None:
-    if ("\\" in value or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in value)
-            or re.search(r"%(?![0-9a-fA-F]{2})", value)):
-        return None
-    try:
-        url = urlsplit(value)
-        if (url.scheme not in {"http", "https"} or url.username is not None or url.password is not None
-                or url.port not in {None, 443 if url.scheme == "https" else 80}):
-            return None
-        routes = {
-            "pubmed.ncbi.nlm.nih.gov": rf"/({_PMID})/?",
-            "ncbi.nlm.nih.gov": rf"/pubmed/({_PMID})/?",
-            "www.ncbi.nlm.nih.gov": rf"/pubmed/({_PMID})/?",
-            "europepmc.org": rf"/article/MED/({_PMID})/?",
-            "www.europepmc.org": rf"/article/MED/({_PMID})/?",
-        }
-        if url.hostname in routes:
-            match = re.fullmatch(routes[url.hostname], url.path)
-            return ("pmid", match.group(1)) if match else None
-        if url.hostname in {"doi.org", "dx.doi.org"}:
-            doi = unquote(url.path[1:], errors="strict") if url.path.startswith("/") else ""
-            return ("doi", doi) if re.fullmatch(_DOI, doi) else None
-    except (ValueError, UnicodeError):
-        return None
-    return None
-
-
-def _tagged_identifier(value: str) -> tuple[str, str] | None:
-    # 冒号或斜杠才声明标识符；普通分组标签保持原样
-    for pattern, kind in [(r"(?:pmid|pubmed)\s*[:/]\s*(.*)", "pmid"), (rf"(?:pmid|pubmed)\s*({_PMID})", "pmid"),
-                          (r"doi\s*[:/]\s*(.*)", "doi"), (rf"doi\s+({_DOI})", "doi")]:
-        match = re.fullmatch(pattern, value, re.I)
-        if match:
-            return kind, match.group(1)
-    if re.fullmatch(_DOI, value):
-        return "doi", value
-    return _url_identifier(value)
-
+# ---- 文献身份：规则在共享契约包里（reuse key 依赖它），这里只把 Material 交给它 ----
 
 def source_identity(material: Material) -> str | None:
     """同一篇文献的不同记录合并为一组（pmid:/doi:/group:/record:）；无标识返回 None。
 
     这是文献身份，不是队列或实验独立性。
     """
-    candidates = {"pmid": {}, "doi": {}}
-    for kind in candidates:
-        value = getattr(material, kind)
-        if value is not None:
-            candidates[kind][kind] = _identifier_value(value, kind, kind)
-    source = material.source_id.strip().casefold().replace("-", "_")
-    for field in ("source_group", "record_id", "url"):
-        value = (getattr(material, field) or "").strip()
-        if not value:
-            continue
-        parsed = _url_identifier(value) if field == "url" else _tagged_identifier(value)
-        if parsed:
-            candidates[parsed[0]][field] = _identifier_value(parsed[1], parsed[0], field)
-        elif field == "record_id" and source == "pubmed":
-            candidates["pmid"][field] = _identifier_value(value, "pmid", field)
-        elif field == "record_id" and source in {"europe_pmc", "europepmc"} and value.upper().startswith("MED:"):
-            candidates["pmid"][field] = _identifier_value(value[4:], "pmid", field)
-    # 两类都检查完再取优先级，PMID 不能掩盖互相矛盾的 DOI
-    for kind, fields in candidates.items():
-        if len(set(fields.values())) > 1:
-            raise IdentityError("material_identity_conflict", kind, fields)
-    for kind in ("pmid", "doi"):
-        if candidates[kind]:
-            return kind + ":" + next(iter(candidates[kind].values()))
-    if material.source_group:
-        return "group:" + " ".join(material.source_group.casefold().split())
-    if material.record_id:
-        return "record:" + " ".join((material.source_id + ":" + material.record_id).casefold().split())
-    return None
+    return identity_of({name: getattr(material, name) for name in (
+        "pmid", "doi", "url", "source_id", "record_id", "source_group")})
 
 
 # ---- 片段：按换行和句末标点切分，每份材料编号 E1.1..E1.k ----
