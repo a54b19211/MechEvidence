@@ -8,7 +8,7 @@
 2. 模型调用只走 `llm.chat_json`。结构化阶段关闭思考，`max_tokens` 4096；校验失败带错误重试一次，再失败只让这一项失败。
 3. 编号由程序分配（C/J、E1.3、O），模型只引用。无效编号、找不到的短引：丢弃该条并记进 `material_notes`，不让整份输出失败。
 4. schema 要小：每次输出不超过两层、必填字段不超过 5 个、枚举用小写英文。
-5. 不加哈希、版本摘要或回执；调用记录只存 stage、model、usage、finish_reason、耗时、错误码和实际发出的请求数（requests）。
+5. 哈希、评价器身份和回执只属于版本绑定契约 `/v2/evaluate`（`docs/decisions/0002-version-bound-contract.md`）；兼容路径 `/v1/evaluate` 不加。调用记录存 stage、model、usage、finish_reason、耗时、错误码和实际发出的请求数（requests）；v2 回执另带每次尝试的模型原始回答（`outputs`，单条 ≤256 KiB，超出即失败，不当结果）。
 6. 注释解释医学或算法原因，不复述代码；同一规则只维护一处（评级在 `assess.py`，可评性和身份在 `materials.py`）。
 
 ## 证据完整性
@@ -24,4 +24,12 @@
 12. 默认端口是 18563（`mechevidence.service.DEFAULT_PORT`，环境变量 `PORT` 可改）；18561 是查询规划服务的，不要混用。
 13. 测试只覆盖真实错误和容易被误伤的正确例子（`python -m pytest -q`，不联网）。
 14. 密钥放私有 .env 或部署环境，数据和运行结果放忽略目录；凭据和隐藏思考不进仓库或报告。
-15. 文档只维护本文件和 README.md。保留他人修改。
+15. 文档维护本文件、README.md 和 `docs/decisions/` 下的 ADR：历史 ADR 不改写，新的决定另写新编号。保留他人修改。
+
+## 版本绑定契约
+
+16. 请求模型一律拒绝契约未写的字段（422 `field_not_in_contract`），不静默丢弃；模型输出的模型保持宽松。
+17. 评价器身份 `evaluator_id` 由 `identity.current_evaluator()` 一处给出，覆盖规则版本、提示词哈希、批大小、顺序规则和模型配置。任何会让同一输入得出不同结论的改动（提示词、范围别名表、比较与评级规则、批大小、默认模型）都要升 `assess.RULES_VERSION` 或改变上述字段，并在 ADR 记一笔。
+18. 复用键必须覆盖评价实际用到的每个输入；给材料加字段，先在 `tests/test_contract_v2.py` 里加扰动用例。第一期键是有序的，包含调用方别名，不声称顺序无关。
+19. v2 每次真实模型 HTTP 请求之前都要经 `authorization.py` 向预配置的可信端点现查授权，查不了就不发；v1 不查，这是兼容缺口，不得说成新系统的保证。
+20. 契约夹具在 `examples/contract-v2/`，由 `tests/contract_cases.py` 生成并有测试比对；改了契约、提示词或规则后用 `MECH_REGEN_FIXTURES=1` 重生并在提交里说明。
