@@ -152,7 +152,7 @@ make check-lock      # requirements.lock 是否仍与 requirements.txt 一致（
 
 `make check-lock`、`make lock` 要访问 PyPI（`make venv`、`make check-install` 在 uv 缓存里没有的包也要下载）。zktest 上直连 PyPI 有时超时，这时只给这几条命令临时加上本机已有的 HTTP 代理（mihomo，监听 127.0.0.1:7890），例如 `HTTPS_PROXY=http://127.0.0.1:7890 HTTP_PROXY=http://127.0.0.1:7890 make check-lock`；不要把代理写进全局配置。`check-lock` 的结果有两种失败：解析本身失败（包索引或网络不可用、依赖解不出来）时报 `check-lock did not run`，make 显示 `Error 2`，锁文件没有比较过，不能因此重做锁；只有解析成功而内容不同时才报 `requirements.lock is stale`（make 显示 `Error 1`）。两种情况 make 都以非零状态结束。
 
-- v2 契约的纯函数（evaluator id、reuse key、回执校验、adopt、文献身份）在共享包 `extraction-contract` 1.14.1 的 `extraction_contract.mech_v2` 里，雷达导入同一份；wheel 哈希写在 `requirements-contract.txt` 和锁里，`make` 用 `EXTRACTION_CONTRACT_WHEELS` 找 wheel（默认 `../extraction-contract/dist`）。本仓库只保留请求校验（pydantic 模型）并把校验后的请求交给它。
+- v2 契约的纯函数（evaluator id、reuse key、回执校验、adopt、文献身份）在共享包 `extraction-contract`（版本和哈希见 `requirements-contract.txt`）的 `extraction_contract.mech_v2` 里，雷达导入同一份；wheel 哈希写在 `requirements-contract.txt` 和锁里，`make` 用 `EXTRACTION_CONTRACT_WHEELS` 找 wheel（默认 `../extraction-contract/dist`）。本仓库只保留请求校验（pydantic 模型）并把校验后的请求交给它。
 - 模型调用的 HTTP 一侧用共享包 `zk-llm-transport`（0.1.1，兄弟目录 `llm-transport` 构建的 wheel，哈希写在 `requirements-transport.txt` 和锁里；`make` 用 `LLM_TRANSPORT_WHEELS` 找 wheel，默认 `../llm-transport/dist`，即本仓库和 `llm-transport` 同在 `zk_projects/` 下的位置；放在别处的 worktree 用 `make LLM_TRANSPORT_WHEELS=/home/zk_test/zk_projects/llm-transport/dist …` 显式给出，不走 PyPI）。
 - 直接依赖写在 `requirements.txt`（运行 + 测试，均为精确版本）；`requirements.lock` 是由它解析出的完整锁（运行 + 测试），每个包都带 sha256，解析目标是 CPython 3.12、x86_64-unknown-linux-gnu（锁文件头一行写着解析命令）。改了依赖后运行 `make lock`，再提交锁文件。
 - 已验证的组合：uv 0.13.0、CPython 3.12.15；通过数量以 `make check` 的输出为准，这里不写数字。
