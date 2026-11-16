@@ -122,7 +122,7 @@ def test_evaluator_id_follows_prompts_rules_model_and_endpoint_not_the_build(mon
     assert base["prompts"]["decompose_sha256"] != base["prompts"]["review_sha256"]
     monkeypatch.setenv("MECHEVIDENCE_CODE_VERSION", "other-build")
     assert current_evaluator()["evaluator_id"] == base["evaluator_id"]  # a refactor does not void the cache
-    for name, value in (("LLM_MODEL", "zktest-qwen"), ("LLM_PROVIDER", "vllm"), ("LLM_ENDPOINT_ID", "zktest-vllm-qwen")):
+    for name, value in (("LLM_MODEL", "dev-qwen"), ("LLM_PROVIDER", "vllm"), ("LLM_ENDPOINT_ID", "dev-vllm-qwen")):
         with monkeypatch.context() as scoped:
             scoped.setenv(name, value)
             assert current_evaluator()["evaluator_id"] != base["evaluator_id"], name

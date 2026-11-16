@@ -55,7 +55,7 @@ def test_the_default_port_is_the_deployed_one_everywhere():
     assert service.DEFAULT_PORT == 18563
     assert "DEFAULT_PORT" in inspect.getsource(service).split("__main__")[1]  # the entry point uses it
     root = Path(__file__).resolve().parents[1]
-    for name in ("README.md", "AGENTS.md"):
+    for name in ("README.md", "docs/设计.md"):
         text = (root / name).read_text(encoding="utf-8")
         assert "18563" in text and "18561" not in text.replace("18561 是查询规划服务的", "")
 

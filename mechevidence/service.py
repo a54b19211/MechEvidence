@@ -21,7 +21,7 @@ from .models import EvaluateRequest
 from .receipt import RECEIPT_SCHEMA_VERSION, receipt_schema, reuse_key_schema
 from .v2 import evaluate_v2, reuse_key_v2, v1_receipt
 
-# the port MechEvidence is deployed on (the query planner has its own); README and AGENTS name the same one
+# the port MechEvidence is deployed on (the query planner has its own); README and docs/设计.md name the same one
 DEFAULT_PORT = 18563
 
 

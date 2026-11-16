@@ -1,6 +1,6 @@
 # MechEvidence
 
-机制证据评价服务，维护人：**汪鑫怡**。
+机制证据评价服务。
 
 给定一个问题、一个候选机制（一句话）、目标范围（物种 / 系统 / 疾病）和雷达取到的材料，判断这些材料在目标范围内支持机制的哪些部分，指出反证、冲突和缺口。模型只做“这段原文说了什么”的语义判断；是否算证据、是否适用、是否冲突、整体结论，全部由程序按固定规则决定。
 
@@ -105,7 +105,7 @@ uvicorn mechevidence.service:app --host 127.0.0.1 --port 18563
 
 ## v2：版本绑定契约
 
-`POST /v2/evaluate` 评价的是“命题 + 范围 + 一组固定版本的材料 + 评价器”，结果可复现、可缓存、可审计。完整的请求、回执和负例见 `examples/contract-v2/`（雷达的测试直接复用）；设计和取舍见 [docs/decisions/0002-version-bound-contract.md](docs/decisions/0002-version-bound-contract.md)。
+`POST /v2/evaluate` 评价的是“命题 + 范围 + 一组固定版本的材料 + 评价器”，结果可复现、可缓存、可审计。完整的请求、回执和负例见 `examples/contract-v2/`（雷达的测试直接复用）；设计和取舍见 [docs/设计.md](docs/设计.md)「版本绑定契约」。
 
 - 请求：`contract_version: "mechevidence.evaluate.v2"`；`scope` 每个维度明确是 `{"state": "stated", "value": …}`、`{"state": "unknown"}`（没提供）或 `{"state": "not_required"}`（明确不限定），空字符串一律按 `unknown`；每份材料带 `binding`（与雷达的 `material.binding()` 同形：整串 sha256、字符数、literal 段和 part 段，part 段有来源/记录/版本/原件哈希/处理器版本和段哈希）；文献身份字段放在 `identifiers` 里；`authorization_ref`（必填，不透明字符串）；`expected_evaluator_id`（可选）。任何层出现契约未写的字段都是 422。
 - 服务只能核“文字和绑定自洽”（回执写 `binding_checked: "self_consistent"`）；“这串文字确实是那个固定版本的那一段”由雷达发出前向 Fabric 重读核对。
@@ -151,7 +151,7 @@ make check-lock      # requirements.lock 是否仍与 requirements.txt 一致（
 | BioRadar | `E`（含行宽 E501，110） |
 | BioCheck | `E`（含行宽 E501，120） |
 
-`make check-lock`、`make lock` 要访问 PyPI（`make venv`、`make check-install` 在 uv 缓存里没有的包也要下载）。zktest 上直连 PyPI 有时超时，这时只给这几条命令临时加上本机已有的 HTTP 代理（mihomo，监听 127.0.0.1:7890），例如 `HTTPS_PROXY=http://127.0.0.1:7890 HTTP_PROXY=http://127.0.0.1:7890 make check-lock`；不要把代理写进全局配置。`check-lock` 的结果有两种失败：解析本身失败（包索引或网络不可用、依赖解不出来）时报 `check-lock did not run`，make 显示 `Error 2`，锁文件没有比较过，不能因此重做锁；只有解析成功而内容不同时才报 `requirements.lock is stale`（make 显示 `Error 1`）。两种情况 make 都以非零状态结束。
+`make check-lock`、`make lock` 要访问 PyPI（`make venv`、`make check-install` 在 uv 缓存里没有的包也要下载）。直连 PyPI 超时时，只给这几条命令临时加上本机的 HTTP 代理，例如 `HTTPS_PROXY=http://127.0.0.1:7890 HTTP_PROXY=http://127.0.0.1:7890 make check-lock`；不要把代理写进全局配置。`check-lock` 的结果有两种失败：解析本身失败（包索引或网络不可用、依赖解不出来）时报 `check-lock did not run`，make 显示 `Error 2`，锁文件没有比较过，不能因此重做锁；只有解析成功而内容不同时才报 `requirements.lock is stale`（make 显示 `Error 1`）。两种情况 make 都以非零状态结束。
 
 - v2 契约的纯函数在本仓库：`mechevidence/v2_rules.py`（evaluator id、reuse key、回执回显、adopt）、`mechevidence/receipt.py`（回执格式 SHAPE、跨字段规则，及其 JSON Schema 形式，由 `GET /v2/contract` 发布）、`mechevidence/source_identity.py`（文献身份）。`contract.py` 用 pydantic 模型校验请求，再把校验后的请求交给它们。
 - 模型调用用 OpenAI 官方 `openai` 库（`mechevidence/llm.py`，从 PyPI 安装）；库自带的重发关掉，每个请求都先过授权钩子、先存档再解析。
@@ -162,7 +162,7 @@ make check-lock      # requirements.lock 是否仍与 requirements.txt 一致（
 
 ## 设计来由
 
-服务为什么是现在这个形状（同步 HTTP、两次调用、程序编号），见 [docs/decisions/0001-synchronous-two-call-service.md](docs/decisions/0001-synchronous-two-call-service.md)。
+服务为什么是现在这个形状（同步 HTTP、两次调用、程序编号）、开发约定和 v2 契约的取舍，见 [docs/设计.md](docs/设计.md)。部署和共用设施（WeKnora、PostgreSQL 17、systemd）见仓库 a54b19211/ZK-radar-deploy。
 
 ## 已知局限
 

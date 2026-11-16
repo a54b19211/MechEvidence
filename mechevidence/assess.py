@@ -15,7 +15,7 @@ from .prompts import DECOMPOSE, REVIEW
 
 BATCH_SIZE = 3
 # Bump RULES_VERSION with any change to what this module (and materials.admissibility / source grouping) concludes
-# from the same observations - scope aliases, comparison, grading; docs/decisions/0002 says what counts.
+# from the same observations - scope aliases, comparison, grading; docs/设计.md says what counts.
 RULES_VERSION = "mechevidence.aggregate.v1"
 # Phase 1 reviews materials in the order the request lists them, in batches of BATCH_SIZE; a canonical order is a
 # later rules version, and only then may a reuse key treat the materials as a set.
