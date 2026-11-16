@@ -1,4 +1,5 @@
-"""HTTP 服务：GET /health，GET /v2/evaluator，GET /v2/contract，POST /v1/evaluate（兼容）和 POST /v2/evaluate（版本绑定契约）。
+"""HTTP 服务：GET /health，GET /v2/evaluator，GET /v2/contract，POST /v2/reuse-key，POST /v1/evaluate（兼容）和
+POST /v2/evaluate（版本绑定契约）。
 一次请求 = 一次同步评价，服务自己调模型。"""
 from __future__ import annotations
 
@@ -17,8 +18,8 @@ from .contract import CONTRACT_V1, CONTRACT_V2, ContractError
 from .identity import current_evaluator
 from .llm import chat_json
 from .models import EvaluateRequest
-from .receipt import RECEIPT_SCHEMA_VERSION, receipt_schema
-from .v2 import evaluate_v2, v1_receipt
+from .receipt import RECEIPT_SCHEMA_VERSION, receipt_schema, reuse_key_schema
+from .v2 import evaluate_v2, reuse_key_v2, v1_receipt
 
 # the port MechEvidence is deployed on (the query planner has its own); README and AGENTS name the same one
 DEFAULT_PORT = 18563
@@ -81,7 +82,15 @@ def create_app(chat=chat_json, endpoint=None) -> FastAPI:
     def contract():
         """The receipt format of the v2 contract as a JSON Schema, for callers that validate receipts."""
         return {"contract_version": CONTRACT_V2, "schema_version": RECEIPT_SCHEMA_VERSION,
-                "receipt_schema": receipt_schema()}
+                "receipt_schema": receipt_schema(), "reuse_key_schema": reuse_key_schema()}
+
+    @app.post("/v2/reuse-key")
+    def reuse_key_route(body: Annotated[Any, Body()]):
+        """The evaluator and reuse key POST /v2/evaluate would use for this request; nothing is evaluated."""
+        try:
+            return reuse_key_v2(body)
+        except ContractError as error:
+            return _error(error.status, error.code, str(error), **error.extra)
 
     @app.post("/v1/evaluate")
     def evaluate_route(body: EvaluateRequest):

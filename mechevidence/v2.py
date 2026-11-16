@@ -1,6 +1,7 @@
 """POST /v2/evaluate: validate the binding, refuse another evaluator, authorize every model request with the trusted
-endpoint (and hand it each outcome), evaluate, and answer with a receipt that names evaluator, reuse key and bound
-materials."""
+endpoint (and hand it each outcome), evaluate, check the receipt against this service's own receipt rules, and answer
+with it (it names evaluator, reuse key and bound materials). POST /v2/reuse-key answers the evaluator and reuse key of
+a request without evaluating it, so a caller can look up its cache without knowing how the key is made."""
 from __future__ import annotations
 
 import uuid
@@ -13,6 +14,7 @@ from .contract import (
     INCOMPLETE_CODES,
     ContractError,
     Parsed,
+    adopt_wire,
     material_echo,
     parse_request,
     reuse_key,
@@ -34,18 +36,34 @@ def new_attempt_id() -> str:
     return uuid.uuid4().hex
 
 
-def evaluate_v2(raw, chat=chat_json, endpoint=None) -> dict:
-    """Raises ContractError (422 invalid, 409 evaluator_changed) or EvaluationFailed (502: model failure, the
-    endpoint refused a request or did not record an outcome, or a raw model answer too large to archive)."""
-    endpoint = endpoint if endpoint is not None else TrustedEndpoint()
+def _checked(raw) -> tuple[Parsed, dict]:
+    """The validated request and the evaluator that would answer it; ContractError 422 / 409 evaluator_changed."""
     parsed = parse_request(raw)
     request, evaluator = parsed.request, current_evaluator()
     if request.expected_evaluator_id is not None and request.expected_evaluator_id != evaluator["evaluator_id"]:
         # one request, one determinate evaluator: nothing is evaluated and no model is called
         raise ContractError(409, "evaluator_changed",
-                            "the evaluator is not the one this request was prepared for; fetch GET /v2/evaluator, "
-                            "recompute the reuse key and send again", evaluator=evaluator,
+                            "the evaluator is not the one this request was prepared for; ask POST /v2/reuse-key "
+                            "for the current evaluator and key and send again", evaluator=evaluator,
                             expected_evaluator_id=request.expected_evaluator_id, llm_calls=[])
+    return parsed, evaluator
+
+
+def reuse_key_v2(raw) -> dict:
+    """POST /v2/reuse-key: what POST /v2/evaluate would key this request by, and the material echo its receipt
+    would carry. Nothing is evaluated and no model is called; the same ContractError as POST /v2/evaluate."""
+    parsed, evaluator = _checked(raw)
+    return {"contract_version": CONTRACT_V2, "evaluator": evaluator, "reuse_key": reuse_key(parsed, evaluator),
+            "materials": material_echo(parsed)}
+
+
+def evaluate_v2(raw, chat=chat_json, endpoint=None) -> dict:
+    """Raises ContractError (422 invalid, 409 evaluator_changed) or EvaluationFailed (502: model failure, the
+    endpoint refused a request or did not record an outcome, a raw model answer too large to archive, or a
+    receipt that breaks this service's own receipt rules: receipt_invalid, never returned)."""
+    endpoint = endpoint if endpoint is not None else TrustedEndpoint()
+    parsed, evaluator = _checked(raw)
+    request = parsed.request
     key = reuse_key(parsed, evaluator)
     seen: list[dict] = []
     sent = {"index": 0, "decision": None}   # index: request number over the whole evaluation, never reset
@@ -79,9 +97,16 @@ def evaluate_v2(raw, chat=chat_json, endpoint=None) -> dict:
 
     result = evaluate(_internal_request(parsed), guarded)
     reasons = sorted({note["code"] for note in result["material_notes"] if note["code"] in INCOMPLETE_CODES})
-    return {"contract_version": CONTRACT_V2, "evaluator": evaluator, "reuse_key": key,
-            "complete": not reasons, "not_complete_because": reasons, "audit_complete": True,
-            "scope": request.scope.normal(), "materials": material_echo(parsed), **result}
+    receipt = {"contract_version": CONTRACT_V2, "evaluator": evaluator, "reuse_key": key,
+               "complete": not reasons, "not_complete_because": reasons, "audit_complete": True,
+               "scope": request.scope.normal(), "materials": material_echo(parsed), **result}
+    # the producer enforces its own receipt rules: a receipt that breaks them is a failure, never an answer
+    outcome = adopt_wire(parsed.wire, receipt, evaluator["evaluator_id"])["result"]
+    if outcome["status"] != "completed":
+        problems = outcome.get("invalid") or outcome.get("mismatch") or [outcome["reason"]]
+        raise EvaluationFailed("receipt_invalid", f"the receipt breaks the v2 receipt rules: {str(problems)[:500]}",
+                               seen)
+    return receipt
 
 
 def v1_receipt(result: dict) -> dict:

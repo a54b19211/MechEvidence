@@ -13,7 +13,8 @@ A receipt that fails any pass is never adopted or cached; the caller keeps the r
 fields are covered by adding them to SHAPE (and, if they refer to something, to the reference rules).
 
 receipt_schema() is SHAPE as a JSON Schema, which GET /v2/contract publishes for callers (the radar validates
-receipts and model calls against it instead of importing this module).
+receipts and model calls against it instead of importing this module). The cross-field rules are enforced here,
+by the service on its own receipt before it answers (v2.evaluate_v2); callers do not repeat them.
 """
 from __future__ import annotations
 
@@ -250,6 +251,15 @@ def _json_schema(spec, top: bool = False) -> dict:
     optional = spec[2] if len(spec) > 2 else set()
     return {"type": "object", "properties": {name: _json_schema(inner) for name, inner in spec[1].items()},
             "required": [name for name in spec[1] if name not in optional]}
+
+
+REUSE_KEY_SHAPE = ("obj", {"contract_version": "str", "evaluator": _EVALUATOR, "reuse_key": "hex",
+                           "materials": ("list", _ECHO)})
+
+
+def reuse_key_schema() -> dict:
+    """The POST /v2/reuse-key answer as a JSON Schema (draft 2020-12)."""
+    return {"$schema": "https://json-schema.org/draft/2020-12/schema", **_json_schema(REUSE_KEY_SHAPE)}
 
 
 def receipt_schema() -> dict:

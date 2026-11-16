@@ -2,9 +2,11 @@
 dict of a v2 request: what an evaluator's id and a request's reuse key are, what a receipt echoes of its request,
 and what a caller does with a 200 receipt (adopt). No model, no HTTP, no database, no third-party import.
 
-mechevidence.contract hands these functions the request it validated with its models. examples/contract-v2
-holds the fixtures this service publishes; the radar keeps its own copy of the request-side rules and is
-checked against the same fixtures, and validates receipts against GET /v2/contract.
+mechevidence.contract hands these functions the request it validated with its models. These rules have one owner,
+this service: it returns the evaluator id and reuse key (POST /v2/reuse-key, and in every receipt) and runs adopt
+on its own receipt before answering (a receipt that fails is a 502 receipt_invalid, never returned). Callers keep
+no copy: they validate a receipt against the JSON Schema of GET /v2/contract and compare it with what
+POST /v2/reuse-key answered.
 
 The request dict is the wire form: question, mechanism, scope, materials (each with its binding) and, for a
 caller that sends them, claims and joins. A material may omit title, document_type and identifiers.

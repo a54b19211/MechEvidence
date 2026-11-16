@@ -253,3 +253,25 @@ def test_an_answer_over_the_archive_limit_fails_closed_with_the_whole_text_hash(
     assert out["truncated"] is True and out["sha256"] == sha("x" * (llm.OUTPUT_ARCHIVE_LIMIT + 10))
     assert stub.attempts == ["decompose"]                  # nothing further was sent after it
 
+
+
+# ---- the service owns the key and its receipt rules ----
+
+def test_reuse_key_answers_what_evaluate_would_key_and_echo_without_a_model_call():
+    stub = HookedStub()
+    response = client(stub).post("/v2/reuse-key", json=request(), headers=AUTH)
+    body = response.json()
+    assert response.status_code == 200 and stub.attempts == []
+    assert body["evaluator"] == current_evaluator() and body["reuse_key"] == key_of(request(), current_evaluator())
+    receipt = client().post("/v2/evaluate", json=request(), headers=AUTH).json()
+    assert (body["reuse_key"], body["materials"]) == (receipt["reuse_key"], receipt["materials"])
+    assert client().post("/v2/reuse-key", json={**request(), "extra": 1}, headers=AUTH).status_code == 422
+
+
+def test_a_receipt_that_breaks_the_receipt_rules_is_never_returned(monkeypatch):
+    from mechevidence import v2
+
+    original = v2.material_echo
+    monkeypatch.setattr(v2, "material_echo", lambda parsed: [dict(row, locators_returned=99) for row in original(parsed)])
+    response = client().post("/v2/evaluate", json=request(), headers=AUTH)
+    assert response.status_code == 502 and response.json()["error_code"] == "receipt_invalid"

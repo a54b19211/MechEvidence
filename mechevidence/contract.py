@@ -133,6 +133,11 @@ def receipt_mismatches(parsed: Parsed, receipt: dict, expected_evaluator_id: str
     return shared.receipt_mismatches(parsed.wire, receipt, expected_evaluator_id)
 
 
+def adopt_wire(wire: dict, receipt, expected_evaluator_id: str) -> dict:
+    """adopt over a request this service has already parsed (Parsed.wire)."""
+    return shared.adopt(wire, receipt, expected_evaluator_id)
+
+
 def adopt(request: dict, receipt, expected_evaluator_id: str) -> dict:
     """What a caller records for a 200 receipt: {"result": mechanism_result, "rejected": row or None}; the rules are
     v2_rules.adopt. Never raises on a malformed receipt (a malformed request raises

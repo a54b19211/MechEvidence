@@ -25,7 +25,7 @@
    },
    "expected_evaluator_id": "3f7f0ca282d2484cb3c9a3995f1524024ab12c12b2667db12fe0cb121c3edce2",
    "llm_calls": [],
-   "message": "the evaluator is not the one this request was prepared for; fetch GET /v2/evaluator, recompute the reuse key and send again"
+   "message": "the evaluator is not the one this request was prepared for; ask POST /v2/reuse-key for the current evaluator and key and send again"
   },
   "name": "evaluator_changed",
   "request": {
