@@ -1,11 +1,11 @@
-# Tool settings only: dependencies are pinned in requirements.txt and requirements-transport.txt (README).
+# Tool settings only: dependencies are pinned in requirements.txt and requirements-contract.txt (README).
 # Function size is gated separately by scripts/code_metrics.py (80 lines / complexity 20).
 [tool.ruff]
 line-length = 120
 target-version = "py310"
 
 [tool.ruff.lint]
-# the base rule set of every repository (devtools README): pyflakes, the pycodestyle errors that are bugs or
+# the base rule set of every repository: pyflakes, the pycodestyle errors that are bugs or
 # hide statements, whitespace, import order. Complexity is gated by scripts/code_metrics.py, not by C90.
 # Line length (E501) is not enforced: wide characters count double in ruff and most long lines are Chinese
 # prompt or message text.

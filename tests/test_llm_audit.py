@@ -174,3 +174,17 @@ def test_a_whole_evaluation_through_the_real_transport_checks_each_request(monke
         (info["stage"], info["index_in_call"])), **k))
     assert checks == [("decompose", 1), ("review", 1), ("review", 2)] and len(fake.bodies) == 3
     assert [len(call["outputs"]) for call in out["llm_calls"]] == [1, 2]
+
+
+def test_the_openai_client_gets_the_configured_url_and_key_and_a_refused_connection_was_not_delivered(monkeypatch):
+    monkeypatch.setenv("LLM_BASE_URL", "http://model.invalid/v1")
+    seen = []
+
+    def refuse(request):
+        seen.append((str(request.url), request.headers["authorization"]))
+        raise httpx.ConnectError("refused")
+
+    use(monkeypatch, refuse)
+    _, call = llm.chat_json("decompose", "s", {}, Decomposition)
+    assert seen[0] == ("http://model.invalid/v1/chat/completions", "Bearer k")
+    assert call["error"] == "network_error" and call["requests"] == 1 and call["outputs"][0]["delivered"] == "no"

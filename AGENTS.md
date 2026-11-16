@@ -5,7 +5,7 @@
 ## 代码
 
 1. 普通函数和直接调用；一个文件一类职责。不建插件框架、注册中心、通用 Agent 或队列。
-2. 模型调用只走 `llm.chat_json`（HTTP 一侧由共享包 `llm_transport` 完成）；先存档原始 HTTP 回答再解析，已发出的请求不得因解析失败而丢失。结构化阶段关闭思考，`max_tokens` 4096；校验失败带错误重试一次，再失败只让这一项失败。
+2. 模型调用只走 `llm.chat_json`（用 `openai` 库发送）；先存档原始 HTTP 回答再解析，已发出的请求不得因解析失败而丢失。结构化阶段关闭思考，`max_tokens` 4096；校验失败带错误重试一次，再失败只让这一项失败。
 3. 编号由程序分配（C/J、E1.3、O），模型只引用。无效编号、找不到的短引：丢弃该条并记进 `material_notes`，不让整份输出失败。
 4. schema 要小：每次输出不超过两层、必填字段不超过 5 个、枚举用小写英文。
 5. 哈希、评价器身份和回执只属于版本绑定契约 `/v2/evaluate`（`docs/decisions/0002-version-bound-contract.md`）；兼容路径 `/v1/evaluate` 不加。调用记录存 stage、model、usage、finish_reason、耗时、错误码和实际发出的请求数（requests）；v2 回执另带每次尝试的模型原始回答（`outputs`，单条 ≤256 KiB，超出即失败，不当结果）。

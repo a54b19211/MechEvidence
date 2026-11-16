@@ -58,8 +58,9 @@ protocol. That stays true of v1; it is not rewritten. v2 adds a receipt and hash
   the evaluation is a handleable 502. An answer that does not fit is not archived completely, so the evaluation fails
   closed (502 `output_oversize`, no verdict) with no format retry. A truncated answer's hash is never presented as the
   hash of a stored whole.
-- **Transport.** The HTTP side of the call (provider body, send, delivery outcome, request count, envelope) is the shared
-  `zk-llm-transport` wheel, pinned by hash; prompts, format retry and error codes stay here.
+- **Transport.** The HTTP side of the call is the official `openai` client with its own retries off (2026-11: the
+  shared `zk-llm-transport` wheel was removed); body, delivery outcome, request count, envelope, prompts, format
+  retry and error codes are in `mechevidence/llm.py`.
 - **Receipt adoption is strict and table-driven.** `contract.adopt()` never raises on a malformed receipt. `receipt.SHAPE`
   is the one table of fields, JSON types (a bool is not an int), enums and hash forms; only a receipt of the right shape
   goes on to the cross-field rules: each archived answer agrees with itself (delivered, status, text, hash, error), the

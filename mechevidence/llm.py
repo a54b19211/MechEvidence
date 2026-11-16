@@ -1,7 +1,7 @@
-"""唯一的模型调用入口：OpenAI 兼容 /chat/completions，返回 (对象或 None, 调用记录)。
+"""唯一的模型调用入口：OpenAI 兼容 /chat/completions（官方 openai 库），返回 (对象或 None, 调用记录)。
 
-HTTP 一侧（请求体、发送、送达结果、请求计数、响应信封）由共享的 llm_transport 完成；提示词说明、格式重试、
-错误码和默认值留在这里。
+每个请求发出前过授权钩子、发出后先存档原始 HTTP 回答再解析，所以 openai 库自己的重发关掉（max_retries=0）：
+库内部的重发绕不过钩子，也不会被计数。提示词说明、格式重试、错误码和默认值都在这里。
 """
 from __future__ import annotations
 
@@ -13,9 +13,8 @@ from collections.abc import Callable
 from typing import get_args
 
 import httpx
-import llm_transport as lt
+import openai
 from extraction_contract.mech_v2.receipt import OUTPUT_ARCHIVE_LIMIT
-from llm_transport import SendBlocked
 from pydantic import BaseModel, ValidationError
 
 __all__ = ["OutputNotRecorded", "SendBlocked", "archived", "chat_json", "describe", "make_client"]
@@ -26,6 +25,17 @@ STRUCTURED_TEMPERATURE = 0
 STRUCTURED_THINKING = False
 DEFAULT_MODEL = "deepseek-v4-pro"
 DEFAULT_PROVIDER = "deepseek"
+
+# Failures raised before any byte of the request left this process: the provider cannot have seen it.
+_NOT_SENT = (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout, httpx.UnsupportedProtocol)
+
+
+class SendBlocked(Exception):
+    """Raised by a before_attempt hook: this request may not go out; `reason` becomes the call's error."""
+
+    def __init__(self, reason: str):
+        super().__init__(reason)
+        self.reason = reason
 
 
 class OutputNotRecorded(Exception):
@@ -63,77 +73,111 @@ def describe(model_cls: type[BaseModel]) -> str:
     return "\n".join(lines)
 
 
-def _provider(model: str) -> lt.Provider:
-    name = os.environ.get("LLM_PROVIDER", DEFAULT_PROVIDER)
-    return lt.Provider(
-        kind=name if name in ("deepseek", "vllm") else "openai_compatible",
-        base_url=os.environ.get("LLM_BASE_URL", "https://api.deepseek.com"), model=model,
-        api_key=os.environ.get("LLM_API_KEY", ""), timeout_seconds=float(os.environ.get("LLM_TIMEOUT_SECONDS", "180")),
-        endpoint_id=os.environ.get("LLM_ENDPOINT_ID", "unnamed"))
-
-
-def _hooks(call: dict, provider: lt.Provider, model: str, before_attempt, after_attempt):
-    """The transport's before/after callbacks for one logical call: authorization hook in front, record behind."""
-    stage = call["stage"]
-
-    def before(start: lt.AttemptStart) -> None:
-        if before_attempt is None:
-            return
-        try:
-            before_attempt({"stage": stage, "index_in_call": start.index, "requests_before": start.sent_before,
-                            "request_body_sha256": start.body_sha256, "model": model,
-                            "endpoint_id": provider.endpoint_id})
-        except lt.SendBlocked:
-            raise
-        except Exception as error:  # noqa: BLE001 - whatever stops the check also stops the request
-            raise lt.SendBlocked(getattr(error, "code", None) or "authorization_error") from None
-
-    def after(attempt: lt.Attempt) -> None:
-        call["outputs"].append(_entry(attempt.index, attempt.response_bytes, attempt.delivered, attempt.status,
-                                      attempt.error))
-        if after_attempt is not None:
-            try:
-                after_attempt(call["outputs"][-1])
-            except Exception:  # noqa: BLE001 - an outcome that is not kept stops the call
-                raise OutputNotRecorded from None
-
-    return before, after
-
-
-def _send(call: dict, provider: lt.Provider, body, record: lt.CallRecord, client, before, after):
-    """One transport send; None (with call["error"] set) when the call has to stop."""
+def _api(client: httpx.Client) -> openai.OpenAI:
+    """The client for LLM_BASE_URL; ValueError when that is not an http(s) URL with a host."""
+    base_url = os.environ.get("LLM_BASE_URL", "https://api.deepseek.com")
     try:
-        return lt.send(provider, body, record, client=client, before_attempt=before, after_attempt=after)
-    except lt.SendBlocked as blocked:
-        call["error"] = blocked.reason
-    except OutputNotRecorded:
-        call["error"] = "authorization_outcome_failed"
-    except lt.RequestNotBuilt:
-        call["error"] = "request_not_built"
-    except Exception:  # noqa: BLE001 - settled by the transport as unknown; the call keeps its record
-        call["error"] = "unexpected_error"
-    return None
+        url = httpx.URL(base_url)
+    except httpx.InvalidURL:
+        raise ValueError("LLM_BASE_URL is not a URL") from None
+    if url.scheme not in ("http", "https") or not url.host:
+        raise ValueError("LLM_BASE_URL must be an http or https URL with a host")
+    return openai.OpenAI(base_url=base_url, api_key=os.environ["LLM_API_KEY"], max_retries=0,
+                         timeout=float(os.environ.get("LLM_TIMEOUT_SECONDS", "180")), http_client=client)
+
+
+def _body(model: str, messages: list, max_tokens: int, thinking: bool) -> dict:
+    """The request body: the provider's per-call thinking switch, temperature 0 when not thinking."""
+    body = {"model": model, "messages": list(messages), "max_tokens": max_tokens,
+            "response_format": {"type": "json_object"}}
+    provider = os.environ.get("LLM_PROVIDER", DEFAULT_PROVIDER)
+    if provider == "deepseek":
+        body["thinking"] = {"type": "enabled" if thinking else "disabled"}
+    elif provider == "vllm":  # local vLLM serving Qwen reads the switch from its chat template
+        body["chat_template_kwargs"] = {"enable_thinking": bool(thinking)}
+    if not thinking:
+        body["temperature"] = STRUCTURED_TEMPERATURE
+    return body
+
+
+def _post(api: openai.OpenAI, body: dict):
+    """One HTTP request: (raw answer or None, delivered, status, error, timed_out)."""
+    extra = {k: body[k] for k in ("thinking", "chat_template_kwargs") if k in body}
+    plain = {k: v for k, v in body.items() if k not in extra}
+    try:
+        response = api.chat.completions.with_raw_response.create(**plain, extra_body=extra or None).http_response
+    except openai.APIStatusError as error:
+        response = error.response
+    except openai.APIConnectionError as error:
+        cause, timed_out = error.__cause__, isinstance(error, openai.APITimeoutError)
+        if isinstance(cause, _NOT_SENT):
+            return None, "no", None, "pool_timeout" if isinstance(cause, httpx.PoolTimeout) else "connect_failed", timed_out
+        return None, "unknown", None, "timeout" if timed_out else "connection_lost", timed_out
+    status = response.status_code
+    return response.content, "yes", status, None if response.is_success else f"http_{status}", False
+
+
+def _send(call: dict, api, body: dict, model: str, before_attempt, after_attempt):
+    """One request with its hooks: (raw answer, status, timed_out), or None (call["error"] set) to stop."""
+    if before_attempt is not None:
+        try:
+            before_attempt({"stage": call["stage"], "index_in_call": call["requests"] + 1,
+                            "requests_before": call["requests"], "model": model,
+                            "request_body_sha256": hashlib.sha256(json.dumps(
+                                body, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()).hexdigest(),
+                            "endpoint_id": os.environ.get("LLM_ENDPOINT_ID", "unnamed")})
+        except SendBlocked as blocked:
+            call["error"] = blocked.reason
+            return None
+        except Exception as error:  # noqa: BLE001 - whatever stops the check also stops the request
+            call["error"] = getattr(error, "code", None) or "authorization_error"
+            return None
+    call["requests"] += 1
+    try:
+        raw, delivered, status, error, timed_out = _post(api, body)
+    except Exception:  # noqa: BLE001 - the request may have gone out: settled as unknown, the call stops
+        raw, delivered, status, error, timed_out = None, "unknown", None, "unexpected_error", False
+    call["outputs"].append(_entry(call["requests"], raw, delivered, status, error))
+    if after_attempt is not None:
+        try:
+            after_attempt(call["outputs"][-1])
+        except Exception:  # noqa: BLE001 - an outcome that is not kept stops the call
+            call["error"] = "authorization_outcome_failed"
+            return None
+    if error == "unexpected_error":
+        call["error"] = error
+        return None
+    return raw, status, timed_out
 
 
 def _content(call: dict, sent) -> str | None:
     """The model's text of a sent request; None (with call["error"] set) when the call has to stop."""
-    if sent.exception is not None:
-        call["error"] = "timeout" if sent.timed_out else "network_error"  # 不自动重发：对方可能已经计费
+    raw, status, timed_out = sent
+    if raw is None:
+        call["error"] = "timeout" if timed_out else "network_error"  # 不自动重发：对方可能已经计费
         return None
-    if sent.status != 200:
-        call["error"] = f"http_{sent.status}"
+    if status != 200:
+        call["error"] = f"http_{status}"
         return None
     if call["outputs"][-1]["truncated"]:
         call["error"] = "output_oversize"  # cannot be archived whole: no format retry, no result
         return None
-    found = sent.envelope()
-    if found.problem is not None or not (found.content is None or isinstance(found.content, str)):
+    choice = None
+    try:
+        data = json.loads(raw)
+        choice = data["choices"][0]
+        content = choice["message"].get("content")
+        usage = data.get("usage") or {}
+    except (ValueError, TypeError, KeyError, IndexError, AttributeError):
+        content = usage = None
+    if not isinstance(content, (str, type(None))) or not isinstance(usage, dict) or not isinstance(choice, dict):
         call["error"] = "response_malformed"
         return None
-    for name, value in found.usage.items():
-        call["usage"][name] = call["usage"].get(name, 0) + value
-    call["finish_reason"] = found.finish_reason
-    content = found.content or ""
+    for name, value in usage.items():
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            call["usage"][name] = call["usage"].get(name, 0) + value
+    call["finish_reason"] = choice.get("finish_reason")
+    content = content or ""
     if call["finish_reason"] == "length" and not content.strip():
         call["error"] = "output_empty_after_limit"  # 思考或长输入吃掉了额度
         return None
@@ -160,23 +204,20 @@ def chat_json(stage: str, system: str, payload: dict, model_cls: type[BaseModel]
     if not os.environ.get("LLM_API_KEY", ""):
         call["error"] = "llm_not_configured"
         return None, call
-    try:
-        provider = _provider(model)
-    except ValueError:
-        call["error"] = "llm_base_url_invalid"
-        return None, call
-    record = lt.CallRecord(stage=stage, endpoint_id=provider.endpoint_id, model=model)
     user = json.dumps(payload, ensure_ascii=False)
     messages = [{"role": "system", "content": system + "\n\n只输出一个 JSON 对象，字段：\n" + describe(model_cls)},
                 {"role": "user", "content": user}]
-    before, after = _hooks(call, provider, model, before_attempt, after_attempt)
-
     started = time.monotonic()
     try:
         with make_client() as client:
+            try:
+                api = _api(client)
+            except ValueError:
+                call["error"] = "llm_base_url_invalid"
+                return None, call
             for _ in range(2):
-                body = lt.build_body(provider, messages, max_tokens=max_tokens, thinking=thinking)
-                sent = _send(call, provider, body, record, client, before, after)
+                body = _body(model, messages, max_tokens, thinking)
+                sent = _send(call, api, body, model, before_attempt, after_attempt)
                 content = _content(call, sent) if sent is not None else None
                 if content is None:
                     return None, call
@@ -190,5 +231,4 @@ def chat_json(stage: str, system: str, payload: dict, model_cls: type[BaseModel]
                                    + str(error)[:2000]}
             return None, call
     finally:
-        call["requests"] = record.requests
         call["seconds"] = round(time.monotonic() - started, 2)
