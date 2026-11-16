@@ -58,3 +58,18 @@ def test_the_default_port_is_the_deployed_one_everywhere():
     for name in ("README.md", "AGENTS.md"):
         text = (root / name).read_text(encoding="utf-8")
         assert "18563" in text and "18561" not in text.replace("18561 是查询规划服务的", "")
+
+
+def test_the_receipt_format_is_published_as_a_json_schema(monkeypatch):
+    from mechevidence.receipt import SHAPE
+
+    response = client(monkeypatch).get("/v2/contract", headers=AUTH)
+    body = response.json()
+    assert response.status_code == 200
+    assert body["contract_version"] == "mechevidence.evaluate.v2"
+    assert body["schema_version"] == "mechevidence.evaluate.v2.receipt.1"
+    schema = body["receipt_schema"]
+    assert schema["type"] == "object" and schema["required"] == list(SHAPE[1])
+    assert schema["properties"]["llm_calls"] == {"type": "array", "items": {"$ref": "#/$defs/llm_call"}}
+    assert "outputs" in schema["$defs"]["llm_call"]["required"]
+    assert client(monkeypatch).get("/v2/contract").status_code == 401

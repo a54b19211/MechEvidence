@@ -14,8 +14,9 @@ from typing import get_args
 
 import httpx
 import openai
-from extraction_contract.mech_v2.receipt import OUTPUT_ARCHIVE_LIMIT
 from pydantic import BaseModel, ValidationError
+
+from .receipt import OUTPUT_ARCHIVE_LIMIT
 
 __all__ = ["OutputNotRecorded", "SendBlocked", "archived", "chat_json", "describe", "make_client"]
 

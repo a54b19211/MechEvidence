@@ -3,10 +3,9 @@ from __future__ import annotations
 
 import re
 
-from extraction_contract.mech_v2 import IdentityError
-from extraction_contract.mech_v2 import source_identity as identity_of
-
 from .models import Material
+from .source_identity import IdentityError
+from .source_identity import source_identity as identity_of
 
 DECLARATIONS = {"press_release", "company_disclosure", "news", "social_post"}
 DESIGNS = {"trial_registration", "study_protocol"}

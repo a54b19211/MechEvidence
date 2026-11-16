@@ -7,16 +7,14 @@
 #
 # UV          the uv binary (default: uv on PATH)
 # PYTHON      interpreter for the virtualenv (default 3.12: the lock is resolved for it)
-# EXTRACTION_CONTRACT_WHEELS  directory holding the extraction-contract wheel (default ../extraction-contract/dist)
 # UV_OFFLINE=1  install from the local uv cache only
 set -eu
 cd "$(dirname "$0")/.."
 UV="${UV:-uv}"
-CONTRACT_WHEELS="${EXTRACTION_CONTRACT_WHEELS:-../extraction-contract/dist}"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 "$UV" venv --quiet --python "${PYTHON:-3.12}" "$work/venv"
-"$UV" pip sync --quiet --python "$work/venv/bin/python" --require-hashes --find-links "$CONTRACT_WHEELS" requirements.lock
+"$UV" pip sync --quiet --python "$work/venv/bin/python" --require-hashes requirements.lock
 "$work/venv/bin/python" - <<'EOF'
 import importlib
 import pathlib

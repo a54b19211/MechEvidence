@@ -35,6 +35,7 @@ uvicorn mechevidence.service:app --host 127.0.0.1 --port 18563
 
 - `GET /health` → `{"status": "ok", "contracts": ["mechevidence.evaluate.v1", "mechevidence.evaluate.v2"], "evaluator_id": "…"}`（不需要令牌）
 - `GET /v2/evaluator` → 当前评价器身份
+- `GET /v2/contract` → v2 回执格式：`{"contract_version": "mechevidence.evaluate.v2", "schema_version": "mechevidence.evaluate.v2.receipt.1", "receipt_schema": {JSON Schema 2020-12}}`；单次模型调用是 `receipt_schema.$defs.llm_call`。调用方（雷达）按它校验回执和调用记录；跨字段规则不在 schema 里
 - `POST /v2/evaluate`：版本绑定契约，见下一节
 - `POST /v1/evaluate`：兼容路径；评价本身不变，回执多 `contract_version`（v1）、`evaluator`、`binding_state: "unbound"`、`reusable: false`；契约未写的字段现在报 422 `field_not_in_contract`，不再静默丢弃；不查授权、不带原始回答
 - 出错时统一返回 `{"error_code": "...", "message": "..."}`：`unauthorized`(401)、`input_invalid`(422)、`field_not_in_contract`(422)、`decomposition_failed`(502，附 `llm_calls`)、`service_not_configured`(503)、`not_found`(404)；v2 另有下一节的几个码。
@@ -152,7 +153,7 @@ make check-lock      # requirements.lock 是否仍与 requirements.txt 一致（
 
 `make check-lock`、`make lock` 要访问 PyPI（`make venv`、`make check-install` 在 uv 缓存里没有的包也要下载）。zktest 上直连 PyPI 有时超时，这时只给这几条命令临时加上本机已有的 HTTP 代理（mihomo，监听 127.0.0.1:7890），例如 `HTTPS_PROXY=http://127.0.0.1:7890 HTTP_PROXY=http://127.0.0.1:7890 make check-lock`；不要把代理写进全局配置。`check-lock` 的结果有两种失败：解析本身失败（包索引或网络不可用、依赖解不出来）时报 `check-lock did not run`，make 显示 `Error 2`，锁文件没有比较过，不能因此重做锁；只有解析成功而内容不同时才报 `requirements.lock is stale`（make 显示 `Error 1`）。两种情况 make 都以非零状态结束。
 
-- v2 契约的纯函数（evaluator id、reuse key、回执校验、adopt、文献身份）在共享包 `extraction-contract`（版本和哈希见 `requirements-contract.txt`）的 `extraction_contract.mech_v2` 里，雷达导入同一份；wheel 哈希写在 `requirements-contract.txt` 和锁里，`make` 用 `EXTRACTION_CONTRACT_WHEELS` 找 wheel（默认 `../extraction-contract/dist`）。本仓库只保留请求校验（pydantic 模型）并把校验后的请求交给它。
+- v2 契约的纯函数在本仓库：`mechevidence/v2_rules.py`（evaluator id、reuse key、回执回显、adopt）、`mechevidence/receipt.py`（回执格式 SHAPE、跨字段规则，及其 JSON Schema 形式，由 `GET /v2/contract` 发布）、`mechevidence/source_identity.py`（文献身份）。`contract.py` 用 pydantic 模型校验请求，再把校验后的请求交给它们。
 - 模型调用用 OpenAI 官方 `openai` 库（`mechevidence/llm.py`，从 PyPI 安装）；库自带的重发关掉，每个请求都先过授权钩子、先存档再解析。
 - 直接依赖写在 `requirements.txt`（运行 + 测试，均为精确版本）；`requirements.lock` 是由它解析出的完整锁（运行 + 测试），每个包都带 sha256，解析目标是 CPython 3.12、x86_64-unknown-linux-gnu（锁文件头一行写着解析命令）。改了依赖后运行 `make lock`，再提交锁文件。
 - 已验证的组合：uv 0.13.0、CPython 3.12.15；通过数量以 `make check` 的输出为准，这里不写数字。

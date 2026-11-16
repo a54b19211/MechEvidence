@@ -1,18 +1,23 @@
 """The versioned contract: parsing and classifying a v2 request with this service's models. The evaluator id, the
-reuse key, the receipt rules and `adopt` are the shared package's (extraction_contract.mech_v2), which the radar
-imports too; this module hands them the validated request as a plain dict (`Parsed.wire`).
+reuse key, the receipt rules and `adopt` are in v2_rules (pure functions over the wire dict); this module hands
+them the validated request as a plain dict (`Parsed.wire`).
 """
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
 
-from extraction_contract import mech_v2 as shared
-from extraction_contract.mech_v2 import INCOMPLETE_CODES, canonical, digest, evaluator_id_of  # noqa: F401 - re-exported: INCOMPLETE_CODES: complete=false is never adopted or reused as a whole
-from extraction_contract.mech_v2.contract import EVALUATOR_ID_FIELDS  # noqa: F401
 from pydantic import ValidationError
 
+from . import v2_rules as shared
 from .models_v2 import CONTRACT_V2, EvaluateRequestV2
+from .v2_rules import (  # noqa: F401 - re-exported: INCOMPLETE_CODES: complete=false is never adopted or reused as a whole
+    EVALUATOR_ID_FIELDS,  # noqa: F401
+    INCOMPLETE_CODES,
+    canonical,
+    digest,
+    evaluator_id_of,
+)
 
 CONTRACT_V1 = "mechevidence.evaluate.v1"
 
@@ -62,7 +67,7 @@ def classify(errors: list[dict]) -> tuple[str, str]:
 class Parsed:
     request: EvaluateRequestV2
     binding_hashes: list[str]
-    wire: dict   # the validated request as the shared contract reads it (defaults filled in, bindings as sent)
+    wire: dict   # the validated request as v2_rules reads it (defaults filled in, bindings as sent)
 
 
 def binding_sha256(binding: dict) -> str:
@@ -102,7 +107,7 @@ def parse_request(raw) -> Parsed:
     return Parsed(request, hashes, _wire(request, raw))
 
 
-# ---- evaluator id, reuse key and what a caller does with a receipt: the shared contract ----
+# ---- evaluator id, reuse key and what a caller does with a receipt: v2_rules ----
 
 def material_inputs(parsed: Parsed) -> list[dict]:
     """Every material field the evaluator uses, normalised, in request order. The model is sent title,
@@ -113,7 +118,7 @@ def material_inputs(parsed: Parsed) -> list[dict]:
 
 def reuse_key(parsed: Parsed, evaluator: dict) -> str:
     """Phase 1, conservative: an ordered list of materials including their request alias ids, and the batch size
-    (rules in extraction_contract.mech_v2). max_llm_calls is left out: an answer the budget cut short is not
+    (rules in v2_rules). max_llm_calls is left out: an answer the budget cut short is not
     complete and is never reused."""
     return shared.reuse_key(parsed.wire, evaluator)
 
@@ -130,6 +135,6 @@ def receipt_mismatches(parsed: Parsed, receipt: dict, expected_evaluator_id: str
 
 def adopt(request: dict, receipt, expected_evaluator_id: str) -> dict:
     """What a caller records for a 200 receipt: {"result": mechanism_result, "rejected": row or None}; the rules are
-    extraction_contract.mech_v2.adopt. Never raises on a malformed receipt (a malformed request raises
+    v2_rules.adopt. Never raises on a malformed receipt (a malformed request raises
     ContractError)."""
     return shared.adopt(parse_request(request).wire, receipt, expected_evaluator_id)

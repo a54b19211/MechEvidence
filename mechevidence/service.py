@@ -1,4 +1,4 @@
-"""HTTP 服务：GET /health，GET /v2/evaluator，POST /v1/evaluate（兼容）和 POST /v2/evaluate（版本绑定契约）。
+"""HTTP 服务：GET /health，GET /v2/evaluator，GET /v2/contract，POST /v1/evaluate（兼容）和 POST /v2/evaluate（版本绑定契约）。
 一次请求 = 一次同步评价，服务自己调模型。"""
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ from .contract import CONTRACT_V1, CONTRACT_V2, ContractError
 from .identity import current_evaluator
 from .llm import chat_json
 from .models import EvaluateRequest
+from .receipt import RECEIPT_SCHEMA_VERSION, receipt_schema
 from .v2 import evaluate_v2, v1_receipt
 
 # the port MechEvidence is deployed on (the query planner has its own); README and AGENTS name the same one
@@ -75,6 +76,12 @@ def create_app(chat=chat_json, endpoint=None) -> FastAPI:
     def evaluator():
         return {"contract_version": CONTRACT_V2, "evaluator": current_evaluator(),
                 "authorization": {"mode": "per_attempt_trusted_endpoint", "configured": endpoint.configured()}}
+
+    @app.get("/v2/contract")
+    def contract():
+        """The receipt format of the v2 contract as a JSON Schema, for callers that validate receipts."""
+        return {"contract_version": CONTRACT_V2, "schema_version": RECEIPT_SCHEMA_VERSION,
+                "receipt_schema": receipt_schema()}
 
     @app.post("/v1/evaluate")
     def evaluate_route(body: EvaluateRequest):
